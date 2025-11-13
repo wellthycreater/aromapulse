@@ -32,6 +32,12 @@ app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Login page - redirect to static file
+app.get('/login', (c) => c.redirect('/static/login.html'));
+
+// Signup page - redirect to static file  
+app.get('/signup', (c) => c.redirect('/static/signup.html'));
+
 // Home page
 app.get('/', (c) => {
   return c.html(`

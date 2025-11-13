@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 아로마펄스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .step { display: none; }
+        .step.active { display: block; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-teal-50 to-blue-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4">
+            <a href="/" class="flex items-center space-x-2">
+                <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+            </a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-xl p-8">
+            <!-- Progress Bar -->
+            <div class="mb-8">
+                <div class="flex justify-between mb-2">
+                    <span class="text-sm font-semibold step-label" data-step="1">1. 사용자 유형</span>
+                    <span class="text-sm font-semibold step-label" data-step="2">2. 기본 정보</span>
+                    <span class="text-sm font-semibold step-label" data-step="3">3. 상세 정보</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progress-bar" class="bg-teal-600 h-2 rounded-full transition-all" style="width: 33%"></div>
+                </div>
+            </div>
+
+            <!-- Step 1: 사용자 유형 선택 -->
+            <div class="step active" id="step-1">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">어떤 목적으로 가입하시나요?</h2>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- B2C -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-teal-500 transition cursor-pointer" onclick="selectUserType('B2C')">
+                        <h3 class="text-xl font-bold text-teal-600 mb-4">
+                            <i class="fas fa-user mr-2"></i>개인 고객
+                        </h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="user_type" value="B2C_daily" class="mr-2">
+                                <span>일상 스트레스 관리</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="user_type" value="B2C_work" class="mr-2">
+                                <span>직무 스트레스 관리</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- B2B -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-teal-500 transition cursor-pointer" onclick="selectUserType('B2B')">
+                        <h3 class="text-xl font-bold text-blue-600 mb-4">
+                            <i class="fas fa-building mr-2"></i>비즈니스 고객
+                        </h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="user_type" value="B2B_perfumer" class="mr-2">
+                                <span>조향사 (파트너 제휴)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="user_type" value="B2B_company" class="mr-2">
+                                <span>기업 (대량 납품/클래스)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="user_type" value="B2B_shop" class="mr-2">
+                                <span>매장 (제품 문의)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="user_type" value="B2B_independent" class="mr-2">
+                                <span>독립 직군</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="nextStep()" class="mt-8 w-full bg-teal-600 text-white py-3 rounded-lg hover:bg-teal-700 font-bold">
+                    다음 단계
+                </button>
+            </div>
+
+            <!-- Step 2: 기본 정보 -->
+            <div class="step" id="step-2">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">기본 정보를 입력해주세요</h2>
+                
+                <form id="basic-info-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">이름 *</label>
+                        <input type="text" name="name" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">이메일 *</label>
+                        <input type="email" name="email" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">비밀번호 *</label>
+                        <input type="password" name="password" required minlength="8" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
+                        <p class="text-xs text-gray-500 mt-1">8자 이상 입력해주세요</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">휴대폰 번호</label>
+                        <input type="tel" name="phone" placeholder="010-1234-5678" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">지역 *</label>
+                        <select name="region" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
+                            <option value="">선택하세요</option>
+                            <option value="서울">서울</option>
+                            <option value="경기">경기</option>
+                            <option value="인천">인천</option>
+                            <option value="부산">부산</option>
+                            <option value="대구">대구</option>
+                            <option value="대전">대전</option>
+                            <option value="광주">광주</option>
+                            <option value="울산">울산</option>
+                            <option value="세종">세종</option>
+                            <option value="강원">강원</option>
+                            <option value="충북">충북</option>
+                            <option value="충남">충남</option>
+                            <option value="전북">전북</option>
+                            <option value="전남">전남</option>
+                            <option value="경북">경북</option>
+                            <option value="경남">경남</option>
+                            <option value="제주">제주</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">연령대 *</label>
+                        <select name="age_group" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
+                            <option value="">선택하세요</option>
+                            <option value="10s">10대</option>
+                            <option value="20s">20대</option>
+                            <option value="30s">30대</option>
+                            <option value="40s">40대</option>
+                            <option value="50s">50대</option>
+                            <option value="60s_plus">60대 이상</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">성별</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="gender" value="male" class="mr-2">
+                                <span>남성</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="gender" value="female" class="mr-2">
+                                <span>여성</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="gender" value="other" class="mr-2">
+                                <span>기타</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">관심 증상 (복수선택 가능)</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="symptoms" value="insomnia" class="mr-2">
+                                <span>불면증</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="symptoms" value="depression" class="mr-2">
+                                <span>우울감</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="symptoms" value="anxiety" class="mr-2">
+                                <span>불안감</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="flex gap-4 mt-8">
+                    <button onclick="prevStep()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-bold">
+                        이전
+                    </button>
+                    <button onclick="nextStep()" class="flex-1 bg-teal-600 text-white py-3 rounded-lg hover:bg-teal-700 font-bold">
+                        다음 단계
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: 상세 정보 (동적 생성) -->
+            <div class="step" id="step-3">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">추가 정보를 입력해주세요</h2>
+                
+                <div id="detail-form-container">
+                    <!-- JavaScript로 동적 생성 -->
+                </div>
+
+                <div class="flex gap-4 mt-8">
+                    <button onclick="prevStep()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-bold">
+                        이전
+                    </button>
+                    <button onclick="submitSignup()" class="flex-1 bg-teal-600 text-white py-3 rounded-lg hover:bg-teal-700 font-bold">
+                        <i class="fas fa-check mr-2"></i>가입 완료
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/signup.js"></script>
+</body>
+</html>
