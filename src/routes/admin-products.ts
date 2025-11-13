@@ -65,7 +65,10 @@ adminProducts.post('/', checkAdminAuth, async (c) => {
     const {
       name,
       description,
+      concept,
       category,
+      refresh_type,
+      volume,
       price,
       thumbnail_image,
       detail_image,
@@ -77,22 +80,41 @@ adminProducts.post('/', checkAdminAuth, async (c) => {
     } = data;
     
     // 필수 필드 검증
-    if (!name || !category || !price) {
+    if (!name || !concept || !price) {
       return c.json({ 
         error: '필수 필드가 누락되었습니다',
-        required: ['name', 'category', 'price']
+        required: ['name', 'concept', 'price']
+      }, 400);
+    }
+    
+    // 증상케어 제품인 경우 category 필수
+    if (concept === 'symptom_care' && !category) {
+      return c.json({ 
+        error: '증상케어 제품은 카테고리가 필수입니다',
+        required: ['category']
+      }, 400);
+    }
+    
+    // 리프레시 제품인 경우 refresh_type 필수
+    if (concept === 'refresh' && !refresh_type) {
+      return c.json({ 
+        error: '리프레시 제품은 제품 유형이 필수입니다',
+        required: ['refresh_type']
       }, 400);
     }
     
     const result = await c.env.DB.prepare(
       `INSERT INTO products (
-        name, description, category, price, thumbnail_image, detail_image, stock,
+        name, description, concept, category, refresh_type, volume, price, thumbnail_image, detail_image, stock,
         workshop_name, workshop_location, workshop_address, workshop_contact
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       name,
       description || null,
-      category,
+      concept,
+      category || null,
+      refresh_type || null,
+      volume || null,
       price,
       thumbnail_image || null,
       detail_image || null,
@@ -122,7 +144,10 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
     const {
       name,
       description,
+      concept,
       category,
+      refresh_type,
+      volume,
       price,
       thumbnail_image,
       detail_image,
@@ -138,7 +163,10 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
       `UPDATE products SET
         name = ?, 
         description = ?, 
+        concept = ?,
         category = ?, 
+        refresh_type = ?,
+        volume = ?,
         price = ?,
         thumbnail_image = ?,
         detail_image = ?,
@@ -153,7 +181,10 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
     ).bind(
       name,
       description,
-      category,
+      concept || 'symptom_care',
+      category || null,
+      refresh_type || null,
+      volume || null,
       price,
       thumbnail_image,
       detail_image,

@@ -24,6 +24,55 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// 제품 컨셉 변경 시 필드 토글
+function toggleProductFields() {
+  const concept = document.getElementById('product-concept').value;
+  const symptomField = document.getElementById('symptom-category-field');
+  const refreshField = document.getElementById('refresh-type-field');
+  const volumeField = document.getElementById('volume-field');
+  const workshopSection = document.getElementById('workshop-info-section');
+  const categorySelect = document.getElementById('product-category');
+  const refreshSelect = document.getElementById('refresh-type');
+  const volumeSelect = document.getElementById('product-volume');
+  
+  if (concept === 'symptom_care') {
+    // 증상케어 제품
+    symptomField.style.display = 'block';
+    refreshField.style.display = 'none';
+    volumeField.style.display = 'none';
+    workshopSection.style.display = 'block';
+    categorySelect.required = true;
+    refreshSelect.required = false;
+    volumeSelect.required = false;
+    refreshSelect.value = '';
+    volumeSelect.value = '';
+  } else if (concept === 'refresh') {
+    // 리프레시 제품
+    symptomField.style.display = 'none';
+    refreshField.style.display = 'block';
+    volumeField.style.display = 'block';
+    workshopSection.style.display = 'none';
+    categorySelect.required = false;
+    refreshSelect.required = true;
+    volumeSelect.required = true;
+    categorySelect.value = '';
+    // 공방 정보 초기화
+    document.getElementById('workshop-name').value = '';
+    document.getElementById('workshop-location').value = '';
+    document.getElementById('workshop-address').value = '';
+    document.getElementById('workshop-contact').value = '';
+  } else {
+    // 선택 안 함
+    symptomField.style.display = 'none';
+    refreshField.style.display = 'none';
+    volumeField.style.display = 'none';
+    workshopSection.style.display = 'none';
+    categorySelect.required = false;
+    refreshSelect.required = false;
+    volumeSelect.required = false;
+  }
+}
+
 // 인증 확인
 async function checkAuth() {
   const token = localStorage.getItem('auth_token');
@@ -138,7 +187,30 @@ function createProductCard(product) {
   
   const thumbnailUrl = product.thumbnail_image || 'https://via.placeholder.com/300x200?text=No+Image';
   
-  const workshopInfo = product.workshop_name 
+  // 제품 컨셉 뱃지
+  const conceptBadge = product.concept === 'refresh'
+    ? '<span class="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">리프레시</span>'
+    : '<span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">증상케어</span>';
+  
+  // 리프레시 제품 유형 표시
+  const refreshTypeLabels = {
+    fabric_perfume: '섬유 향수',
+    room_spray: '룸 스프레이',
+    fabric_deodorizer: '섬유 탈취제',
+    diffuser: '디퓨저',
+    candle: '캔들',
+    perfume: '향수'
+  };
+  
+  const refreshTypeInfo = product.concept === 'refresh' && product.refresh_type
+    ? `<div class="text-xs text-purple-600 mb-2 font-semibold">
+         <i class="fas fa-spray-can mr-1"></i>${refreshTypeLabels[product.refresh_type] || product.refresh_type}
+         ${product.volume ? ` · ${product.volume}` : ''}
+       </div>`
+    : '';
+  
+  // 공방 정보 (증상케어 제품일 때만)
+  const workshopInfo = product.concept === 'symptom_care' && product.workshop_name 
     ? `<div class="text-xs text-gray-500 mb-2">
          <i class="fas fa-store mr-1"></i>${product.workshop_name}
          ${product.workshop_location ? ` · ${product.workshop_location}` : ''}
@@ -148,12 +220,14 @@ function createProductCard(product) {
   card.innerHTML = `
     <div class="relative">
       <img src="${thumbnailUrl}" alt="${product.name}" class="w-full h-48 object-cover">
-      <div class="absolute top-2 right-2">
+      <div class="absolute top-2 right-2 flex gap-2">
+        ${conceptBadge}
         ${statusBadge}
       </div>
     </div>
     <div class="p-4">
       <h3 class="font-bold text-lg mb-2 text-gray-800">${product.name}</h3>
+      ${refreshTypeInfo}
       ${workshopInfo}
       <p class="text-sm text-gray-600 mb-3 line-clamp-2">${product.description || '설명 없음'}</p>
       <div class="flex items-center justify-between mb-3">
@@ -182,6 +256,12 @@ function openNewProductModal() {
   document.getElementById('modal-title').textContent = '새 제품 등록';
   document.getElementById('submit-btn').textContent = '등록';
   document.getElementById('product-form').reset();
+  
+  // 제품 컨셉 초기화 (필드 숨기기)
+  document.getElementById('product-concept').value = '';
+  document.getElementById('symptom-category-field').style.display = 'none';
+  document.getElementById('refresh-type-field').style.display = 'none';
+  document.getElementById('workshop-info-section').style.display = 'none';
   
   // 이미지 미리보기 초기화
   document.getElementById('thumbnail-preview').style.display = 'none';
@@ -212,19 +292,33 @@ async function editProduct(productId) {
   document.getElementById('modal-title').textContent = '제품 수정';
   document.getElementById('submit-btn').textContent = '수정';
   
+  // 제품 컨셉 설정
+  const concept = product.concept || 'symptom_care';
+  document.getElementById('product-concept').value = concept;
+  toggleProductFields();
+  
   // 폼 필드 채우기
   document.getElementById('product-name').value = product.name;
   document.getElementById('product-description').value = product.description || '';
-  document.getElementById('product-category').value = product.category;
   document.getElementById('product-price').value = product.price;
   document.getElementById('product-stock').value = product.stock;
   document.getElementById('product-active').checked = product.is_active === 1;
   
-  // 로컬 공방 정보
-  document.getElementById('workshop-name').value = product.workshop_name || '';
-  document.getElementById('workshop-location').value = product.workshop_location || '';
-  document.getElementById('workshop-address').value = product.workshop_address || '';
-  document.getElementById('workshop-contact').value = product.workshop_contact || '';
+  // 증상케어 제품인 경우
+  if (concept === 'symptom_care') {
+    document.getElementById('product-category').value = product.category;
+    
+    // 로컬 공방 정보
+    document.getElementById('workshop-name').value = product.workshop_name || '';
+    document.getElementById('workshop-location').value = product.workshop_location || '';
+    document.getElementById('workshop-address').value = product.workshop_address || '';
+    document.getElementById('workshop-contact').value = product.workshop_contact || '';
+  }
+  // 리프레시 제품인 경우
+  else if (concept === 'refresh') {
+    document.getElementById('refresh-type').value = product.refresh_type || '';
+    document.getElementById('product-volume').value = product.volume || '';
+  }
   
   // 이미지 URL 및 미리보기 설정
   if (product.thumbnail_image) {
@@ -329,22 +423,65 @@ async function handleFormSubmit(e) {
   const submitBtn = document.getElementById('submit-btn');
   const originalText = submitBtn.textContent;
   
+  // 제품 컨셉 확인
+  const concept = document.getElementById('product-concept').value;
+  if (!concept) {
+    alert('제품 컨셉을 선택해주세요.');
+    return;
+  }
+  
   // 폼 데이터 수집
   const productData = {
     name: document.getElementById('product-name').value.trim(),
     description: document.getElementById('product-description').value.trim(),
-    category: document.getElementById('product-category').value,
+    concept: concept,
     price: parseInt(document.getElementById('product-price').value),
     stock: parseInt(document.getElementById('product-stock').value),
     thumbnail_image: document.getElementById('thumbnail-image-url').value,
     detail_image: document.getElementById('detail-image-url').value,
-    is_active: document.getElementById('product-active').checked ? 1 : 0,
-    // 로컬 공방 정보
-    workshop_name: document.getElementById('workshop-name').value.trim() || null,
-    workshop_location: document.getElementById('workshop-location').value || null,
-    workshop_address: document.getElementById('workshop-address').value.trim() || null,
-    workshop_contact: document.getElementById('workshop-contact').value.trim() || null
+    is_active: document.getElementById('product-active').checked ? 1 : 0
   };
+  
+  // 증상케어 제품인 경우
+  if (concept === 'symptom_care') {
+    const category = document.getElementById('product-category').value;
+    if (!category) {
+      alert('증상 카테고리를 선택해주세요.');
+      return;
+    }
+    productData.category = category;
+    productData.refresh_type = null;
+    
+    // 로컬 공방 정보 (선택사항)
+    productData.workshop_name = document.getElementById('workshop-name').value.trim() || null;
+    productData.workshop_location = document.getElementById('workshop-location').value || null;
+    productData.workshop_address = document.getElementById('workshop-address').value.trim() || null;
+    productData.workshop_contact = document.getElementById('workshop-contact').value.trim() || null;
+  }
+  // 리프레시 제품인 경우
+  else if (concept === 'refresh') {
+    const refreshType = document.getElementById('refresh-type').value;
+    if (!refreshType) {
+      alert('리프레시 제품 유형을 선택해주세요.');
+      return;
+    }
+    
+    const volume = document.getElementById('product-volume').value;
+    if (!volume) {
+      alert('용량을 선택해주세요.');
+      return;
+    }
+    
+    productData.category = 'refresh'; // 리프레시 제품은 category를 'refresh'로 설정
+    productData.refresh_type = refreshType;
+    productData.volume = volume;
+    
+    // 리프레시 제품은 공방 정보 없음
+    productData.workshop_name = null;
+    productData.workshop_location = null;
+    productData.workshop_address = null;
+    productData.workshop_contact = null;
+  }
   
   // 유효성 검사
   if (!productData.name) {
