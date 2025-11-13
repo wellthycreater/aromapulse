@@ -1,7 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "aromapulse",
-  "main": "src/index.tsx",
   "compatibility_date": "2025-11-13",
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
@@ -14,11 +13,12 @@
   // D1 Database (SQLite)
   // 로컬 개발: --local 플래그 사용 시 자동으로 로컬 SQLite 생성
   // 프로덕션: wrangler d1 create로 database_id 생성 후 추가 필요
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "aromapulse-production",
-      "database_id": "placeholder" // 로컬 개발용 (--local 플래그 사용 시 무시됨)
-    }
-  ]
+  // 임시로 주석 처리 - API 토큰 권한 문제로 나중에 추가
+  // "d1_databases": [
+  //   {
+  //     "binding": "DB",
+  //     "database_name": "aromapulse-production",
+  //     "database_id": "placeholder"
+  //   }
+  // ]
 }
