@@ -6,7 +6,19 @@ const auth = new Hono<{ Bindings: Bindings }>();
 // 회원가입
 auth.post('/signup', async (c) => {
   try {
-    const { email, password, name, phone, user_type, b2c_stress_type, b2b_business_type, region, symptoms, interests, source } = await c.req.json();
+    const data = await c.req.json();
+    const { 
+      email, password, name, phone, 
+      user_type, region, age_group, gender, symptoms,
+      // B2C 일상 스트레스
+      b2c_stress_type, daily_stress_category,
+      // B2C 직무 스트레스
+      work_industry, work_position,
+      // B2B
+      b2b_business_type, b2b_independent_type,
+      b2b_company_name, b2b_company_size, b2b_department, b2b_position,
+      b2b_shop_name, b2b_shop_type, b2b_inquiry_type
+    } = data;
     
     // 이메일 중복 체크
     const existing = await c.env.DB.prepare(
@@ -19,30 +31,60 @@ auth.post('/signup', async (c) => {
     
     // 사용자 생성 (비밀번호는 실제로는 해싱 필요)
     const result = await c.env.DB.prepare(
-      `INSERT INTO users (email, password, name, phone, user_type, b2c_stress_type, b2b_business_type, region, symptoms, interests, source)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (
+        email, password, name, phone, user_type, region, age_group, gender, symptoms,
+        b2c_stress_type, daily_stress_category,
+        work_industry, work_position,
+        b2b_business_type, b2b_independent_type,
+        b2b_company_name, b2b_company_size, b2b_department, b2b_position,
+        b2b_shop_name, b2b_shop_type, b2b_inquiry_type
+      )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       email, 
-      password, // 실제로는 bcrypt 등으로 해싱 필요
+      password, // TODO: bcrypt 등으로 해싱 필요
       name, 
-      phone, 
+      phone || null,
       user_type,
-      b2c_stress_type || null,
-      b2b_business_type || null,
       region || null,
-      symptoms ? JSON.stringify(symptoms) : null,
-      interests ? JSON.stringify(interests) : null,
-      source || null
+      age_group || null,
+      gender || null,
+      symptoms || null,
+      // B2C
+      b2c_stress_type || null,
+      daily_stress_category || null,
+      work_industry || null,
+      work_position || null,
+      // B2B
+      b2b_business_type || null,
+      b2b_independent_type || null,
+      b2b_company_name || null,
+      b2b_company_size || null,
+      b2b_department || null,
+      b2b_position || null,
+      b2b_shop_name || null,
+      b2b_shop_type || null,
+      b2b_inquiry_type || null
     ).run();
+    
+    // 생성된 사용자 정보 조회
+    const userId = result.meta.last_row_id;
+    const user = await c.env.DB.prepare(
+      'SELECT id, email, name, user_type, b2c_stress_type, b2b_business_type FROM users WHERE id = ?'
+    ).bind(userId).first();
+    
+    // TODO: JWT 토큰 발급
+    const token = `temp_token_${userId}`; // 임시 토큰
     
     return c.json({ 
       message: '회원가입 성공',
-      user_id: result.meta.last_row_id 
+      token,
+      user
     }, 201);
     
   } catch (error) {
     console.error('Signup error:', error);
-    return c.json({ error: '회원가입 실패' }, 500);
+    return c.json({ error: '회원가입 실패', details: error.message }, 500);
   }
 });
 
