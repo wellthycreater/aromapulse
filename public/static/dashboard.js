@@ -66,6 +66,9 @@ async function loadB2CDashboard() {
     
     // 추천 워크샵 로드
     await loadRecommendedWorkshops();
+    
+    // 활동 통계 로드
+    await loadActivityStats();
 }
 
 // B2B 대시보드 로드
@@ -394,6 +397,62 @@ function editWorkshop(id) {
 
 function viewWorkshop(id) {
     window.location.href = `/workshop/${id}`;
+}
+
+// 활동 통계 로드 (B2C)
+async function loadActivityStats() {
+    try {
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch('/api/activity/stats', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('활동 통계를 불러올 수 없습니다');
+        }
+        
+        const stats = await response.json();
+        
+        // 활동 타입별 카운트 표시
+        const activityCounts = {};
+        stats.activity_counts.forEach(item => {
+            activityCounts[item.activity_type] = item.count;
+        });
+        
+        document.getElementById('view-count').textContent = activityCounts['view'] || 0;
+        document.getElementById('search-count').textContent = activityCounts['search'] || 0;
+        document.getElementById('filter-count').textContent = activityCounts['filter'] || 0;
+        document.getElementById('click-count').textContent = activityCounts['click'] || 0;
+        
+        // 최근 검색 키워드 표시
+        if (stats.search_keywords && stats.search_keywords.length > 0) {
+            const keywordsHtml = stats.search_keywords
+                .filter(item => item.keyword)
+                .map(item => `
+                    <span class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm">
+                        ${escapeHtml(item.keyword)} (${item.count})
+                    </span>
+                `).join('');
+            
+            if (keywordsHtml) {
+                document.getElementById('recent-searches').innerHTML = keywordsHtml;
+            }
+        }
+        
+    } catch (error) {
+        console.error('활동 통계 로드 오류:', error);
+        // 통계 로드 실패해도 대시보드는 계속 표시
+    }
+}
+
+// HTML 이스케이프 (XSS 방지)
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // 로그아웃

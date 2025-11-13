@@ -78,6 +78,9 @@ async function loadWorkshopDetails() {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('main-content').style.display = 'block';
         
+        // 워크샵 조회 트래킹
+        trackWorkshopView(workshopId);
+        
     } catch (error) {
         console.error('워크샵 로드 오류:', error);
         alert('워크샵 정보를 불러올 수 없습니다');
@@ -207,6 +210,9 @@ document.getElementById('booking-form').addEventListener('submit', async (e) => 
         if (!response.ok) {
             throw new Error(data.error || '예약 신청에 실패했습니다');
         }
+        
+        // 예약 완료 트래킹
+        trackBookingComplete(workshopId, data.id);
         
         // Show success modal
         document.getElementById('success-modal').style.display = 'flex';
@@ -445,6 +451,11 @@ document.getElementById('review-submit-form').addEventListener('submit', async (
         
         if (!response.ok) {
             throw new Error(data.error || '리뷰 등록에 실패했습니다');
+        }
+        
+        // 리뷰 작성 트래킹
+        if (!editingReviewId) {
+            trackReviewWrite(workshopId, rating);
         }
         
         // Reset form and reload reviews

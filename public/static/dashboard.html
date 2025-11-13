@@ -90,10 +90,50 @@
                 </div>
             </div>
 
+            <!-- 나의 활동 통계 -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-line text-teal-600 mr-2"></i>나의 활동 통계
+                </h2>
+                <div id="activity-stats" class="grid md:grid-cols-4 gap-4">
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <i class="fas fa-eye text-teal-600 text-2xl mb-2"></i>
+                        <p class="text-2xl font-bold text-gray-800" id="view-count">0</p>
+                        <p class="text-sm text-gray-600">조회</p>
+                    </div>
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <i class="fas fa-search text-blue-600 text-2xl mb-2"></i>
+                        <p class="text-2xl font-bold text-gray-800" id="search-count">0</p>
+                        <p class="text-sm text-gray-600">검색</p>
+                    </div>
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <i class="fas fa-filter text-purple-600 text-2xl mb-2"></i>
+                        <p class="text-2xl font-bold text-gray-800" id="filter-count">0</p>
+                        <p class="text-sm text-gray-600">필터</p>
+                    </div>
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <i class="fas fa-mouse-pointer text-orange-600 text-2xl mb-2"></i>
+                        <p class="text-2xl font-bold text-gray-800" id="click-count">0</p>
+                        <p class="text-sm text-gray-600">클릭</p>
+                    </div>
+                </div>
+                
+                <!-- 최근 검색 키워드 -->
+                <div class="mt-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-clock text-gray-500 mr-2"></i>최근 검색 키워드
+                    </h3>
+                    <div id="recent-searches" class="flex flex-wrap gap-2">
+                        <p class="text-gray-500 text-sm">검색 기록이 없습니다</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- 추천 워크샵 -->
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>추천 워크샵
+                    <span class="text-sm font-normal text-gray-500 ml-2">내 관심사 기반</span>
                 </h2>
                 <div id="recommended-workshops" class="grid md:grid-cols-3 gap-4">
                     <p class="text-gray-500 text-center py-8 col-span-3">추천 워크샵을 불러오는 중...</p>

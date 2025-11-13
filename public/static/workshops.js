@@ -8,6 +8,9 @@ let currentPriceFilter = 'all';
 window.addEventListener('DOMContentLoaded', async () => {
     checkAuth();
     await loadWorkshops();
+    
+    // 페이지 뷰 트래킹
+    trackPageView('workshops_list');
 });
 
 // 인증 확인
@@ -120,6 +123,11 @@ function searchWorkshops() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
     const category = document.getElementById('category-filter').value;
     
+    // 검색 트래킹
+    if (searchTerm) {
+        trackSearch(searchTerm, category);
+    }
+    
     filteredWorkshops = allWorkshops.filter(workshop => {
         const matchesSearch = !searchTerm || 
             workshop.title.toLowerCase().includes(searchTerm) ||
@@ -145,6 +153,9 @@ function filterByPrice(range) {
         chip.classList.remove('active');
     });
     event.target.classList.add('active');
+    
+    // 필터 트래킹
+    trackFilter('price', range);
     
     searchWorkshops();
 }

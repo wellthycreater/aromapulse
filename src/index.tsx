@@ -13,6 +13,7 @@ import blogRoutes from './routes/blog';
 import workshopsRoutes from './routes/workshops';
 import bookingsRoutes from './routes/bookings';
 import reviewsApiRoutes from './routes/reviews_api';
+import activityRoutes from './routes/activity';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -32,6 +33,7 @@ app.route('/api/blog', blogRoutes);
 app.route('/api/workshops', workshopsRoutes);
 app.route('/api/bookings', bookingsRoutes);
 app.route('/api/reviews-api', reviewsApiRoutes);
+app.route('/api/activity', activityRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
