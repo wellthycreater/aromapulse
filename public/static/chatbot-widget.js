@@ -53,8 +53,20 @@ function toggleChatbot() {
       startSession();
     }
   } else {
-    chatbotWindow.classList.remove('show');
-    chatbotBtn.classList.remove('active');
+    // 닫을 때 확인 메시지
+    const confirmed = confirm('상담을 종료하시겠습니까?');
+    if (confirmed) {
+      chatbotWindow.classList.remove('show');
+      chatbotBtn.classList.remove('active');
+      
+      // 종료 메시지
+      addBotMessage('상담을 종료합니다. 감사합니다! 🙏\n\n궁금한 점이 있으시면 언제든지 다시 방문해주세요.');
+      
+      // 세션 정보는 유지 (재방문 시 이어서 대화 가능)
+    } else {
+      // 취소하면 열린 상태 유지
+      isOpen = true;
+    }
   }
 }
 
@@ -229,14 +241,51 @@ function showUserTypeBadge(userType, confidence) {
   messagesContainer.appendChild(badgeDiv);
   scrollToBottom();
   
-  // 회원가입 추천 메시지
+  // 회원가입 추천 메시지 + 링크
   setTimeout(() => {
     const signupUrl = userType === 'B2B' 
       ? 'https://www.aromapulse.kr/signup?type=B2B'
       : 'https://www.aromapulse.kr/signup?type=B2C';
     
-    addBotMessage(`회원가입하시면 더 많은 혜택을 받으실 수 있어요! 지금 가입하시겠어요?\n\n👉 ${signupUrl}`);
+    const signupMessage = document.createElement('div');
+    signupMessage.className = 'message bot';
+    signupMessage.innerHTML = `
+      <div class="message-avatar">🤖</div>
+      <div class="message-content">
+        <div class="message-bubble">
+          회원가입하시면 더 많은 혜택을 받으실 수 있어요! 지금 가입하시겠어요?
+          <br><br>
+          <a href="${signupUrl}" target="_blank" 
+             onclick="trackConversion('${userType}')"
+             style="display:inline-block;background:white;color:#667eea;padding:8px 16px;border-radius:20px;text-decoration:none;font-weight:600;margin-top:8px;">
+            💜 ${userType === 'B2B' ? 'B2B' : 'B2C'} 회원가입하기
+          </a>
+        </div>
+        <div class="message-time">${getCurrentTime()}</div>
+      </div>
+    `;
+    
+    messagesContainer.appendChild(signupMessage);
+    scrollToBottom();
   }, 2000);
+}
+
+// 회원가입 전환 추적
+async function trackConversion(userType) {
+  try {
+    await fetch(`${CHATBOT_API_URL}/track-conversion`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        user_type: userType
+      })
+    });
+  } catch (error) {
+    console.error('전환 추적 오류:', error);
+  }
 }
 
 // 스크롤 하단으로

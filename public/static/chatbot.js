@@ -34,12 +34,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // 회원가입 버튼
   document.getElementById('signup-btn').addEventListener('click', () => {
+    trackConversion(); // 전환 추적
     if (detectedUserType === 'B2B') {
       window.location.href = 'https://www.aromapulse.kr/signup?type=B2B';
     } else {
       window.location.href = 'https://www.aromapulse.kr/signup?type=B2C';
     }
   });
+  
+  // 상담 종료 버튼
+  document.getElementById('exit-chat-btn').addEventListener('click', exitChat);
 });
 
 // 새 세션 시작
@@ -126,6 +130,11 @@ async function sendMessage() {
     const messageCount = document.querySelectorAll('.message-user').length;
     if (messageCount >= 3) {
       predictBehavior();
+    }
+    
+    // 회원가입 프롬프트 (5번째 메시지 이후)
+    if (messageCount >= 5 && detectedUserType !== 'unknown') {
+      setTimeout(showSignupPrompt, 3000);
     }
     
   } catch (error) {
@@ -316,6 +325,59 @@ async function predictBehavior() {
     
   } catch (error) {
     console.error('행동 예측 오류:', error);
+  }
+}
+
+// 상담 종료
+function exitChat() {
+  const confirmed = confirm('상담을 종료하시겠습니까?\n\n다음에 다시 방문하시면 처음부터 시작됩니다.');
+  
+  if (confirmed) {
+    // 세션 정보 삭제
+    localStorage.removeItem('chatbot_session_id');
+    localStorage.removeItem('visitor_id');
+    
+    // 종료 메시지 표시
+    addMessage('bot', '상담을 종료합니다. 감사합니다! 🙏\n\n궁금한 점이 있으시면 언제든지 다시 방문해주세요.\n\n💜 www.aromapulse.kr');
+    
+    // 입력 비활성화
+    document.getElementById('message-input').disabled = true;
+    document.getElementById('send-btn').disabled = true;
+    
+    // 3초 후 홈으로 이동
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 3000);
+  }
+}
+
+// 회원가입 전환 추적
+async function trackConversion() {
+  try {
+    await fetch('/api/chatbot/track-conversion', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        user_type: detectedUserType
+      })
+    });
+  } catch (error) {
+    console.error('전환 추적 오류:', error);
+  }
+}
+
+// 회원가입 프롬프트 표시 (5번째 메시지 이후 자동)
+function showSignupPrompt() {
+  const badge = document.getElementById('user-type-badge');
+  if (badge.style.display !== 'none') {
+    // 이미 표시 중이면 하이라이트 효과
+    badge.classList.add('animate-pulse');
+    setTimeout(() => {
+      badge.classList.remove('animate-pulse');
+    }, 2000);
   }
 }
 

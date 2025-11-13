@@ -373,15 +373,10 @@ npm run db:migrate:prod
 ---
 
 **Last Updated**: 2025-11-13
-**Version**: 1.0.0 (Lean MVP)
+**Version**: 1.1.0 (AI Chatbot with Signup Flow)
 **Status**: ✅ Cloudflare Pages 배포 완료
 **Production URL**: https://aromapulse.pages.dev
-
-   - 의도 (관심/문의/체험후기/구매의향)
-
-5. **행동 추적**
-   - 유입 경로 (블로그, 인스타, 카페 등)
-   - 전환율 측정 (리뷰 → 설문 → 패치 신청)
+**Domain**: www.aromapulse.kr
 
 ## 🔮 AI 확장 계획 (향후)
 
@@ -410,19 +405,15 @@ npm run db:migrate:prod
 - **블로그**: https://blog.naver.com/aromapulse
 - **이메일**: admin@aromapulse.co.kr (예정)
 
----
-
-**Last Updated**: 2025-11-13
-**Version**: 1.0.0 (Lean MVP)
-**Status**: ✅ Cloudflare Pages 배포 완료
-**Production URL**: https://aromapulse.pages.dev
-
 ### 챗봇 (Chatbot) 🤖
 - `POST /api/chatbot/session/start` - 새 챗봇 세션 시작
 - `POST /api/chatbot/message` - 메시지 전송 및 AI 응답
 - `GET /api/chatbot/session/:id/messages` - 대화 내역 조회
 - `POST /api/chatbot/predict-behavior` - 사용자 행동 예측
 - `POST /api/chatbot/update-interest-profile` - 관심사 프로필 업데이트
+- `POST /api/chatbot/track-conversion` - 회원가입 전환 추적 (클릭 시점)
+- `POST /api/chatbot/track-signup-conversion` - 회원가입 완료 추적
+- `GET /api/chatbot/conversion-stats` - 전환율 통계 조회
 
 ### 블로그 리뷰 분석 (Blog Reviews) 📊
 - `POST /api/blog-reviews/posts` - 블로그 포스트 등록
@@ -447,6 +438,8 @@ npm run db:migrate:prod
    - Intent/Sentiment/Entity 분석
    - 행동 예측 및 제품 추천
    - 프로덕션 도메인 연동 (www.aromapulse.kr)
+   - **회원가입 유도 플로우 추가** ✅
+   - **상담 종료 기능** ✅
 
 2. **블로그 리뷰 분석 시스템**
    - 네이버 블로그 댓글 수집 및 AI 분석
@@ -468,4 +461,26 @@ npm run db:migrate:prod
 - **챗봇 회원가입 유도**: B2B → www.aromapulse.kr/signup?type=B2B
 - **챗봇 회원가입 유도**: B2C → www.aromapulse.kr/signup?type=B2C
 - **모든 블로그 버튼 링크**: 프로덕션 도메인으로 업데이트 완료 ✅
+
+### 🤖 AI 챗봇 회원가입 플로우
+
+**사용자 여정**:
+1. 블로그 또는 사이트에서 챗봇 시작
+2. AI가 대화를 통해 사용자 타입 자동 감지 (B2B/B2C)
+3. 구매/서비스 의도 감지 시 **회원가입 혜택 자동 안내**:
+   - **B2C**: 첫 구매 10% 할인 + 적립금 5% + 무료 배송
+   - **B2B**: 대량 구매 20% 할인 + 전담 매니저 + 샘플 무료 제공
+4. 사용자 선택:
+   - **서비스 이용 원함** → 회원가입 페이지로 이동 (전환 추적)
+   - **이용 안 함** → 상담 종료 버튼 클릭하여 나가기
+
+**전환 추적**:
+- 회원가입 버튼 클릭 시 `is_converted` 플래그 자동 업데이트
+- B2B/B2C별 전환율 통계 제공
+- 대시보드에서 실시간 전환율 모니터링 가능
+
+**구현 위치**:
+- 챗봇 페이지: `/chatbot` (https://www.aromapulse.kr/chatbot)
+- 위젯 임베드: `/static/chatbot-widget.html`
+- 블로그 버튼: `/static/blog-button-generator`
 

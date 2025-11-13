@@ -445,27 +445,54 @@ chatbot.post('/update-interest-profile', async (c) => {
     }
     
     // 프로필 업데이트 또는 생성
-    await c.env.DB.prepare(`
-      INSERT INTO user_interest_profiles (
-        user_id, visitor_id, insomnia_score, depression_score, anxiety_score,
-        stress_score, fatigue_score, last_interaction_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(user_id) DO UPDATE SET
-        insomnia_score = excluded.insomnia_score,
-        depression_score = excluded.depression_score,
-        anxiety_score = excluded.anxiety_score,
-        stress_score = excluded.stress_score,
-        fatigue_score = excluded.fatigue_score,
-        last_interaction_at = CURRENT_TIMESTAMP
-    `).bind(
-      session.user_id,
-      session.visitor_id,
-      scores.insomnia,
-      scores.depression,
-      scores.anxiety,
-      scores.stress,
-      scores.fatigue
-    ).run()
+    // user_id나 visitor_id 중 하나라도 존재하면 업데이트
+    if (session.user_id) {
+      // 로그인한 사용자
+      await c.env.DB.prepare(`
+        INSERT INTO user_interest_profiles (
+          user_id, visitor_id, insomnia_score, depression_score, anxiety_score,
+          stress_score, fatigue_score, last_interaction_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id) DO UPDATE SET
+          insomnia_score = excluded.insomnia_score,
+          depression_score = excluded.depression_score,
+          anxiety_score = excluded.anxiety_score,
+          stress_score = excluded.stress_score,
+          fatigue_score = excluded.fatigue_score,
+          last_interaction_at = CURRENT_TIMESTAMP
+      `).bind(
+        session.user_id,
+        session.visitor_id,
+        scores.insomnia,
+        scores.depression,
+        scores.anxiety,
+        scores.stress,
+        scores.fatigue
+      ).run()
+    } else {
+      // 비로그인 사용자 (visitor_id 기반)
+      await c.env.DB.prepare(`
+        INSERT INTO user_interest_profiles (
+          user_id, visitor_id, insomnia_score, depression_score, anxiety_score,
+          stress_score, fatigue_score, last_interaction_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(visitor_id) DO UPDATE SET
+          insomnia_score = excluded.insomnia_score,
+          depression_score = excluded.depression_score,
+          anxiety_score = excluded.anxiety_score,
+          stress_score = excluded.stress_score,
+          fatigue_score = excluded.fatigue_score,
+          last_interaction_at = CURRENT_TIMESTAMP
+      `).bind(
+        null,
+        session.visitor_id,
+        scores.insomnia,
+        scores.depression,
+        scores.anxiety,
+        scores.stress,
+        scores.fatigue
+      ).run()
+    }
     
     return c.json({
       message: '관심사 프로필이 업데이트되었습니다',
@@ -474,6 +501,146 @@ chatbot.post('/update-interest-profile', async (c) => {
   } catch (error) {
     console.error('프로필 업데이트 실패:', error)
     return c.json({ error: '프로필 업데이트 실패' }, 500)
+  }
+})
+
+// 회원가입 전환 추적 (클릭 시점)
+chatbot.post('/track-conversion', async (c) => {
+  const { session_id, user_type } = await c.req.json()
+  
+  try {
+    const session = await c.env.DB.prepare(`
+      SELECT * FROM chatbot_sessions WHERE session_id = ?
+    `).bind(session_id).first()
+    
+    if (!session) {
+      return c.json({ error: '세션을 찾을 수 없습니다' }, 404)
+    }
+    
+    // 전환 의도 기록 (클릭 추적)
+    await c.env.DB.prepare(`
+      UPDATE chatbot_sessions
+      SET is_converted = 1
+      WHERE id = ?
+    `).bind(session.id).run()
+    
+    return c.json({
+      success: true,
+      message: '회원가입 전환이 기록되었습니다',
+      redirect_url: user_type === 'B2B' 
+        ? 'https://www.aromapulse.kr/signup?type=B2B'
+        : 'https://www.aromapulse.kr/signup?type=B2C'
+    })
+  } catch (error) {
+    console.error('전환 추적 실패:', error)
+    return c.json({ error: '전환 추적 실패' }, 500)
+  }
+})
+
+// 회원가입 전환 추적 (실제 가입 완료 시)
+chatbot.post('/track-signup-conversion', async (c) => {
+  const { session_id, visitor_id, signup_type } = await c.req.json()
+  
+  try {
+    // 세션 조회
+    let session = null
+    if (session_id) {
+      session = await c.env.DB.prepare(`
+        SELECT * FROM chatbot_sessions WHERE session_id = ?
+      `).bind(session_id).first()
+    } else if (visitor_id) {
+      // visitor_id로도 조회 가능
+      session = await c.env.DB.prepare(`
+        SELECT * FROM chatbot_sessions WHERE visitor_id = ? ORDER BY created_at DESC LIMIT 1
+      `).bind(visitor_id).first()
+    }
+    
+    if (!session) {
+      return c.json({ error: '세션을 찾을 수 없습니다' }, 404)
+    }
+    
+    // 전환 플래그 업데이트
+    await c.env.DB.prepare(`
+      UPDATE chatbot_sessions
+      SET is_converted = 1, converted_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(session.id).run()
+    
+    return c.json({
+      success: true,
+      message: '회원가입 전환이 기록되었습니다',
+      session_id: session.session_id,
+      detected_user_type: session.detected_user_type,
+      signup_type: signup_type
+    })
+  } catch (error) {
+    console.error('전환 추적 실패:', error)
+    return c.json({ error: '전환 추적 실패' }, 500)
+  }
+})
+
+// 회원가입 전환율 통계 조회
+chatbot.get('/conversion-stats', async (c) => {
+  try {
+    // 전체 세션 수
+    const totalSessions = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM chatbot_sessions
+    `).first()
+    
+    // 전환된 세션 수
+    const convertedSessions = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM chatbot_sessions WHERE is_converted = 1
+    `).first()
+    
+    // B2B/B2C 별 전환율
+    const b2bStats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(is_converted) as converted
+      FROM chatbot_sessions
+      WHERE detected_user_type = 'B2B'
+    `).first()
+    
+    const b2cStats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(is_converted) as converted
+      FROM chatbot_sessions
+      WHERE detected_user_type = 'B2C'
+    `).first()
+    
+    const totalCount = (totalSessions as any).count || 0
+    const convertedCount = (convertedSessions as any).count || 0
+    const conversionRate = totalCount > 0 ? (convertedCount / totalCount * 100).toFixed(2) : '0.00'
+    
+    const b2bTotal = (b2bStats as any)?.total || 0
+    const b2bConverted = (b2bStats as any)?.converted || 0
+    const b2bRate = b2bTotal > 0 ? (b2bConverted / b2bTotal * 100).toFixed(2) : '0.00'
+    
+    const b2cTotal = (b2cStats as any)?.total || 0
+    const b2cConverted = (b2cStats as any)?.converted || 0
+    const b2cRate = b2cTotal > 0 ? (b2cConverted / b2cTotal * 100).toFixed(2) : '0.00'
+    
+    return c.json({
+      overall: {
+        total_sessions: totalCount,
+        converted_sessions: convertedCount,
+        conversion_rate: conversionRate + '%'
+      },
+      b2b: {
+        total_sessions: b2bTotal,
+        converted_sessions: b2bConverted,
+        conversion_rate: b2bRate + '%'
+      },
+      b2c: {
+        total_sessions: b2cTotal,
+        converted_sessions: b2cConverted,
+        conversion_rate: b2cRate + '%'
+      }
+    })
+  } catch (error) {
+    console.error('통계 조회 실패:', error)
+    return c.json({ error: '통계 조회 실패' }, 500)
   }
 })
 
