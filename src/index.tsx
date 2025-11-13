@@ -47,6 +47,7 @@ app.get('/', (c) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>아로마펄스 - 향기로운 스트레스 케어</title>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
@@ -56,7 +57,7 @@ app.get('/', (c) => {
             <nav class="container mx-auto px-4 py-4">
                 <div class="flex justify-between items-center">
                     <a href="/" class="flex items-center space-x-2">
-                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-20">
                     </a>
                     <div class="hidden md:flex space-x-6">
                         <a href="#symptom-care" class="text-gray-700 hover:text-purple-600">증상케어</a>
