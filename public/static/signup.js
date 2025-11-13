@@ -383,8 +383,8 @@ async function submitSignup() {
                 localStorage.setItem('token', result.token);
                 localStorage.setItem('user', JSON.stringify(result.user));
             }
-            // 로그인 페이지 또는 홈으로 이동
-            window.location.href = '/';
+            // 대시보드로 이동
+            window.location.href = '/dashboard';
         } else {
             alert(result.error || '회원가입에 실패했습니다.');
         }

@@ -10,6 +10,9 @@ import reviewRoutes from './routes/reviews';
 import patchRoutes from './routes/patch';
 import adminRoutes from './routes/admin';
 import blogRoutes from './routes/blog';
+import workshopsRoutes from './routes/workshops';
+import bookingsRoutes from './routes/bookings';
+import reviewsApiRoutes from './routes/reviews_api';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -26,6 +29,9 @@ app.route('/api/reviews', reviewRoutes);
 app.route('/api/patch', patchRoutes);
 app.route('/api/admin', adminRoutes);
 app.route('/api/blog', blogRoutes);
+app.route('/api/workshops', workshopsRoutes);
+app.route('/api/bookings', bookingsRoutes);
+app.route('/api/reviews-api', reviewsApiRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
@@ -81,6 +87,9 @@ app.get('/login', (c) => c.redirect('/static/login.html'));
 
 // Signup page - redirect to static file  
 app.get('/signup', (c) => c.redirect('/static/signup.html'));
+
+// Dashboard page - redirect to static file
+app.get('/dashboard', (c) => c.redirect('/static/dashboard.html'));
 
 // Home page
 app.get('/', (c) => {
