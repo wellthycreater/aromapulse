@@ -2,6 +2,8 @@
 // 관리자 제품 관리 시스템
 
 let currentProducts = [];
+let filteredProducts = [];
+let currentTab = 'all';
 let isEditing = false;
 let editingProductId = null;
 
@@ -23,6 +25,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// 탭 전환
+function switchTab(tab) {
+  currentTab = tab;
+  
+  // 탭 버튼 스타일 업데이트
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.classList.remove('active', 'border-purple-600', 'text-purple-600');
+    btn.classList.add('border-transparent', 'text-gray-500');
+  });
+  
+  const activeTab = document.getElementById(`tab-${tab}`);
+  activeTab.classList.add('active', 'border-purple-600', 'text-purple-600');
+  activeTab.classList.remove('border-transparent', 'text-gray-500');
+  
+  // 제품 필터링 및 렌더링
+  filterAndRenderProducts();
+}
+
+// 제품 필터링 및 렌더링
+function filterAndRenderProducts() {
+  const gridEl = document.getElementById('products-grid');
+  gridEl.innerHTML = '';
+  
+  // 탭에 따라 제품 필터링
+  if (currentTab === 'all') {
+    filteredProducts = currentProducts;
+  } else if (currentTab === 'symptom_care') {
+    filteredProducts = currentProducts.filter(p => p.concept === 'symptom_care');
+  } else if (currentTab === 'refresh') {
+    filteredProducts = currentProducts.filter(p => p.concept === 'refresh');
+  }
+  
+  // 빈 상태 확인
+  if (filteredProducts.length === 0) {
+    gridEl.innerHTML = `
+      <div class="col-span-full text-center py-12 text-gray-500">
+        <i class="fas fa-box-open text-6xl mb-4"></i>
+        <p class="text-lg">이 카테고리에 등록된 제품이 없습니다.</p>
+        <p class="text-sm mt-2">상단의 "제품 등록" 버튼을 클릭하여 제품을 등록해보세요.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // 제품 카드 렌더링
+  filteredProducts.forEach(product => {
+    const card = createProductCard(product);
+    gridEl.appendChild(card);
+  });
+}
+
+// 제품 개수 업데이트
+function updateProductCounts() {
+  const allCount = currentProducts.length;
+  const symptomCareCount = currentProducts.filter(p => p.concept === 'symptom_care').length;
+  const refreshCount = currentProducts.filter(p => p.concept === 'refresh').length;
+  
+  document.getElementById('count-all').textContent = allCount;
+  document.getElementById('count-symptom-care').textContent = symptomCareCount;
+  document.getElementById('count-refresh').textContent = refreshCount;
+}
 
 // 제품 컨셉 변경 시 필드 토글
 function toggleProductFields() {
@@ -147,22 +211,11 @@ async function loadProducts() {
     
     loadingEl.style.display = 'none';
     
-    if (currentProducts.length === 0) {
-      gridEl.innerHTML = `
-        <div class="col-span-full text-center py-12 text-gray-500">
-          <i class="fas fa-box-open text-6xl mb-4"></i>
-          <p class="text-lg">등록된 제품이 없습니다.</p>
-          <p class="text-sm mt-2">상단의 "제품 등록" 버튼을 클릭하여 첫 제품을 등록해보세요.</p>
-        </div>
-      `;
-      return;
-    }
+    // 제품 개수 업데이트
+    updateProductCounts();
     
-    // 제품 카드 렌더링
-    currentProducts.forEach(product => {
-      const card = createProductCard(product);
-      gridEl.appendChild(card);
-    });
+    // 제품 필터링 및 렌더링
+    filterAndRenderProducts();
     
   } catch (error) {
     console.error('제품 로드 오류:', error);

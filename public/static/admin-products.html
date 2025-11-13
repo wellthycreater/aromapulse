@@ -36,10 +36,25 @@
     <div class="container mx-auto px-4 py-8">
         <!-- 액션 버튼 -->
         <div class="mb-6 flex justify-between items-center">
-            <h2 class="text-xl font-bold text-gray-800">증상케어 제품 목록</h2>
+            <h2 class="text-xl font-bold text-gray-800">제품 관리</h2>
             <button onclick="openNewProductModal()" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
                 <i class="fas fa-plus mr-2"></i>제품 등록
             </button>
+        </div>
+
+        <!-- 탭 메뉴 -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="flex space-x-8">
+                <button onclick="switchTab('all')" id="tab-all" class="tab-button active pb-4 px-1 border-b-2 border-purple-600 font-semibold text-purple-600">
+                    <i class="fas fa-box mr-2"></i>전체 (<span id="count-all">0</span>)
+                </button>
+                <button onclick="switchTab('symptom_care')" id="tab-symptom-care" class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-heart-pulse mr-2"></i>증상케어 (<span id="count-symptom-care">0</span>)
+                </button>
+                <button onclick="switchTab('refresh')" id="tab-refresh" class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-spray-can mr-2"></i>리프레시 (<span id="count-refresh">0</span>)
+                </button>
+            </nav>
         </div>
 
         <!-- 제품 목록 -->
