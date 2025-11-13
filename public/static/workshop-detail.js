@@ -230,6 +230,301 @@ function closeSuccessModal() {
 // Listen to participants input change
 document.getElementById('participants').addEventListener('change', updateTotalPrice);
 
+// ========== Review Functions ==========
+
+let currentRating = 0;
+let editingReviewId = null;
+
+// Toggle review form
+function toggleReviewForm() {
+    const form = document.getElementById('review-form');
+    const isHidden = form.style.display === 'none';
+    form.style.display = isHidden ? 'block' : 'none';
+    
+    if (!isHidden) {
+        // Reset form when hiding
+        document.getElementById('review-submit-form').reset();
+        setRating(0);
+        editingReviewId = null;
+    }
+}
+
+// Set star rating
+function setRating(rating) {
+    currentRating = rating;
+    document.getElementById('rating-input').value = rating;
+    
+    // Update star colors
+    const starBtns = document.querySelectorAll('.star-btn');
+    starBtns.forEach((btn, index) => {
+        if (index < rating) {
+            btn.classList.remove('text-gray-300');
+            btn.classList.add('text-yellow-500');
+        } else {
+            btn.classList.remove('text-yellow-500');
+            btn.classList.add('text-gray-300');
+        }
+    });
+}
+
+// Load reviews for this workshop
+async function loadReviews() {
+    try {
+        document.getElementById('reviews-loading').style.display = 'block';
+        document.getElementById('reviews-empty').style.display = 'none';
+        
+        const response = await fetch(`/api/reviews-api/workshop/${workshopId}`);
+        
+        if (!response.ok) {
+            throw new Error('리뷰를 불러올 수 없습니다');
+        }
+
+        const reviews = await response.json();
+        
+        document.getElementById('reviews-loading').style.display = 'none';
+        
+        if (reviews.length === 0) {
+            document.getElementById('reviews-empty').style.display = 'block';
+            document.getElementById('reviews-list').innerHTML = '';
+            document.getElementById('review-count').textContent = '(0)';
+            document.getElementById('rating-number').textContent = '0.0';
+            renderAverageStars(0);
+            return;
+        }
+        
+        // Calculate average rating
+        const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        document.getElementById('review-count').textContent = `(${reviews.length})`;
+        document.getElementById('rating-number').textContent = avgRating.toFixed(1);
+        renderAverageStars(avgRating);
+        
+        // Render reviews
+        renderReviews(reviews);
+        
+    } catch (error) {
+        console.error('리뷰 로드 오류:', error);
+        document.getElementById('reviews-loading').style.display = 'none';
+        document.getElementById('reviews-empty').style.display = 'block';
+    }
+}
+
+// Render average stars
+function renderAverageStars(rating) {
+    const container = document.getElementById('average-stars');
+    container.innerHTML = '';
+    
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('i');
+        star.className = 'fas fa-star text-xl';
+        
+        if (i <= Math.floor(rating)) {
+            star.classList.add('text-yellow-500');
+        } else if (i === Math.ceil(rating) && rating % 1 !== 0) {
+            star.className = 'fas fa-star-half-alt text-xl text-yellow-500';
+        } else {
+            star.classList.add('text-gray-300');
+        }
+        
+        container.appendChild(star);
+    }
+}
+
+// Render reviews list
+function renderReviews(reviews) {
+    const container = document.getElementById('reviews-list');
+    const token = localStorage.getItem('token');
+    let currentUserId = null;
+    
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            currentUserId = payload.userId;
+        } catch (e) {
+            console.error('Token parse error:', e);
+        }
+    }
+    
+    container.innerHTML = reviews.map(review => {
+        const isMyReview = currentUserId && review.user_id === currentUserId;
+        const date = new Date(review.created_at).toLocaleDateString('ko-KR');
+        
+        return `
+            <div class="border-b pb-4">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="font-semibold text-gray-800">${review.user_name || '익명'}</span>
+                            <div class="flex">
+                                ${generateStars(review.rating)}
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500">${date}</p>
+                    </div>
+                    ${isMyReview ? `
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="editReview(${review.id}, ${review.rating}, '${escapeHtml(review.comment)}')"
+                                class="text-sm text-teal-600 hover:text-teal-700"
+                            >
+                                <i class="fas fa-edit"></i> 수정
+                            </button>
+                            <button 
+                                onclick="deleteReview(${review.id})"
+                                class="text-sm text-red-600 hover:text-red-700"
+                            >
+                                <i class="fas fa-trash"></i> 삭제
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+                <p class="text-gray-700">${escapeHtml(review.comment)}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+// Generate star HTML
+function generateStars(rating) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            html += '<i class="fas fa-star text-yellow-500 text-sm"></i>';
+        } else {
+            html += '<i class="fas fa-star text-gray-300 text-sm"></i>';
+        }
+    }
+    return html;
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Submit review
+document.getElementById('review-submit-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('로그인이 필요합니다');
+        window.location.href = '/login';
+        return;
+    }
+    
+    const rating = parseInt(document.getElementById('rating-input').value);
+    const comment = document.getElementById('comment-input').value;
+    
+    if (rating === 0) {
+        alert('별점을 선택해주세요');
+        return;
+    }
+    
+    try {
+        const method = editingReviewId ? 'PUT' : 'POST';
+        const url = editingReviewId ? 
+            `/api/reviews-api/${editingReviewId}` : 
+            '/api/reviews-api';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                workshop_id: workshopId,
+                rating: rating,
+                comment: comment
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || '리뷰 등록에 실패했습니다');
+        }
+        
+        // Reset form and reload reviews
+        toggleReviewForm();
+        await loadReviews();
+        
+        alert(editingReviewId ? '리뷰가 수정되었습니다' : '리뷰가 등록되었습니다');
+        
+    } catch (error) {
+        console.error('리뷰 등록 오류:', error);
+        alert(error.message);
+    }
+});
+
+// Edit review
+function editReview(id, rating, comment) {
+    editingReviewId = id;
+    
+    // Show form
+    document.getElementById('review-form').style.display = 'block';
+    
+    // Set values
+    setRating(rating);
+    document.getElementById('comment-input').value = comment;
+    
+    // Scroll to form
+    document.getElementById('review-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Delete review
+async function deleteReview(id) {
+    if (!confirm('정말 이 리뷰를 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('로그인이 필요합니다');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/reviews-api/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || '리뷰 삭제에 실패했습니다');
+        }
+        
+        await loadReviews();
+        alert('리뷰가 삭제되었습니다');
+        
+    } catch (error) {
+        console.error('리뷰 삭제 오류:', error);
+        alert(error.message);
+    }
+}
+
+// Check if user can write review (only show for logged in B2C users)
+function checkReviewPermission() {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+        const userData = JSON.parse(user);
+        // Only B2C users can write reviews
+        if (userData.user_type === 'B2C') {
+            document.getElementById('write-review-section').style.display = 'block';
+        }
+    }
+}
+
 // Initialize
 checkAuth();
+checkReviewPermission();
 loadWorkshopDetails();
+loadReviews();

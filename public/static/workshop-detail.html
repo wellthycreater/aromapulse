@@ -113,6 +113,97 @@
                         로딩 중...
                     </div>
                 </div>
+
+                <!-- Reviews Section -->
+                <div class="bg-white rounded-lg p-6 shadow-lg">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">
+                            <i class="fas fa-star mr-2 text-yellow-500"></i>리뷰
+                            <span id="review-count" class="text-lg text-gray-500">(0)</span>
+                        </h2>
+                        <div id="average-rating" class="flex items-center space-x-2">
+                            <div class="flex space-x-1" id="average-stars">
+                                <!-- Stars will be rendered here -->
+                            </div>
+                            <span id="rating-number" class="text-xl font-bold text-gray-800">0.0</span>
+                        </div>
+                    </div>
+
+                    <!-- Write Review Button (for logged in users) -->
+                    <div id="write-review-section" style="display: none;">
+                        <button 
+                            onclick="toggleReviewForm()"
+                            class="w-full mb-6 bg-teal-50 text-teal-700 border-2 border-teal-200 py-3 rounded-lg hover:bg-teal-100 transition-colors font-semibold"
+                        >
+                            <i class="fas fa-pen mr-2"></i>리뷰 작성하기
+                        </button>
+
+                        <!-- Review Form -->
+                        <div id="review-form" class="mb-6 p-4 bg-gray-50 rounded-lg" style="display: none;">
+                            <h3 class="font-bold text-gray-800 mb-4">리뷰 작성</h3>
+                            <form id="review-submit-form">
+                                <!-- Star Rating -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">별점</label>
+                                    <div class="flex space-x-2">
+                                        <button type="button" onclick="setRating(1)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="1">★</button>
+                                        <button type="button" onclick="setRating(2)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="2">★</button>
+                                        <button type="button" onclick="setRating(3)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="3">★</button>
+                                        <button type="button" onclick="setRating(4)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="4">★</button>
+                                        <button type="button" onclick="setRating(5)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="5">★</button>
+                                    </div>
+                                    <input type="hidden" id="rating-input" value="0" required>
+                                </div>
+
+                                <!-- Comment -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">리뷰 내용</label>
+                                    <textarea 
+                                        id="comment-input"
+                                        rows="4"
+                                        placeholder="워크샵에 대한 솔직한 후기를 남겨주세요"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        required
+                                    ></textarea>
+                                </div>
+
+                                <!-- Submit Buttons -->
+                                <div class="flex space-x-2">
+                                    <button 
+                                        type="submit"
+                                        class="flex-1 bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 font-semibold"
+                                    >
+                                        <i class="fas fa-check mr-2"></i>등록
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onclick="toggleReviewForm()"
+                                        class="px-6 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
+                                    >
+                                        취소
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Reviews List -->
+                    <div id="reviews-list" class="space-y-4">
+                        <!-- Reviews will be rendered here -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="reviews-empty" class="text-center py-12" style="display: none;">
+                        <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">아직 리뷰가 없습니다</p>
+                        <p class="text-sm text-gray-400">첫 리뷰를 작성해주세요!</p>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="reviews-loading" class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl text-teal-600"></i>
+                    </div>
+                </div>
             </div>
 
             <!-- Right Column - Booking Form -->
