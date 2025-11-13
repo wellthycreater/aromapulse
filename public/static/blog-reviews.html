@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블로그 리뷰 분석 - 아로마펄스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="flex items-center space-x-2">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-16">
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="https://blog.naver.com/aromapulse" target="_blank" class="text-purple-600 hover:text-purple-700">
+                        <i class="fas fa-blog mr-2"></i>네이버 블로그
+                    </a>
+                    <span id="user-name" class="text-gray-700"></span>
+                    <button onclick="logout()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">총 댓글</p>
+                        <p class="text-3xl font-bold text-gray-800" id="total-comments">0</p>
+                    </div>
+                    <div class="bg-purple-100 rounded-full p-3">
+                        <i class="fas fa-comments text-purple-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">B2C 사용자</p>
+                        <p class="text-3xl font-bold text-blue-600" id="b2c-users">0</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-3">
+                        <i class="fas fa-user text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">B2B 사용자</p>
+                        <p class="text-3xl font-bold text-green-600" id="b2b-users">0</p>
+                    </div>
+                    <div class="bg-green-100 rounded-full p-3">
+                        <i class="fas fa-briefcase text-green-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">평균 전환율</p>
+                        <p class="text-3xl font-bold text-orange-600" id="avg-conversion">0%</p>
+                    </div>
+                    <div class="bg-orange-100 rounded-full p-3">
+                        <i class="fas fa-chart-line text-orange-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-xl shadow-md mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="showTab('high-leads')" class="tab-btn border-b-2 border-purple-600 py-4 px-1 text-sm font-medium text-purple-600">
+                        <i class="fas fa-star mr-2"></i>고전환율 리드
+                    </button>
+                    <button onclick="showTab('all-comments')" class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-list mr-2"></i>전체 댓글
+                    </button>
+                    <button onclick="showTab('posts')" class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-blog mr-2"></i>블로그 포스트
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- High Conversion Leads Tab -->
+        <div id="high-leads-tab" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-bullseye mr-2 text-purple-600"></i>
+                        회원가입 유도 대상
+                    </h2>
+                    <div class="flex items-center space-x-4">
+                        <label class="text-sm text-gray-600">최소 전환율:</label>
+                        <select id="min-conversion-filter" onchange="loadHighConversionLeads()" class="border border-gray-300 rounded-lg px-3 py-2">
+                            <option value="0.5">50%</option>
+                            <option value="0.6" selected>60%</option>
+                            <option value="0.7">70%</option>
+                            <option value="0.8">80%</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="high-leads-list" class="space-y-4">
+                    <div class="text-center py-12 text-gray-500">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                        <p>로딩 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Comments Tab -->
+        <div id="all-comments-tab" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-comments mr-2 text-purple-600"></i>
+                    전체 댓글 분석
+                </h2>
+                <div id="all-comments-list" class="space-y-4">
+                    <p class="text-center text-gray-500">댓글을 불러오는 중...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blog Posts Tab -->
+        <div id="posts-tab" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-blog mr-2 text-purple-600"></i>
+                    블로그 포스트
+                </h2>
+                <div id="posts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <p class="text-center text-gray-500">포스트를 불러오는 중...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Signup Invitation Modal -->
+    <div id="signup-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex justify-between items-start mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-user-plus mr-2 text-purple-600"></i>
+                        회원가입 추천
+                    </h3>
+                    <button onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <div id="signup-modal-content" class="space-y-6">
+                    <!-- 동적으로 채워짐 -->
+                </div>
+
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button onclick="closeSignupModal()" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        취소
+                    </button>
+                    <button onclick="sendSignupInvitation()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        초대 발송
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/blog-reviews.js"></script>
+</body>
+</html>

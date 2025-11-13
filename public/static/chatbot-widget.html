@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아로마펄스 AI 상담</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: transparent;
+        }
+        
+        /* 챗봇 버튼 */
+        .chatbot-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+        
+        .chatbot-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+        
+        .chatbot-button.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        /* 채팅 알림 배지 */
+        .chat-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        /* 챗봇 윈도우 */
+        .chatbot-window {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 9998;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .chatbot-window.show {
+            display: flex;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 챗봇 헤더 */
+        .chatbot-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .chatbot-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .chatbot-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .chatbot-title h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .chatbot-status {
+            font-size: 12px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .chatbot-close {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .chatbot-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* 챗봇 메시지 영역 */
+        .chatbot-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #f7f7f7;
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.bot {
+            flex-direction: row;
+        }
+        
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .message-content {
+            max-width: 70%;
+        }
+        
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.5;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        
+        .message.bot .message-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+            padding: 0 8px;
+        }
+        
+        /* 타이핑 인디케이터 */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        /* 빠른 답변 버튼 */
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .quick-reply-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #667eea;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-reply-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* 입력 영역 */
+        .chatbot-input {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chatbot-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e5e5e5;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        
+        .chatbot-input input:focus {
+            border-color: #667eea;
+        }
+        
+        .chatbot-send-btn {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+        
+        .chatbot-send-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .chatbot-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 사용자 타입 배지 */
+        .user-type-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 16px;
+            margin: 8px 0;
+            border-radius: 12px;
+            font-size: 13px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .user-type-badge.b2b {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        /* 모바일 대응 */
+        @media (max-width: 480px) {
+            .chatbot-window {
+                width: 100%;
+                height: 100%;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+            }
+            
+            .chatbot-button {
+                bottom: 16px;
+                right: 16px;
+                width: 56px;
+                height: 56px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 챗봇 버튼 -->
+    <button class="chatbot-button" id="chatbot-btn">
+        🤖
+        <span class="chat-badge" id="chat-badge" style="display: none;">1</span>
+    </button>
+
+    <!-- 챗봇 윈도우 -->
+    <div class="chatbot-window" id="chatbot-window">
+        <!-- 헤더 -->
+        <div class="chatbot-header">
+            <div class="chatbot-header-info">
+                <div class="chatbot-avatar">🌿</div>
+                <div class="chatbot-title">
+                    <h3>아로마펄스 AI 상담</h3>
+                    <div class="chatbot-status">
+                        <span class="status-dot"></span>
+                        <span>온라인</span>
+                    </div>
+                </div>
+            </div>
+            <button class="chatbot-close" id="chatbot-close">×</button>
+        </div>
+
+        <!-- 메시지 영역 -->
+        <div class="chatbot-messages" id="chatbot-messages">
+            <div class="message bot">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="message-bubble">
+                        안녕하세요! 아로마펄스 AI 상담봇입니다 🌿<br><br>
+                        무엇을 도와드릴까요?
+                    </div>
+                    <div class="quick-replies">
+                        <button class="quick-reply-btn" onclick="sendQuickReply('불면증 때문에 고민이에요')">😴 불면증</button>
+                        <button class="quick-reply-btn" onclick="sendQuickReply('스트레스가 심해요')">😫 스트레스</button>
+                        <button class="quick-reply-btn" onclick="sendQuickReply('회사 단체 주문 가능한가요?')">🏢 기업 문의</button>
+                        <button class="quick-reply-btn" onclick="sendQuickReply('가격이 궁금해요')">💰 가격</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 입력 영역 -->
+        <div class="chatbot-input">
+            <input type="text" id="message-input" placeholder="메시지를 입력하세요..." />
+            <button class="chatbot-send-btn" id="send-btn">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <script src="/static/chatbot-widget.js"></script>
+</body>
+</html>

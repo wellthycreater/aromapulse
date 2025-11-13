@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제품 관리 - 아로마펄스 관리자</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-box text-purple-600 mr-2"></i>
+                    제품 관리
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" class="text-gray-700 hover:text-purple-600">
+                        <i class="fas fa-arrow-left mr-2"></i>대시보드로
+                    </a>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-700">
+                        <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- 액션 버튼 -->
+        <div class="mb-6 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800">증상케어 제품 목록</h2>
+            <button onclick="showProductModal()" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
+                <i class="fas fa-plus mr-2"></i>제품 등록
+            </button>
+        </div>
+
+        <!-- 제품 목록 -->
+        <div id="products-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 제품 카드들이 여기에 동적으로 추가됩니다 -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
+            <p class="text-gray-600">제품을 불러오는 중...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-12" style="display: none;">
+            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-600 text-lg mb-4">등록된 제품이 없습니다</p>
+            <button onclick="showProductModal()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                첫 제품 등록하기
+            </button>
+        </div>
+    </div>
+
+    <!-- 제품 등록/수정 모달 -->
+    <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto" style="display: none;">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 my-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800" id="modal-title">제품 등록</h3>
+                <button onclick="closeProductModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <form id="product-form" class="space-y-4">
+                <!-- 제품명 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        제품명 <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="product-name" required
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                        placeholder="예: 라벤더 수면 롤온">
+                </div>
+
+                <!-- 카테고리 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        카테고리 <span class="text-red-500">*</span>
+                    </label>
+                    <select id="product-category" required
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="">선택하세요</option>
+                        <option value="insomnia">불면</option>
+                        <option value="depression">우울</option>
+                        <option value="anxiety">불안</option>
+                        <option value="stress">스트레스</option>
+                    </select>
+                </div>
+
+                <!-- 제품 설명 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        제품 설명
+                    </label>
+                    <textarea id="product-description" rows="3"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                        placeholder="제품에 대한 상세 설명을 입력하세요"></textarea>
+                </div>
+
+                <!-- 가격 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        가격 (원) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" id="product-price" required min="0"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                        placeholder="예: 35000">
+                </div>
+
+                <!-- 재고 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        재고 수량
+                    </label>
+                    <input type="number" id="product-stock" min="0" value="0"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                        placeholder="예: 100">
+                </div>
+
+                <!-- 대표 이미지 업로드 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        대표 이미지 (썸네일) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex items-center space-x-4">
+                        <input type="file" id="thumbnail-upload" accept="image/*"
+                            class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <button type="button" onclick="uploadImage('thumbnail')"
+                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                            <i class="fas fa-upload mr-2"></i>업로드
+                        </button>
+                    </div>
+                    <div id="thumbnail-preview" class="mt-2" style="display: none;">
+                        <img id="thumbnail-preview-img" src="" alt="Thumbnail Preview" class="w-32 h-32 object-cover rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1" id="thumbnail-url"></p>
+                    </div>
+                    <input type="hidden" id="thumbnail-image-url">
+                </div>
+
+                <!-- 상세 이미지 업로드 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        상세 이미지 (일체형) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex items-center space-x-4">
+                        <input type="file" id="detail-upload" accept="image/*"
+                            class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <button type="button" onclick="uploadImage('detail')"
+                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                            <i class="fas fa-upload mr-2"></i>업로드
+                        </button>
+                    </div>
+                    <div id="detail-preview" class="mt-2" style="display: none;">
+                        <img id="detail-preview-img" src="" alt="Detail Preview" class="w-full max-w-md rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1" id="detail-url"></p>
+                    </div>
+                    <input type="hidden" id="detail-image-url">
+                </div>
+
+                <!-- 제출 버튼 -->
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit"
+                        class="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-semibold">
+                        <i class="fas fa-save mr-2"></i>저장
+                    </button>
+                    <button type="button" onclick="closeProductModal()"
+                        class="px-8 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300">
+                        취소
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/admin-products.js"></script>
+</body>
+</html>

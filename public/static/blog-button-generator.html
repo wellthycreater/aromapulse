@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블로그 버튼 생성기 - 아로마펄스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .button-preview {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .button-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-purple-600 mb-8 text-center">
+            🎨 블로그 AI 상담 버튼 생성기
+        </h1>
+
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6">✨ 5가지 버튼 스타일</h2>
+            
+            <!-- 버튼 1 -->
+            <div class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                <p class="text-sm text-gray-600 mb-4">스타일 1: 그라데이션 버튼</p>
+                <div id="button1" class="button-preview bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-4 px-8 rounded-full text-xl font-bold shadow-lg">
+                    💬 궁금한 점이 있으신가요? AI 상담 받기
+                </div>
+                <button onclick="downloadButton('button1', 'style1')" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+                    📥 이미지로 다운로드
+                </button>
+            </div>
+
+            <!-- 버튼 2 -->
+            <div class="mb-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
+                <p class="text-sm text-gray-600 mb-4">스타일 2: 심플 버튼</p>
+                <div id="button2" class="button-preview bg-white border-4 border-purple-600 text-purple-600 text-center py-4 px-8 rounded-lg text-xl font-bold shadow-lg">
+                    🤖 실시간 무료 상담 시작하기
+                </div>
+                <button onclick="downloadButton('button2', 'style2')" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+                    📥 이미지로 다운로드
+                </button>
+            </div>
+
+            <!-- 버튼 3 -->
+            <div class="mb-8 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg">
+                <p class="text-sm text-gray-600 mb-4">스타일 3: 아이콘 버튼</p>
+                <div id="button3" class="button-preview bg-gradient-to-r from-green-500 to-teal-500 text-white text-center py-4 px-8 rounded-2xl text-xl font-bold shadow-lg">
+                    🌿 맞춤형 아로마 추천받기
+                </div>
+                <button onclick="downloadButton('button3', 'style3')" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+                    📥 이미지로 다운로드
+                </button>
+            </div>
+
+            <!-- 버튼 4 -->
+            <div class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                <p class="text-sm text-gray-600 mb-4">스타일 4: B2B 전용</p>
+                <div id="button4" class="button-preview bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center py-4 px-8 rounded-lg text-xl font-bold shadow-lg">
+                    🏢 기업 납품 문의하기
+                </div>
+                <button onclick="downloadButton('button4', 'style4')" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+                    📥 이미지로 다운로드
+                </button>
+            </div>
+
+            <!-- 버튼 5 -->
+            <div class="mb-8 p-6 bg-gradient-to-r from-pink-50 to-red-50 rounded-lg">
+                <p class="text-sm text-gray-600 mb-4">스타일 5: 하트 버튼</p>
+                <div id="button5" class="button-preview bg-gradient-to-r from-pink-500 to-red-500 text-white text-center py-4 px-8 rounded-full text-xl font-bold shadow-lg">
+                    💜 1:1 맞춤 상담 (무료)
+                </div>
+                <button onclick="downloadButton('button5', 'style5')" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+                    📥 이미지로 다운로드
+                </button>
+            </div>
+        </div>
+
+        <!-- 사용 방법 -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold mb-6">📖 네이버 블로그 삽입 방법</h2>
+            
+            <div class="space-y-6">
+                <div class="flex items-start">
+                    <div class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">1</div>
+                    <div>
+                        <h3 class="font-bold mb-2">버튼 이미지 다운로드</h3>
+                        <p class="text-gray-600">위에서 원하는 스타일의 "📥 이미지로 다운로드" 버튼 클릭</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start">
+                    <div class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">2</div>
+                    <div>
+                        <h3 class="font-bold mb-2">블로그 글쓰기</h3>
+                        <p class="text-gray-600">네이버 블로그 → 글쓰기 → 본문 작성</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start">
+                    <div class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">3</div>
+                    <div>
+                        <h3 class="font-bold mb-2">이미지 삽입</h3>
+                        <p class="text-gray-600 mb-2">에디터 상단 "사진" 버튼 클릭 → 다운받은 버튼 이미지 업로드</p>
+                        <div class="bg-blue-50 p-3 rounded text-sm">
+                            💡 TIP: 글 하단에 삽입하면 효과적!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start">
+                    <div class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">4</div>
+                    <div>
+                        <h3 class="font-bold mb-2">링크 연결</h3>
+                        <p class="text-gray-600 mb-2">
+                            1. 삽입된 버튼 이미지 클릭<br>
+                            2. 상단 "링크" 버튼 (🔗) 클릭<br>
+                            3. 아래 URL 복사해서 붙여넣기:
+                        </p>
+                        <div class="bg-gray-100 p-3 rounded font-mono text-sm break-all">
+                            https://www.aromapulse.kr/chatbot
+                        </div>
+                        <button onclick="copyURL()" class="mt-2 bg-green-500 text-white px-4 py-2 rounded text-sm">
+                            📋 URL 복사
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-start">
+                    <div class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">5</div>
+                    <div>
+                        <h3 class="font-bold mb-2">새 창 설정</h3>
+                        <p class="text-gray-600">"새 창으로 열기" 체크 → 확인 → 발행</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 예시 -->
+        <div class="bg-white rounded-lg shadow-lg p-8 mt-8">
+            <h2 class="text-2xl font-bold mb-6">📱 블로그 글 예시</h2>
+            
+            <div class="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+                <h3 class="text-xl font-bold mb-4">불면증에 좋은 아로마 오일 BEST 5 ✨</h3>
+                <p class="text-gray-700 mb-4">
+                    라벤더, 캐모마일 등 수면에 도움이 되는 향을 소개합니다...
+                </p>
+                <p class="text-gray-700 mb-6">
+                    (본문 내용)
+                </p>
+                
+                <div class="border-t-2 border-dashed border-purple-300 pt-6 text-center">
+                    <p class="text-gray-600 mb-4">━━━━━━━━━━━━━━━━━━━━━━━━</p>
+                    <p class="text-lg mb-4">💬 궁금한 점이 있으신가요?</p>
+                    <div class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-full font-bold cursor-pointer hover:shadow-lg">
+                        🤖 AI 상담 시작하기 (클릭!)
+                    </div>
+                    <p class="text-gray-600 mt-4">━━━━━━━━━━━━━━━━━━━━━━━━</p>
+                    <p class="text-sm text-gray-500 mt-2">24시간 무료 상담 가능</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        function downloadButton(elementId, filename) {
+            const element = document.getElementById(elementId);
+            
+            html2canvas(element, {
+                backgroundColor: null,
+                scale: 2
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `aromapulse_button_${filename}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                
+                alert('✅ 버튼 이미지가 다운로드되었습니다!\n\n이제 네이버 블로그에 업로드하세요.');
+            });
+        }
+        
+        function copyURL() {
+            const url = 'https://www.aromapulse.kr/chatbot';
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ URL이 복사되었습니다!\n\n네이버 블로그 링크 설정에 붙여넣기 하세요.');
+            });
+        }
+    </script>
+</body>
+</html>

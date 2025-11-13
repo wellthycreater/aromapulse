@@ -48,17 +48,17 @@ ALTER TABLE users ADD COLUMN b2b_inquiry_type TEXT; -- JSON 배열: ["협업", "
 ALTER TABLE users ADD COLUMN b2b_shop_name TEXT;
 ALTER TABLE users ADD COLUMN b2b_shop_type TEXT; -- 매장 유형
 
--- 제품 - 카테고리 (기존 type을 보완)
-ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'room_spray' CHECK(category IN (
-  'room_spray', 'fabric_perfume', 'fabric_deodorizer', 'diffuser', 'candle', 'perfume'
-));
+-- 제품 - 카테고리 (0001_5_products_table.sql에 이미 존재)
+-- ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'room_spray' CHECK(category IN (
+--   'room_spray', 'fabric_perfume', 'fabric_deodorizer', 'diffuser', 'candle', 'perfume'
+-- ));
 
--- 블로그 댓글에 자동 분류 추가
-ALTER TABLE blog_comments ADD COLUMN auto_user_type TEXT CHECK(auto_user_type IN ('B2C', 'B2B', NULL));
+-- 블로그 댓글에 자동 분류 추가 (blog_comments 테이블이 존재하지 않음)
+-- ALTER TABLE blog_comments ADD COLUMN auto_user_type TEXT CHECK(auto_user_type IN ('B2C', 'B2B', NULL));
 
 -- 인덱스 추가
 CREATE INDEX IF NOT EXISTS idx_users_daily_category ON users(daily_stress_category);
 CREATE INDEX IF NOT EXISTS idx_users_work_industry ON users(work_industry);
 CREATE INDEX IF NOT EXISTS idx_users_age_group ON users(age_group);
 CREATE INDEX IF NOT EXISTS idx_users_gender ON users(gender);
-CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+-- CREATE INDEX IF NOT EXISTS idx_products_category ON products(category); -- 이미 존재

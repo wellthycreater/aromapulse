@@ -212,6 +212,7 @@ export interface Admin {
 // Cloudflare Bindings
 export type Bindings = {
   DB: D1Database;
+  IMAGES: R2Bucket;
   
   // Environment Variables
   JWT_SECRET: string;

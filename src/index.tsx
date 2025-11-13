@@ -14,6 +14,10 @@ import workshopsRoutes from './routes/workshops';
 import bookingsRoutes from './routes/bookings';
 import reviewsApiRoutes from './routes/reviews_api';
 import activityRoutes from './routes/activity';
+import adminProductsRoutes from './routes/admin-products';
+import blogAnalysisRoutes from './routes/blog-analysis';
+import chatbotRoutes from './routes/chatbot';
+import blogReviewsRoutes from './routes/blog-reviews';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -34,6 +38,10 @@ app.route('/api/workshops', workshopsRoutes);
 app.route('/api/bookings', bookingsRoutes);
 app.route('/api/reviews-api', reviewsApiRoutes);
 app.route('/api/activity', activityRoutes);
+app.route('/api/admin-products', adminProductsRoutes);
+app.route('/api/blog-analysis', blogAnalysisRoutes);
+app.route('/api/chatbot', chatbotRoutes);
+app.route('/api/blog-reviews', blogReviewsRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
@@ -102,6 +110,15 @@ app.get('/workshop/:id', (c) => {
   return c.redirect(`/static/workshop-detail.html?id=${id}`);
 });
 
+// Admin product management page
+app.get('/admin/products', (c) => c.redirect('/static/admin-products.html'));
+
+// Chatbot page
+app.get('/chatbot', (c) => c.redirect('/static/chatbot'));
+
+// Blog review analysis page
+app.get('/admin/blog-reviews', (c) => c.redirect('/static/blog-reviews.html'));
+
 // Home page
 app.get('/', (c) => {
   return c.html(`
@@ -124,10 +141,13 @@ app.get('/', (c) => {
                         <img src="/static/logo-light.png" alt="아로마펄스" class="h-20">
                     </a>
                     <div class="hidden md:flex space-x-6">
-                        <a href="#symptom-care" class="text-gray-700 hover:text-purple-600">증상케어</a>
-                        <a href="#refresh" class="text-gray-700 hover:text-purple-600">리프레시</a>
-                        <a href="#reviews" class="text-gray-700 hover:text-purple-600">리뷰</a>
-                        <a href="#patch" class="text-gray-700 hover:text-purple-600">패치신청</a>
+                        <a href="/workshops" class="text-gray-700 hover:text-purple-600">워크샵</a>
+                        <a href="/chatbot" class="text-gray-700 hover:text-purple-600">
+                            <i class="fas fa-robot mr-1"></i>AI 상담
+                        </a>
+                        <a href="/dashboard" class="text-gray-700 hover:text-purple-600">대시보드</a>
+                        <a href="#features" class="text-gray-700 hover:text-purple-600">서비스</a>
+                        <a href="#user-type" class="text-gray-700 hover:text-purple-600">회원가입</a>
                     </div>
                     <div class="flex space-x-4">
                         <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800">로그인</button>

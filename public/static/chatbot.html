@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 상담 챗봇 - 아로마펄스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 200px);
+            max-height: 600px;
+        }
+        .message-user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .message-bot {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .typing-indicator span {
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50">
+    <!-- Header -->
+    <header class="bg-white shadow-md mb-6">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="flex items-center space-x-2">
+                    <i class="fas fa-arrow-left text-purple-600"></i>
+                    <span class="text-lg font-semibold text-gray-800">홈으로</span>
+                </a>
+                <h1 class="text-2xl font-bold text-purple-600">
+                    <i class="fas fa-robot mr-2"></i>AI 상담 챗봇
+                </h1>
+                <div class="w-24"></div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 max-w-4xl">
+        <!-- User Type Detection Badge -->
+        <div id="user-type-badge" class="bg-white rounded-lg shadow-md p-4 mb-4" style="display: none;">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div id="type-icon" class="text-3xl"></div>
+                    <div>
+                        <p class="text-sm text-gray-600">감지된 사용자 타입</p>
+                        <p id="type-text" class="text-lg font-bold"></p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">신뢰도</p>
+                    <p id="confidence-text" class="text-lg font-bold text-purple-600"></p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button id="signup-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all">
+                    <i class="fas fa-user-plus mr-2"></i><span id="signup-text">회원가입하기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="chat-container overflow-y-auto p-6 space-y-4">
+                <!-- Welcome Message -->
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="message-bot text-white rounded-lg p-4 inline-block max-w-md">
+                            <p class="whitespace-pre-wrap">안녕하세요! 아로마펄스 AI 상담봇입니다 🌿
+무엇을 도와드릴까요?
+
+💜 스트레스/증상 케어
+🏢 기업/단체 문의
+🛍️ 제품 구매
+🎨 워크샵 체험</p>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">방금 전</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="border-t border-gray-200 p-4 bg-gray-50">
+                <div class="flex items-center space-x-3">
+                    <input
+                        id="message-input"
+                        type="text"
+                        placeholder="메시지를 입력하세요..."
+                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                    />
+                    <button
+                        id="send-btn"
+                        class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+                    >
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <!-- Quick Reply Buttons -->
+                <div id="quick-replies" class="mt-3 flex flex-wrap gap-2">
+                    <button class="quick-reply-btn bg-white border border-purple-300 text-purple-700 px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors" data-message="불면증 때문에 고민이에요">
+                        😴 불면증
+                    </button>
+                    <button class="quick-reply-btn bg-white border border-purple-300 text-purple-700 px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors" data-message="스트레스가 심해요">
+                        😫 스트레스
+                    </button>
+                    <button class="quick-reply-btn bg-white border border-purple-300 text-purple-700 px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors" data-message="회사 단체 주문 가능한가요?">
+                        🏢 기업 문의
+                    </button>
+                    <button class="quick-reply-btn bg-white border border-purple-300 text-purple-700 px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors" data-message="가격이 궁금해요">
+                        💰 가격
+                    </button>
+                    <button class="quick-reply-btn bg-white border border-purple-300 text-purple-700 px-4 py-2 rounded-full text-sm hover:bg-purple-50 transition-colors" data-message="워크샵 예약하고 싶어요">
+                        🎨 워크샵
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Panel -->
+        <div id="analysis-panel" class="mt-6 bg-white rounded-lg shadow-md p-6" style="display: none;">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">
+                <i class="fas fa-chart-line mr-2 text-purple-600"></i>대화 분석 결과
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">의도</p>
+                    <p id="analysis-intent" class="text-lg font-bold text-purple-600">-</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">감정</p>
+                    <p id="analysis-sentiment" class="text-lg font-bold text-pink-600">-</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">사용자 타입</p>
+                    <p id="analysis-usertype" class="text-lg font-bold text-indigo-600">-</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">신뢰도</p>
+                    <p id="analysis-confidence" class="text-lg font-bold text-green-600">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/chatbot.js"></script>
+</body>
+</html>
