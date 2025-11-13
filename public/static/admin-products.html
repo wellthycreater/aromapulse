@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>제품 관리 - 아로마펄스 관리자</title>
+    <title>제품 관리 - 웰씨코리아 관리자</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
@@ -13,12 +13,21 @@
     <header class="bg-white shadow-md">
         <nav class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-800">
-                    <i class="fas fa-box text-purple-600 mr-2"></i>
-                    제품 관리
-                </h1>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-box text-purple-600 mr-2"></i>
+                        제품 관리
+                    </h1>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <span class="font-semibold">브랜드:</span> 아로마펄스(AromaPulse) | 
+                        <span class="font-semibold">운영사:</span> 웰씨코리아(WellC Korea)
+                    </p>
+                </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-gray-700">
+                        <i class="fas fa-building text-blue-600 mr-1"></i>
+                        <span class="font-semibold">웰씨코리아</span>
+                        <span class="text-gray-500 mx-2">|</span>
                         <i class="fas fa-user-shield mr-1"></i>
                         <span id="user-name">관리자</span>
                     </span>
