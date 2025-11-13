@@ -112,6 +112,7 @@ app.get('/workshop/:id', (c) => {
 
 // Admin product management page
 app.get('/admin/products', (c) => c.redirect('/static/admin-products.html'));
+app.get('/admin-products', (c) => c.redirect('/static/admin-products.html'));
 
 // Chatbot page
 app.get('/chatbot', (c) => c.redirect('/static/chatbot'));
