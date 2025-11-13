@@ -1,159 +1,117 @@
--- 아로마펄스 시장 테스트 플랫폼 초기 스키마
--- 생성일: 2025-11-13
-
--- 회원 테이블 (B2C/B2B 구분)
+-- 사용자 테이블
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
+  password_hash TEXT, -- NULL for OAuth users
   name TEXT NOT NULL,
   phone TEXT,
-  user_type TEXT NOT NULL DEFAULT 'B2C', -- 'B2C', 'B2B', 'Unknown'
-  region TEXT, -- 지역 (서울, 경기, 부산 등)
-  symptoms TEXT, -- JSON 배열: ["불면", "우울", "불안"]
-  interests TEXT, -- JSON 배열: ["룸스프레이", "디퓨저", "향수"]
-  source TEXT, -- 유입 경로 (블로그, 인스타, 카페 등)
-  status TEXT DEFAULT 'active', -- active, inactive
+  
+  -- 사용자 타입
+  user_type TEXT NOT NULL CHECK(user_type IN ('B2C', 'B2B')),
+  
+  -- B2C 세부 분류
+  b2c_category TEXT CHECK(b2c_category IN ('daily_stress', 'work_stress', NULL)),
+  b2c_subcategory TEXT, -- 학생/취준생/돌봄인 또는 9개 산업군
+  
+  -- B2B 세부 분류
+  b2b_category TEXT CHECK(b2b_category IN ('perfumer', 'company', 'shop', 'independent', NULL)),
+  b2b_business_name TEXT,
+  b2b_business_number TEXT,
+  b2b_address TEXT,
+  
+  -- OAuth 정보
+  oauth_provider TEXT CHECK(oauth_provider IN ('naver', 'kakao', 'google', 'email', NULL)),
+  oauth_id TEXT,
+  
+  -- 메타 정보
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_login_at DATETIME,
+  is_active INTEGER DEFAULT 1,
+  
+  UNIQUE(oauth_provider, oauth_id)
 );
 
--- 네이버 블로그 포스트 테이블
-CREATE TABLE IF NOT EXISTS blog_posts (
+-- 워크샵 테이블
+CREATE TABLE IF NOT EXISTS workshops (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  post_id TEXT UNIQUE NOT NULL, -- 네이버 블로그 logNo
+  provider_id INTEGER NOT NULL, -- B2B 사용자 ID
   title TEXT NOT NULL,
-  content TEXT,
-  link TEXT NOT NULL,
-  published_at DATETIME,
-  category TEXT,
-  tags TEXT, -- JSON 배열
-  view_count INTEGER DEFAULT 0,
-  comment_count INTEGER DEFAULT 0,
-  like_count INTEGER DEFAULT 0,
+  description TEXT,
+  category TEXT, -- 아로마테라피 종류
+  location TEXT NOT NULL,
+  address TEXT,
+  price INTEGER,
+  duration INTEGER, -- 분 단위
+  max_participants INTEGER,
+  image_url TEXT,
+  
+  is_active INTEGER DEFAULT 1,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (provider_id) REFERENCES users(id)
 );
 
--- 네이버 블로그 댓글 테이블
-CREATE TABLE IF NOT EXISTS blog_comments (
+-- 워크샵 예약 테이블
+CREATE TABLE IF NOT EXISTS bookings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  comment_id TEXT UNIQUE, -- 네이버 댓글 고유 ID
-  post_id INTEGER NOT NULL,
-  author_name TEXT,
-  author_id TEXT,
-  content TEXT NOT NULL,
-  parent_id INTEGER, -- 대댓글인 경우
-  is_secret INTEGER DEFAULT 0,
-  like_count INTEGER DEFAULT 0,
-  sentiment TEXT, -- 'positive', 'negative', 'neutral' (수동 태깅)
-  intent TEXT, -- '관심', '문의', '체험후기', '구매의향' (수동 태깅)
-  keywords TEXT, -- JSON 배열: 추출된 키워드
-  is_tagged INTEGER DEFAULT 0, -- 관리자가 태깅했는지 여부
-  created_at DATETIME,
-  imported_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE
+  workshop_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL, -- B2C 사용자 ID
+  booking_date DATETIME NOT NULL,
+  participants INTEGER DEFAULT 1,
+  total_price INTEGER,
+  status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+  
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (workshop_id) REFERENCES workshops(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- 자체 리뷰 테이블
+-- 리뷰 테이블
 CREATE TABLE IF NOT EXISTS reviews (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER,
-  post_id INTEGER, -- 연관된 블로그 포스트 (선택)
-  content TEXT NOT NULL,
-  rating INTEGER, -- 1-5점
-  sentiment TEXT, -- 'positive', 'negative', 'neutral' (수동 태깅)
-  intent TEXT, -- '관심', '문의', '체험후기', '구매의향' (수동 태깅)
-  keywords TEXT, -- JSON 배열: 추출된 키워드
-  is_tagged INTEGER DEFAULT 0,
+  workshop_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  booking_id INTEGER,
+  rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+  comment TEXT,
+  source TEXT CHECK(source IN ('platform', 'blog', 'external')),
+  
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE SET NULL
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (workshop_id) REFERENCES workshops(id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (booking_id) REFERENCES bookings(id)
 );
 
--- 제품 테이블
-CREATE TABLE IF NOT EXISTS products (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  type TEXT NOT NULL, -- '룸스프레이', '디퓨저', '향수', '섬유향수', '캔들'
-  description TEXT,
-  symptoms TEXT, -- JSON 배열: 연관 증상
-  region TEXT, -- 판매 지역
-  price INTEGER,
-  is_b2b INTEGER DEFAULT 0, -- B2B 납품 가능 여부
-  workshop_available INTEGER DEFAULT 0, -- 워크숍/클래스 가능 여부
-  supplier_name TEXT, -- 공방/업체명
-  supplier_contact TEXT,
-  image_url TEXT,
-  status TEXT DEFAULT 'active',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- 패치 신청 테이블
-CREATE TABLE IF NOT EXISTS patch_applications (
+-- 사용자 행동 로그 테이블 (행동 예측용)
+CREATE TABLE IF NOT EXISTS user_activity_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,
-  name TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  email TEXT,
-  address TEXT NOT NULL,
-  symptoms TEXT, -- JSON 배열
-  notes TEXT,
-  status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'shipped', 'completed'
+  activity_type TEXT NOT NULL, -- 'view', 'search', 'bookmark', 'booking'
+  target_type TEXT, -- 'workshop', 'review', 'profile'
+  target_id INTEGER,
+  metadata TEXT, -- JSON 형식
+  
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  processed_at DATETIME,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- 설문 테이블 (BEFORE/AFTER)
-CREATE TABLE IF NOT EXISTS surveys (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER,
-  application_id INTEGER, -- 연관된 패치 신청
-  survey_type TEXT NOT NULL, -- 'before', 'after'
-  stress_level INTEGER, -- 1-10
-  sleep_quality INTEGER, -- 1-10
-  anxiety_level INTEGER, -- 1-10
-  depression_level INTEGER, -- 1-10
-  feedback TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (application_id) REFERENCES patch_applications(id) ON DELETE CASCADE
-);
-
--- 추천 로그 테이블
-CREATE TABLE IF NOT EXISTS recommendation_logs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER,
-  product_id INTEGER,
-  reason TEXT, -- 추천 이유 (증상 매칭, 지역 매칭 등)
-  clicked INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-);
-
--- 관리자 테이블
-CREATE TABLE IF NOT EXISTS admins (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  name TEXT NOT NULL,
-  role TEXT DEFAULT 'admin', -- 'admin', 'super_admin'
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- 인덱스 생성
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id);
 CREATE INDEX IF NOT EXISTS idx_users_type ON users(user_type);
-CREATE INDEX IF NOT EXISTS idx_blog_posts_post_id ON blog_posts(post_id);
-CREATE INDEX IF NOT EXISTS idx_blog_comments_post_id ON blog_comments(post_id);
-CREATE INDEX IF NOT EXISTS idx_blog_comments_tagged ON blog_comments(is_tagged);
-CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);
-CREATE INDEX IF NOT EXISTS idx_reviews_tagged ON reviews(is_tagged);
-CREATE INDEX IF NOT EXISTS idx_products_type ON products(type);
-CREATE INDEX IF NOT EXISTS idx_products_region ON products(region);
-CREATE INDEX IF NOT EXISTS idx_patch_applications_status ON patch_applications(status);
-CREATE INDEX IF NOT EXISTS idx_surveys_user_id ON surveys(user_id);
-CREATE INDEX IF NOT EXISTS idx_recommendation_logs_user_id ON recommendation_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_workshops_provider ON workshops(provider_id);
+CREATE INDEX IF NOT EXISTS idx_workshops_active ON workshops(is_active);
+CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_workshop ON bookings(workshop_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_workshop ON reviews(workshop_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_user ON user_activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_type ON user_activity_logs(activity_type);

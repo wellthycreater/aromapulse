@@ -345,10 +345,23 @@ async function submitSignup() {
         signupData.symptoms = JSON.stringify(signupData.symptoms);
     }
     
-    // 사용자 유형 설정
+    // 사용자 유형 설정 (새 스키마에 맞게 수정)
     signupData.user_type = signupData.userType;
-    signupData.b2c_stress_type = signupData.userType === 'B2C' ? signupData.subType : null;
-    signupData.b2b_business_type = signupData.userType === 'B2B' ? signupData.subType : null;
+    
+    if (signupData.userType === 'B2C') {
+        signupData.b2c_category = signupData.subType; // 'daily' or 'work'
+        // daily_stress_category 또는 work_industry가 b2c_subcategory가 됨
+        if (signupData.subType === 'daily') {
+            signupData.b2c_subcategory = signupData.daily_stress_category;
+        } else if (signupData.subType === 'work') {
+            signupData.b2c_subcategory = signupData.work_industry;
+        }
+        signupData.b2b_category = null;
+    } else if (signupData.userType === 'B2B') {
+        signupData.b2b_category = signupData.subType; // 'perfumer', 'company', 'shop', 'independent'
+        signupData.b2c_category = null;
+        signupData.b2c_subcategory = null;
+    }
     
     console.log('회원가입 데이터:', signupData);
     

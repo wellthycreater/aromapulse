@@ -10,22 +10,37 @@ import {
 
 const auth = new Hono<{ Bindings: Bindings }>();
 
+// 비밀번호 해싱 함수 (Web Crypto API 사용)
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 // 회원가입
 auth.post('/signup', async (c) => {
   try {
     const data = await c.req.json();
     const { 
       email, password, name, phone, 
-      user_type, region, age_group, gender, symptoms,
-      // B2C 일상 스트레스
-      b2c_stress_type, daily_stress_category,
-      // B2C 직무 스트레스
-      work_industry, work_position,
-      // B2B
-      b2b_business_type, b2b_independent_type,
-      b2b_company_name, b2b_company_size, b2b_department, b2b_position,
-      b2b_shop_name, b2b_shop_type, b2b_inquiry_type
+      user_type, // 'B2C' or 'B2B'
+      // B2C 정보
+      b2c_category, // 'daily_stress' or 'work_stress'
+      b2c_subcategory, // 학생/취준생/돌봄인 or 9개 산업군
+      // B2B 정보
+      b2b_category, // 'perfumer', 'company', 'shop', 'independent'
+      b2b_business_name,
+      b2b_business_number,
+      b2b_address
     } = data;
+    
+    // 필수 필드 검증
+    if (!email || !password || !name || !user_type) {
+      return c.json({ error: '필수 정보를 입력해주세요' }, 400);
+    }
     
     // 이메일 중복 체크
     const existing = await c.env.DB.prepare(
@@ -36,52 +51,45 @@ auth.post('/signup', async (c) => {
       return c.json({ error: '이미 가입된 이메일입니다' }, 400);
     }
     
-    // 사용자 생성 (비밀번호는 실제로는 해싱 필요)
+    // 비밀번호 해싱
+    const password_hash = await hashPassword(password);
+    
+    // 사용자 생성
     const result = await c.env.DB.prepare(
       `INSERT INTO users (
-        email, password, name, phone, user_type, region, age_group, gender, symptoms,
-        b2c_stress_type, daily_stress_category,
-        work_industry, work_position,
-        b2b_business_type, b2b_independent_type,
-        b2b_company_name, b2b_company_size, b2b_department, b2b_position,
-        b2b_shop_name, b2b_shop_type, b2b_inquiry_type
+        email, password_hash, name, phone, user_type,
+        b2c_category, b2c_subcategory,
+        b2b_category, b2b_business_name, b2b_business_number, b2b_address,
+        oauth_provider
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
-      email, 
-      password, // TODO: bcrypt 등으로 해싱 필요
-      name, 
+      email,
+      password_hash,
+      name,
       phone || null,
       user_type,
-      region || null,
-      age_group || null,
-      gender || null,
-      symptoms || null,
       // B2C
-      b2c_stress_type || null,
-      daily_stress_category || null,
-      work_industry || null,
-      work_position || null,
+      b2c_category || null,
+      b2c_subcategory || null,
       // B2B
-      b2b_business_type || null,
-      b2b_independent_type || null,
-      b2b_company_name || null,
-      b2b_company_size || null,
-      b2b_department || null,
-      b2b_position || null,
-      b2b_shop_name || null,
-      b2b_shop_type || null,
-      b2b_inquiry_type || null
+      b2b_category || null,
+      b2b_business_name || null,
+      b2b_business_number || null,
+      b2b_address || null,
+      'email' // OAuth provider for email/password signup
     ).run();
     
     // 생성된 사용자 정보 조회
     const userId = result.meta.last_row_id;
     const user = await c.env.DB.prepare(
-      'SELECT id, email, name, user_type, b2c_stress_type, b2b_business_type FROM users WHERE id = ?'
+      `SELECT id, email, name, user_type, b2c_category, b2c_subcategory, 
+       b2b_category, b2b_business_name, created_at 
+       FROM users WHERE id = ?`
     ).bind(userId).first();
     
-    // TODO: JWT 토큰 발급
-    const token = `temp_token_${userId}`; // 임시 토큰
+    // JWT 토큰 발급
+    const token = await generateToken(user as any, c.env.JWT_SECRET);
     
     return c.json({ 
       message: '회원가입 성공',
@@ -89,7 +97,7 @@ auth.post('/signup', async (c) => {
       user
     }, 201);
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Signup error:', error);
     return c.json({ error: '회원가입 실패', details: error.message }, 500);
   }
@@ -100,13 +108,26 @@ auth.post('/login', async (c) => {
   try {
     const { email, password } = await c.req.json();
     
+    if (!email || !password) {
+      return c.json({ error: '이메일과 비밀번호를 입력해주세요' }, 400);
+    }
+    
+    // 비밀번호 해싱
+    const password_hash = await hashPassword(password);
+    
+    // 사용자 조회
     const user = await c.env.DB.prepare(
-      'SELECT * FROM users WHERE email = ? AND password = ?'
-    ).bind(email, password).first();
+      'SELECT * FROM users WHERE email = ? AND password_hash = ? AND oauth_provider = ?'
+    ).bind(email, password_hash, 'email').first();
     
     if (!user) {
       return c.json({ error: '이메일 또는 비밀번호가 잘못되었습니다' }, 401);
     }
+    
+    // 마지막 로그인 시간 업데이트
+    await c.env.DB.prepare(
+      'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).bind(user.id).run();
     
     // JWT 토큰 생성
     const token = await generateToken(user as any, c.env.JWT_SECRET);
@@ -119,15 +140,14 @@ auth.post('/login', async (c) => {
         email: user.email,
         name: user.name,
         user_type: user.user_type,
-        b2c_stress_type: user.b2c_stress_type,
-        b2b_business_type: user.b2b_business_type,
-        profile_image: user.profile_image
+        b2c_category: user.b2c_category,
+        b2b_category: user.b2b_category
       }
     });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
-    return c.json({ error: '로그인 실패' }, 500);
+    return c.json({ error: '로그인 실패', details: error.message }, 500);
   }
 });
 
@@ -137,7 +157,11 @@ auth.get('/me/:id', async (c) => {
     const id = c.req.param('id');
     
     const user = await c.env.DB.prepare(
-      'SELECT id, email, name, phone, user_type, b2c_stress_type, b2b_business_type, region, symptoms, interests, source, created_at FROM users WHERE id = ?'
+      `SELECT id, email, name, phone, user_type, 
+       b2c_category, b2c_subcategory,
+       b2b_category, b2b_business_name, b2b_business_number, b2b_address,
+       oauth_provider, created_at, last_login_at
+       FROM users WHERE id = ?`
     ).bind(id).first();
     
     if (!user) {
@@ -146,9 +170,9 @@ auth.get('/me/:id', async (c) => {
     
     return c.json({ user });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get user error:', error);
-    return c.json({ error: '사용자 조회 실패' }, 500);
+    return c.json({ error: '사용자 조회 실패', details: error.message }, 500);
   }
 });
 
@@ -201,75 +225,72 @@ auth.get('/naver/callback', async (c) => {
     // 사용자 정보 조회
     const userInfo = await getNaverUserInfo(tokenData.access_token);
     
-    // 기존 OAuth 계정 확인
-    const existingOAuth = await c.env.DB.prepare(
-      'SELECT user_id FROM oauth_accounts WHERE provider = ? AND provider_user_id = ?'
+    // 기존 OAuth 사용자 확인
+    const existingUser = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE oauth_provider = ? AND oauth_id = ?'
     ).bind('naver', userInfo.id).first();
     
     let userId: number;
+    let user: any;
     
-    if (existingOAuth) {
+    if (existingUser) {
       // 기존 사용자 로그인
-      userId = existingOAuth.user_id as number;
+      userId = existingUser.id as number;
+      user = existingUser;
+      
+      // 마지막 로그인 시간 업데이트
+      await c.env.DB.prepare(
+        'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).bind(userId).run();
+      
     } else {
-      // 이메일로 기존 사용자 확인
-      const existingUser = await c.env.DB.prepare(
+      // 이메일로 기존 사용자 확인 (OAuth 연동)
+      const emailUser = await c.env.DB.prepare(
         'SELECT id FROM users WHERE email = ?'
       ).bind(userInfo.email).first();
       
-      if (existingUser) {
-        // 기존 사용자에 OAuth 계정 연결
-        userId = existingUser.id as number;
+      if (emailUser) {
+        // 기존 이메일 계정에 OAuth 연결
+        userId = emailUser.id as number;
+        await c.env.DB.prepare(
+          'UPDATE users SET oauth_provider = ?, oauth_id = ? WHERE id = ?'
+        ).bind('naver', userInfo.id, userId).run();
+        
+        user = await c.env.DB.prepare(
+          'SELECT * FROM users WHERE id = ?'
+        ).bind(userId).first();
+        
       } else {
         // 신규 사용자 생성
         const result = await c.env.DB.prepare(
-          `INSERT INTO users (email, password, name, oauth_provider, oauth_id, profile_image, is_oauth, user_type)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash)
+           VALUES (?, ?, ?, ?, ?, ?)`
         ).bind(
           userInfo.email,
-          '', // OAuth 사용자는 비밀번호 없음
           userInfo.name,
           'naver',
           userInfo.id,
-          userInfo.profile_image || null,
-          1,
-          'B2C' // 기본값, 나중에 추가 정보 입력
+          'B2C', // 기본값, 추가 정보 입력 필요
+          null // OAuth 사용자는 비밀번호 없음
         ).run();
         
         userId = result.meta.last_row_id as number;
+        
+        user = await c.env.DB.prepare(
+          'SELECT * FROM users WHERE id = ?'
+        ).bind(userId).first();
       }
-      
-      // OAuth 계정 정보 저장
-      await c.env.DB.prepare(
-        `INSERT INTO oauth_accounts (user_id, provider, provider_user_id, provider_email, provider_name, profile_image, access_token, refresh_token, token_expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '+' || ? || ' seconds'))`
-      ).bind(
-        userId,
-        'naver',
-        userInfo.id,
-        userInfo.email,
-        userInfo.name,
-        userInfo.profile_image || null,
-        tokenData.access_token,
-        tokenData.refresh_token || null,
-        tokenData.expires_in
-      ).run();
     }
     
-    // 사용자 정보 조회
-    const user = await c.env.DB.prepare(
-      'SELECT * FROM users WHERE id = ?'
-    ).bind(userId).first();
-    
     // JWT 토큰 생성
-    const token = await generateToken(user as any, c.env.JWT_SECRET);
+    const token = await generateToken(user, c.env.JWT_SECRET);
     
     // 토큰을 쿠키에 저장하고 홈으로 리다이렉트
     c.header('Set-Cookie', `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
     
     return c.redirect('/');
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Naver OAuth error:', error);
     return c.redirect('/static/login.html?error=auth_failed');
   }
@@ -319,66 +340,64 @@ auth.get('/google/callback', async (c) => {
     
     const userInfo = await getGoogleUserInfo(tokenData.access_token);
     
-    const existingOAuth = await c.env.DB.prepare(
-      'SELECT user_id FROM oauth_accounts WHERE provider = ? AND provider_user_id = ?'
+    const existingUser = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE oauth_provider = ? AND oauth_id = ?'
     ).bind('google', userInfo.id).first();
     
     let userId: number;
+    let user: any;
     
-    if (existingOAuth) {
-      userId = existingOAuth.user_id as number;
+    if (existingUser) {
+      userId = existingUser.id as number;
+      user = existingUser;
+      
+      await c.env.DB.prepare(
+        'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).bind(userId).run();
+      
     } else {
-      const existingUser = await c.env.DB.prepare(
+      const emailUser = await c.env.DB.prepare(
         'SELECT id FROM users WHERE email = ?'
       ).bind(userInfo.email).first();
       
-      if (existingUser) {
-        userId = existingUser.id as number;
+      if (emailUser) {
+        userId = emailUser.id as number;
+        await c.env.DB.prepare(
+          'UPDATE users SET oauth_provider = ?, oauth_id = ? WHERE id = ?'
+        ).bind('google', userInfo.id, userId).run();
+        
+        user = await c.env.DB.prepare(
+          'SELECT * FROM users WHERE id = ?'
+        ).bind(userId).first();
+        
       } else {
         const result = await c.env.DB.prepare(
-          `INSERT INTO users (email, password, name, oauth_provider, oauth_id, profile_image, is_oauth, user_type)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash)
+           VALUES (?, ?, ?, ?, ?, ?)`
         ).bind(
           userInfo.email,
-          '',
           userInfo.name,
           'google',
           userInfo.id,
-          userInfo.picture || null,
-          1,
-          'B2C'
+          'B2C',
+          null
         ).run();
         
         userId = result.meta.last_row_id as number;
+        
+        user = await c.env.DB.prepare(
+          'SELECT * FROM users WHERE id = ?'
+        ).bind(userId).first();
       }
-      
-      await c.env.DB.prepare(
-        `INSERT INTO oauth_accounts (user_id, provider, provider_user_id, provider_email, provider_name, profile_image, access_token, refresh_token, token_expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '+' || ? || ' seconds'))`
-      ).bind(
-        userId,
-        'google',
-        userInfo.id,
-        userInfo.email,
-        userInfo.name,
-        userInfo.picture || null,
-        tokenData.access_token,
-        tokenData.refresh_token || null,
-        tokenData.expires_in
-      ).run();
     }
     
-    const user = await c.env.DB.prepare(
-      'SELECT * FROM users WHERE id = ?'
-    ).bind(userId).first();
-    
-    const token = await generateToken(user as any, c.env.JWT_SECRET);
+    const token = await generateToken(user, c.env.JWT_SECRET);
     
     c.header('Set-Cookie', `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
     
     return c.redirect('/');
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Google OAuth error:', error);
     return c.redirect('/static/login.html?error=auth_failed');
   }
@@ -417,69 +436,73 @@ auth.get('/kakao/callback', async (c) => {
     
     const userInfo = await getKakaoUserInfo(tokenData.access_token);
     
-    const existingOAuth = await c.env.DB.prepare(
-      'SELECT user_id FROM oauth_accounts WHERE provider = ? AND provider_user_id = ?'
+    const existingUser = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE oauth_provider = ? AND oauth_id = ?'
     ).bind('kakao', userInfo.id).first();
     
     let userId: number;
+    let user: any;
     
-    if (existingOAuth) {
-      userId = existingOAuth.user_id as number;
+    if (existingUser) {
+      userId = existingUser.id as number;
+      user = existingUser;
+      
+      await c.env.DB.prepare(
+        'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).bind(userId).run();
+      
     } else {
-      const existingUser = await c.env.DB.prepare(
+      const emailUser = await c.env.DB.prepare(
         'SELECT id FROM users WHERE email = ?'
       ).bind(userInfo.email).first();
       
-      if (existingUser) {
-        userId = existingUser.id as number;
+      if (emailUser) {
+        userId = emailUser.id as number;
+        await c.env.DB.prepare(
+          'UPDATE users SET oauth_provider = ?, oauth_id = ? WHERE id = ?'
+        ).bind('kakao', userInfo.id, userId).run();
+        
+        user = await c.env.DB.prepare(
+          'SELECT * FROM users WHERE id = ?'
+        ).bind(userId).first();
+        
       } else {
         const result = await c.env.DB.prepare(
-          `INSERT INTO users (email, password, name, oauth_provider, oauth_id, profile_image, is_oauth, user_type)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash)
+           VALUES (?, ?, ?, ?, ?, ?)`
         ).bind(
           userInfo.email,
-          '',
-          userInfo.name,
+          userInfo.name || '카카오 사용자',
           'kakao',
           userInfo.id,
-          userInfo.profile_image || null,
-          1,
-          'B2C'
+          'B2C',
+          null
         ).run();
         
         userId = result.meta.last_row_id as number;
+        
+        user = await c.env.DB.prepare(
+          'SELECT * FROM users WHERE id = ?'
+        ).bind(userId).first();
       }
-      
-      await c.env.DB.prepare(
-        `INSERT INTO oauth_accounts (user_id, provider, provider_user_id, provider_email, provider_name, profile_image, access_token, refresh_token, token_expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '+' || ? || ' seconds'))`
-      ).bind(
-        userId,
-        'kakao',
-        userInfo.id,
-        userInfo.email,
-        userInfo.name,
-        userInfo.profile_image || null,
-        tokenData.access_token,
-        tokenData.refresh_token || null,
-        tokenData.expires_in
-      ).run();
     }
     
-    const user = await c.env.DB.prepare(
-      'SELECT * FROM users WHERE id = ?'
-    ).bind(userId).first();
-    
-    const token = await generateToken(user as any, c.env.JWT_SECRET);
+    const token = await generateToken(user, c.env.JWT_SECRET);
     
     c.header('Set-Cookie', `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
     
     return c.redirect('/');
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Kakao OAuth error:', error);
     return c.redirect('/static/login.html?error=auth_failed');
   }
+});
+
+// 로그아웃
+auth.post('/logout', async (c) => {
+  c.header('Set-Cookie', `auth_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
+  return c.json({ message: '로그아웃 성공' });
 });
 
 export default auth;
