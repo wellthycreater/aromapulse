@@ -12,21 +12,28 @@
 
 ## 🌐 접속 URL
 
+### 프로덕션 (Cloudflare Pages) ✅
+- **메인 URL**: https://aromapulse.pages.dev
+- **로그인**: https://aromapulse.pages.dev/login
+- **회원가입**: https://aromapulse.pages.dev/signup
+- **예정 도메인**: https://aromapulse.kr (연결 예정)
+
 ### 개발 환경 (Sandbox)
 - **Frontend**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai
 - **API Health Check**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai/api/health
-- **관리자 대시보드**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai/api/admin/dashboard/stats
-
-### 프로덕션 (배포 후)
-- **Production URL**: (Cloudflare Pages 배포 후 생성됨)
 
 ## 📋 현재 완료된 기능
 
 ### ✅ 핵심 기능
-1. **회원 시스템**
+1. **회원 시스템 & OAuth 소셜 로그인**
    - B2C 사용자 (일반 스트레스형 / 직무 스트레스형)
    - B2B 사용자 (조향사 / 기업 / 가게)
-   - 회원가입/로그인 API 완성
+   - 이메일/비밀번호 로그인
+   - 네이버 소셜 로그인 ✅
+   - 카카오 소셜 로그인 ✅
+   - 구글 소셜 로그인 ✅
+   - JWT 토큰 기반 인증
+   - 다단계 회원가입 폼 (사용자 유형별 상세 정보 수집)
 
 2. **제품 관리 시스템**
    - 증상케어 제품 (타사 공방)
@@ -99,9 +106,15 @@
 ## 🚀 API 엔드포인트
 
 ### 인증 (Auth)
-- `POST /api/auth/signup` - 회원가입
+- `POST /api/auth/signup` - 회원가입 (이메일/비밀번호)
 - `POST /api/auth/login` - 로그인
 - `GET /api/auth/me/:id` - 사용자 정보 조회
+- `GET /api/auth/naver` - 네이버 OAuth 시작
+- `GET /api/auth/naver/callback` - 네이버 OAuth 콜백
+- `GET /api/auth/kakao` - 카카오 OAuth 시작
+- `GET /api/auth/kakao/callback` - 카카오 OAuth 콜백
+- `GET /api/auth/google` - 구글 OAuth 시작
+- `GET /api/auth/google/callback` - 구글 OAuth 콜백
 
 ### 제품 (Products)
 - `GET /api/products` - 제품 목록 (필터링 가능)
@@ -214,21 +227,55 @@ npm run db:console:prod
 
 ## 🚢 배포
 
-### Cloudflare Pages 배포
+### Cloudflare Pages 배포 ✅ 완료
+
+**현재 배포 상태**: https://aromapulse.pages.dev
 
 ```bash
-# 1. Cloudflare API 키 설정
-# (Deploy 탭에서 API 키 설정 필요)
+# 1. 프로젝트 빌드
+npm run build
 
-# 2. D1 Database 생성 (프로덕션)
-npx wrangler d1 create webapp-production
-# database_id를 wrangler.jsonc에 추가
+# 2. Cloudflare Pages 배포
+export CLOUDFLARE_API_TOKEN="your-api-token"
+npx wrangler pages deploy dist --project-name aromapulse
 
-# 3. 마이그레이션 적용 (프로덕션)
+# 3. 환경 변수 설정 (이미 완료)
+# - JWT_SECRET
+# - NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, NAVER_CALLBACK_URL
+# - KAKAO_CLIENT_ID, KAKAO_CLIENT_SECRET, KAKAO_CALLBACK_URL
+# - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL
+
+# 4. 환경 변수 추가 (필요시)
+echo "your-secret" | npx wrangler pages secret put SECRET_NAME --project-name aromapulse
+```
+
+### OAuth Callback URL 설정 필요
+
+배포 후 각 OAuth 플랫폼에서 프로덕션 Callback URL을 등록해야 합니다:
+
+**네이버 개발자센터**: https://developers.naver.com/apps
+- Callback URL: `https://aromapulse.pages.dev/api/auth/naver/callback`
+- 향후 도메인: `https://aromapulse.kr/api/auth/naver/callback`
+
+**카카오 개발자센터**: https://developers.kakao.com/console
+- Redirect URI: `https://aromapulse.pages.dev/api/auth/kakao/callback`
+- 향후 도메인: `https://aromapulse.kr/api/auth/kakao/callback`
+- 카카오 로그인 활성화 필요
+
+**구글 클라우드 콘솔**: https://console.cloud.google.com/apis/credentials
+- 승인된 리디렉션 URI: `https://aromapulse.pages.dev/api/auth/google/callback`
+- 향후 도메인: `https://aromapulse.kr/api/auth/google/callback`
+
+### D1 Database (향후 추가 예정)
+
+현재는 D1 Database 없이 배포되었습니다. 데이터 저장이 필요한 경우:
+
+```bash
+# D1 Database 생성
+npx wrangler d1 create aromapulse-production
+
+# wrangler.jsonc에 database_id 추가 후
 npm run db:migrate:prod
-
-# 4. 배포
-npm run deploy:prod
 ```
 
 ## 📊 비즈니스 모델
@@ -327,4 +374,5 @@ npm run deploy:prod
 
 **Last Updated**: 2025-11-13
 **Version**: 1.0.0 (Lean MVP)
-**Status**: ✅ 개발 완료, 테스트 중
+**Status**: ✅ Cloudflare Pages 배포 완료
+**Production URL**: https://aromapulse.pages.dev
