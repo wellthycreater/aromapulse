@@ -84,9 +84,14 @@
                     </div>
                 </div>
 
-                <button onclick="nextStep()" class="mt-8 w-full bg-teal-600 text-white py-3 rounded-lg hover:bg-teal-700 font-bold">
-                    다음 단계
-                </button>
+                <div class="flex gap-4 mt-8">
+                    <button onclick="location.href='/'" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-bold">
+                        <i class="fas fa-arrow-left mr-2"></i>취소
+                    </button>
+                    <button onclick="nextStep()" class="flex-1 bg-teal-600 text-white py-3 rounded-lg hover:bg-teal-700 font-bold">
+                        다음 단계
+                    </button>
+                </div>
             </div>
 
             <!-- Step 2: 기본 정보 -->
