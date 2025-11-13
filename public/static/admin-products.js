@@ -30,11 +30,16 @@ async function checkAuth() {
   if (!token) {
     alert('로그인이 필요합니다.');
     window.location.href = '/login';
-    return;
+    return false;
   }
   
   try {
-    const response = await fetch('/api/auth/me', {
+    // JWT 토큰 디코딩 (간단한 방식)
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const userId = payload.userId;
+    
+    // 사용자 정보 조회
+    const response = await fetch(`/api/auth/me/${userId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -45,21 +50,26 @@ async function checkAuth() {
     }
     
     const data = await response.json();
+    const user = data.user || data;
     
-    // 관리자 권한 확인 (user_type이 'business'인 경우만 허용)
-    if (data.user.user_type !== 'business') {
-      alert('관리자 권한이 필요합니다.');
-      window.location.href = '/';
-      return;
+    // 관리자 권한 확인 (role이 'admin' 또는 'super_admin'인 경우만 허용)
+    if (user.role !== 'admin' && user.role !== 'super_admin') {
+      alert('관리자 권한이 필요합니다.\n\n관리자 계정으로 로그인해주세요.');
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
+      return false;
     }
     
     // 사용자 정보 표시
-    document.getElementById('user-name').textContent = data.user.name;
+    document.getElementById('user-name').textContent = user.name;
+    
+    return true;
   } catch (error) {
     console.error('인증 오류:', error);
     alert('인증에 실패했습니다. 다시 로그인해주세요.');
     localStorage.removeItem('auth_token');
     window.location.href = '/login';
+    return false;
   }
 }
 

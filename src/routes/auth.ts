@@ -140,6 +140,7 @@ auth.post('/login', async (c) => {
         email: user.email,
         name: user.name,
         user_type: user.user_type,
+        role: user.role || 'user',
         b2c_category: user.b2c_category,
         b2b_category: user.b2b_category
       }
@@ -157,7 +158,7 @@ auth.get('/me/:id', async (c) => {
     const id = c.req.param('id');
     
     const user = await c.env.DB.prepare(
-      `SELECT id, email, name, phone, user_type, 
+      `SELECT id, email, name, phone, user_type, role,
        b2c_category, b2c_subcategory,
        b2b_category, b2b_business_name, b2b_business_number, b2b_address,
        oauth_provider, created_at, last_login_at

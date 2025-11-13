@@ -126,11 +126,18 @@
                 
                 if (response.ok) {
                     // 로그인 성공 - 토큰 저장
-                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('auth_token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     
-                    // 대시보드로 리다이렉트
-                    const redirect = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+                    // 관리자인 경우 관리자 페이지로, 아니면 대시보드로
+                    const user = data.user;
+                    let redirectUrl = '/dashboard';
+                    
+                    if (user.role === 'admin' || user.role === 'super_admin') {
+                        redirectUrl = '/admin-products';
+                    }
+                    
+                    const redirect = new URLSearchParams(window.location.search).get('redirect') || redirectUrl;
                     window.location.href = redirect;
                 } else {
                     alert(data.error || '로그인에 실패했습니다.');
