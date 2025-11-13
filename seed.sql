@@ -1,3 +1,8 @@
+-- 관리자 계정 (Admin)
+-- 비밀번호: admin123 (실제 운영 시 변경 필요)
+INSERT OR IGNORE INTO users (email, password_hash, name, user_type, oauth_provider) VALUES 
+  ('admin@aromapulse.kr', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '아로마펄스 관리자', 'admin', 'email');
+
 -- 테스트용 B2B 사용자 (워크샵 제공자)
 INSERT OR IGNORE INTO users (email, name, user_type, b2b_category, b2b_business_name, oauth_provider) VALUES 
   ('perfumer1@example.com', '향기공방', 'B2B', 'perfumer', '서울 향기공방', 'email'),

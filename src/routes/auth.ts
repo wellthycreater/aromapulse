@@ -505,4 +505,103 @@ auth.post('/logout', async (c) => {
   return c.json({ message: '로그아웃 성공' });
 });
 
+// 관리자 계정 생성 (초기 설정용)
+auth.post('/create-admin', async (c) => {
+  try {
+    const data = await c.req.json();
+    const { 
+      email, 
+      password, 
+      name, 
+      phone,
+      secret_key // 보안을 위한 비밀 키
+    } = data;
+    
+    // 비밀 키 검증 (환경 변수로 설정된 키와 비교)
+    const ADMIN_SECRET_KEY = c.env.ADMIN_SECRET_KEY || 'aromapulse-admin-2025';
+    if (secret_key !== ADMIN_SECRET_KEY) {
+      return c.json({ error: '관리자 생성 권한이 없습니다' }, 403);
+    }
+    
+    // 필수 필드 검증
+    if (!email || !password || !name) {
+      return c.json({ error: '필수 정보를 입력해주세요' }, 400);
+    }
+    
+    // 이메일 중복 체크
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE email = ?'
+    ).bind(email).first();
+    
+    if (existing) {
+      return c.json({ error: '이미 가입된 이메일입니다' }, 400);
+    }
+    
+    // 비밀번호 해싱
+    const password_hash = await hashPassword(password);
+    
+    // 관리자 계정 생성
+    const result = await c.env.DB.prepare(
+      `INSERT INTO users (
+        email, password_hash, name, phone, user_type, role, oauth_provider
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      email,
+      password_hash,
+      name,
+      phone || null,
+      'B2B', // 관리자는 B2B로 설정
+      'admin', // role을 admin으로 설정
+      'email'
+    ).run();
+    
+    // 생성된 관리자 정보 조회
+    const userId = result.meta.last_row_id;
+    const admin = await c.env.DB.prepare(
+      `SELECT id, email, name, user_type, role, created_at 
+       FROM users WHERE id = ?`
+    ).bind(userId).first();
+    
+    // JWT 토큰 발급
+    const token = await generateToken(admin as any, c.env.JWT_SECRET);
+    
+    return c.json({ 
+      message: '관리자 계정 생성 성공',
+      token,
+      admin
+    }, 201);
+    
+  } catch (error: any) {
+    console.error('Admin creation error:', error);
+    return c.json({ 
+      error: '관리자 계정 생성 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
+// 현재 관리자 목록 조회 (관리자만 접근 가능)
+auth.get('/admins', async (c) => {
+  try {
+    // TODO: JWT 토큰 검증 및 관리자 권한 확인 미들웨어 추가
+    
+    const admins = await c.env.DB.prepare(
+      `SELECT id, email, name, role, created_at, last_login_at 
+       FROM users WHERE role IN ('admin', 'super_admin')
+       ORDER BY created_at DESC`
+    ).all();
+    
+    return c.json({ 
+      admins: admins.results 
+    });
+    
+  } catch (error: any) {
+    console.error('Get admins error:', error);
+    return c.json({ 
+      error: '관리자 목록 조회 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 export default auth;

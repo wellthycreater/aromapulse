@@ -120,6 +120,9 @@ app.get('/chatbot', (c) => c.redirect('/static/chatbot'));
 // Blog review analysis page
 app.get('/admin/blog-reviews', (c) => c.redirect('/static/blog-reviews.html'));
 
+// Admin creation page
+app.get('/create-admin', (c) => c.redirect('/static/create-admin.html'));
+
 // Home page
 app.get('/', (c) => {
   return c.html(`
