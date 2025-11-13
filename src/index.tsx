@@ -49,10 +49,9 @@ app.get('/', (c) => {
         <header class="bg-white shadow-md">
             <nav class="container mx-auto px-4 py-4">
                 <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-spa text-purple-600 text-2xl"></i>
-                        <h1 class="text-2xl font-bold text-gray-800">아로마펄스</h1>
-                    </div>
+                    <a href="/" class="flex items-center space-x-2">
+                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+                    </a>
                     <div class="hidden md:flex space-x-6">
                         <a href="#symptom-care" class="text-gray-700 hover:text-purple-600">증상케어</a>
                         <a href="#refresh" class="text-gray-700 hover:text-purple-600">리프레시</a>

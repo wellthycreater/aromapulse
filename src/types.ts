@@ -2,7 +2,8 @@
 
 export type UserType = 'B2C' | 'B2B' | 'Unknown';
 export type B2CStressType = 'daily' | 'work';
-export type B2BBusinessType = 'perfumer' | 'company' | 'shop';
+export type B2BBusinessType = 'perfumer' | 'company' | 'shop' | 'independent';
+export type OAuthProvider = 'naver' | 'google' | 'kakao';
 
 export type ProductConcept = 'symptom_care' | 'refresh';
 export type ProductCareType = 'custom' | 'ready_made';
@@ -30,8 +31,55 @@ export interface User {
   interests?: string[];
   source?: string;
   status: string;
+  
+  // OAuth 관련
+  oauth_provider?: OAuthProvider;
+  oauth_id?: string;
+  profile_image?: string;
+  is_oauth: number;
+  
+  // B2C 세부 정보
+  daily_stress_category?: string;
+  work_industry?: string;
+  work_position?: string;
+  age_group?: string;
+  gender?: string;
+  
+  // B2B 세부 정보
+  b2b_independent_type?: string;
+  b2b_company_name?: string;
+  b2b_company_size?: string;
+  b2b_department?: string;
+  b2b_position?: string;
+  b2b_inquiry_type?: string;
+  b2b_shop_name?: string;
+  b2b_shop_type?: string;
+  
   created_at: string;
   updated_at: string;
+}
+
+export interface OAuthAccount {
+  id: number;
+  user_id: number;
+  provider: OAuthProvider;
+  provider_user_id: string;
+  provider_email?: string;
+  provider_name?: string;
+  profile_image?: string;
+  access_token?: string;
+  refresh_token?: string;
+  token_expires_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Session {
+  id: number;
+  user_id: number;
+  token: string;
+  expires_at: string;
+  created_at: string;
 }
 
 export interface Product {
@@ -164,4 +212,26 @@ export interface Admin {
 // Cloudflare Bindings
 export type Bindings = {
   DB: D1Database;
+  
+  // Environment Variables
+  JWT_SECRET: string;
+  
+  // OAuth - Naver
+  NAVER_CLIENT_ID: string;
+  NAVER_CLIENT_SECRET: string;
+  NAVER_CALLBACK_URL: string;
+  
+  // OAuth - Google
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  GOOGLE_CALLBACK_URL: string;
+  
+  // OAuth - Kakao
+  KAKAO_CLIENT_ID: string;
+  KAKAO_CLIENT_SECRET: string;
+  KAKAO_CALLBACK_URL: string;
+  
+  // Domain
+  DOMAIN: string;
+  BASE_URL: string;
 };
