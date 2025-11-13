@@ -32,6 +32,50 @@ app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Database check endpoint (테스트용)
+app.get('/api/db-check', async (c) => {
+  try {
+    // 테이블 목록 조회
+    const tables = await c.env.DB.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table'"
+    ).all();
+    
+    // users 테이블 정보 조회
+    let usersInfo = null;
+    try {
+      usersInfo = await c.env.DB.prepare(
+        "PRAGMA table_info(users)"
+      ).all();
+    } catch (e: any) {
+      usersInfo = { error: e.message };
+    }
+    
+    // users 테이블 카운트
+    let usersCount = null;
+    try {
+      const result = await c.env.DB.prepare(
+        "SELECT COUNT(*) as count FROM users"
+      ).first();
+      usersCount = result?.count;
+    } catch (e: any) {
+      usersCount = { error: e.message };
+    }
+    
+    return c.json({
+      database: 'aromapulse-production',
+      tables: tables.results,
+      users_table_info: usersInfo,
+      users_count: usersCount,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    return c.json({ 
+      error: 'Database check failed', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 // Login page - redirect to static file
 app.get('/login', (c) => c.redirect('/static/login.html'));
 
