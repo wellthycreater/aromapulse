@@ -31,7 +31,7 @@ adminProducts.get('/', checkAdminAuth, async (c) => {
       `SELECT * FROM products ORDER BY created_at DESC`
     ).all();
     
-    return c.json(result.results);
+    return c.json({ products: result.results });
   } catch (error: any) {
     console.error('제품 목록 조회 오류:', error);
     return c.json({ error: '제품 목록 조회 실패', details: error.message }, 500);
