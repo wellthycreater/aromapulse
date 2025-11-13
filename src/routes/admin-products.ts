@@ -204,13 +204,14 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
   }
 });
 
-// 제품 삭제 (소프트 삭제)
+// 제품 삭제 (하드 삭제)
 adminProducts.delete('/:id', checkAdminAuth, async (c) => {
   try {
     const id = c.req.param('id');
     
+    // 완전 삭제
     await c.env.DB.prepare(
-      'UPDATE products SET is_active = 0 WHERE id = ?'
+      'DELETE FROM products WHERE id = ?'
     ).bind(id).run();
     
     return c.json({ message: '제품이 삭제되었습니다' });
