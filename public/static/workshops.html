@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>워크샵 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center space-x-2">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+                </a>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/workshops" class="text-teal-600 font-semibold">워크샵</a>
+                    <a href="/dashboard" class="text-gray-700 hover:text-teal-600">대시보드</a>
+                    <a href="/login" id="auth-link" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+                        로그인
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-teal-500 to-blue-600 text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                <i class="fas fa-spa mr-3"></i>아로마테라피 워크샵
+            </h1>
+            <p class="text-xl mb-8">향기로운 힐링의 여정을 시작하세요</p>
+            
+            <!-- Search Bar -->
+            <div class="max-w-2xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-4 flex gap-2">
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="워크샵 검색..."
+                        class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-800"
+                    >
+                    <select 
+                        id="category-filter"
+                        class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-800"
+                    >
+                        <option value="">전체 카테고리</option>
+                        <option value="입문">입문</option>
+                        <option value="블렌딩">블렌딩</option>
+                        <option value="수면케어">수면케어</option>
+                        <option value="스트레스케어">스트레스케어</option>
+                        <option value="기업">기업</option>
+                    </select>
+                    <button 
+                        onclick="searchWorkshops()"
+                        class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700"
+                    >
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workshops Grid -->
+    <section class="container mx-auto px-4 py-12">
+        <!-- Filter Chips -->
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <button onclick="filterByPrice('all')" class="filter-chip active">전체</button>
+            <button onclick="filterByPrice('0-50000')" class="filter-chip">5만원 이하</button>
+            <button onclick="filterByPrice('50000-100000')" class="filter-chip">5-10만원</button>
+            <button onclick="filterByPrice('100000+')" class="filter-chip">10만원 이상</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-teal-600 mb-4"></i>
+            <p class="text-gray-600">워크샵을 불러오는 중...</p>
+        </div>
+
+        <!-- Workshops Container -->
+        <div id="workshops-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" style="display: none;">
+            <!-- 워크샵 카드들이 여기에 동적으로 추가됩니다 -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-12" style="display: none;">
+            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-600 text-lg">검색 결과가 없습니다</p>
+        </div>
+    </section>
+
+    <style>
+        .filter-chip {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .filter-chip:hover {
+            border-color: #14b8a6;
+            color: #14b8a6;
+        }
+        
+        .filter-chip.active {
+            background-color: #14b8a6;
+            color: white;
+            border-color: #14b8a6;
+        }
+
+        .workshop-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .workshop-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script src="/static/workshops.js"></script>
+</body>
+</html>

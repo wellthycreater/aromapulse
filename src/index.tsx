@@ -91,6 +91,9 @@ app.get('/signup', (c) => c.redirect('/static/signup.html'));
 // Dashboard page - redirect to static file
 app.get('/dashboard', (c) => c.redirect('/static/dashboard.html'));
 
+// Workshops page - redirect to static file
+app.get('/workshops', (c) => c.redirect('/static/workshops.html'));
+
 // Home page
 app.get('/', (c) => {
   return c.html(`
@@ -136,15 +139,15 @@ app.get('/', (c) => {
                     불면, 우울, 불안을 위한 전문 아로마 솔루션
                 </p>
                 <div class="flex justify-center space-x-4">
-                    <button onclick="location.href='/products?concept=symptom_care'" 
-                            class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 text-lg">
-                        <i class="fas fa-heartbeat mr-2"></i>
-                        증상케어 제품 보기
+                    <button onclick="location.href='/workshops'" 
+                            class="bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 text-lg">
+                        <i class="fas fa-spa mr-2"></i>
+                        워크샵 둘러보기
                     </button>
-                    <button onclick="location.href='/products?concept=refresh'" 
-                            class="bg-pink-600 text-white px-8 py-3 rounded-lg hover:bg-pink-700 text-lg">
-                        <i class="fas fa-heart mr-2"></i>
-                        리프레시 제품 보기
+                    <button onclick="location.href='/signup'" 
+                            class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 text-lg">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        회원가입
                     </button>
                 </div>
             </div>
