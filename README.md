@@ -115,6 +115,8 @@
 - `GET /api/auth/kakao/callback` - 카카오 OAuth 콜백
 - `GET /api/auth/google` - 구글 OAuth 시작
 - `GET /api/auth/google/callback` - 구글 OAuth 콜백
+- `POST /api/auth/create-admin` - 관리자 계정 생성 (비밀 키 필요)
+- `GET /api/auth/admins` - 관리자 목록 조회
 
 ### 제품 (Products)
 - `GET /api/products` - 제품 목록 (필터링 가능)
@@ -483,4 +485,39 @@ npm run db:migrate:prod
 - 챗봇 페이지: `/chatbot` (https://www.aromapulse.kr/chatbot)
 - 위젯 임베드: `/static/chatbot-widget.html`
 - 블로그 버튼: `/static/blog-button-generator`
+
+### 👤 관리자 계정 시스템
+
+**관리자 역할**:
+- `user` - 일반 사용자 (기본값)
+- `admin` - 관리자 (제품 관리, 주문 관리, 통계 조회)
+- `super_admin` - 최고 관리자 (향후 확장)
+
+**관리자 계정 생성 방법**:
+1. `/create-admin` 페이지 접속
+2. 이메일, 비밀번호, 이름, 연락처 입력
+3. **관리자 비밀 키** 입력: `aromapulse-admin-2025`
+4. 계정 생성 완료
+
+**API로 관리자 생성**:
+```bash
+curl -X POST https://your-domain/api/auth/create-admin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@aromapulse.kr",
+    "password": "your-secure-password",
+    "name": "관리자 이름",
+    "phone": "010-1234-5678",
+    "secret_key": "aromapulse-admin-2025"
+  }'
+```
+
+**기본 관리자 계정**:
+- 이메일: `admin@aromapulse.kr`
+- 비밀번호: (초기 설정 시 지정)
+- 역할: `admin`
+
+**관리자 페이지 접근**:
+- 제품 관리: `/admin-products`
+- 블로그 리뷰 분석: `/admin/blog-reviews`
 
