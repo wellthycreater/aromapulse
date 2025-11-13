@@ -138,6 +138,13 @@ function createProductCard(product) {
   
   const thumbnailUrl = product.thumbnail_image || 'https://via.placeholder.com/300x200?text=No+Image';
   
+  const workshopInfo = product.workshop_name 
+    ? `<div class="text-xs text-gray-500 mb-2">
+         <i class="fas fa-store mr-1"></i>${product.workshop_name}
+         ${product.workshop_location ? ` · ${product.workshop_location}` : ''}
+       </div>`
+    : '';
+  
   card.innerHTML = `
     <div class="relative">
       <img src="${thumbnailUrl}" alt="${product.name}" class="w-full h-48 object-cover">
@@ -147,6 +154,7 @@ function createProductCard(product) {
     </div>
     <div class="p-4">
       <h3 class="font-bold text-lg mb-2 text-gray-800">${product.name}</h3>
+      ${workshopInfo}
       <p class="text-sm text-gray-600 mb-3 line-clamp-2">${product.description || '설명 없음'}</p>
       <div class="flex items-center justify-between mb-3">
         <span class="text-lg font-bold text-purple-600">${product.price.toLocaleString()}원</span>
@@ -181,6 +189,12 @@ function openNewProductModal() {
   document.getElementById('thumbnail-image-url').value = '';
   document.getElementById('detail-image-url').value = '';
   
+  // 로컬 공방 정보 초기화
+  document.getElementById('workshop-name').value = '';
+  document.getElementById('workshop-location').value = '';
+  document.getElementById('workshop-address').value = '';
+  document.getElementById('workshop-contact').value = '';
+  
   document.getElementById('product-modal').classList.remove('hidden');
 }
 
@@ -205,6 +219,12 @@ async function editProduct(productId) {
   document.getElementById('product-price').value = product.price;
   document.getElementById('product-stock').value = product.stock;
   document.getElementById('product-active').checked = product.is_active === 1;
+  
+  // 로컬 공방 정보
+  document.getElementById('workshop-name').value = product.workshop_name || '';
+  document.getElementById('workshop-location').value = product.workshop_location || '';
+  document.getElementById('workshop-address').value = product.workshop_address || '';
+  document.getElementById('workshop-contact').value = product.workshop_contact || '';
   
   // 이미지 URL 및 미리보기 설정
   if (product.thumbnail_image) {
@@ -318,7 +338,12 @@ async function handleFormSubmit(e) {
     stock: parseInt(document.getElementById('product-stock').value),
     thumbnail_image: document.getElementById('thumbnail-image-url').value,
     detail_image: document.getElementById('detail-image-url').value,
-    is_active: document.getElementById('product-active').checked ? 1 : 0
+    is_active: document.getElementById('product-active').checked ? 1 : 0,
+    // 로컬 공방 정보
+    workshop_name: document.getElementById('workshop-name').value.trim() || null,
+    workshop_location: document.getElementById('workshop-location').value || null,
+    workshop_address: document.getElementById('workshop-address').value.trim() || null,
+    workshop_contact: document.getElementById('workshop-contact').value.trim() || null
   };
   
   // 유효성 검사

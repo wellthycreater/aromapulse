@@ -69,7 +69,11 @@ adminProducts.post('/', checkAdminAuth, async (c) => {
       price,
       thumbnail_image,
       detail_image,
-      stock
+      stock,
+      workshop_name,
+      workshop_location,
+      workshop_address,
+      workshop_contact
     } = data;
     
     // 필수 필드 검증
@@ -81,8 +85,10 @@ adminProducts.post('/', checkAdminAuth, async (c) => {
     }
     
     const result = await c.env.DB.prepare(
-      `INSERT INTO products (name, description, category, price, thumbnail_image, detail_image, stock)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO products (
+        name, description, category, price, thumbnail_image, detail_image, stock,
+        workshop_name, workshop_location, workshop_address, workshop_contact
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       name,
       description || null,
@@ -90,7 +96,11 @@ adminProducts.post('/', checkAdminAuth, async (c) => {
       price,
       thumbnail_image || null,
       detail_image || null,
-      stock || 0
+      stock || 0,
+      workshop_name || null,
+      workshop_location || null,
+      workshop_address || null,
+      workshop_contact || null
     ).run();
     
     return c.json({
@@ -117,7 +127,11 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
       thumbnail_image,
       detail_image,
       stock,
-      is_active
+      is_active,
+      workshop_name,
+      workshop_location,
+      workshop_address,
+      workshop_contact
     } = data;
     
     await c.env.DB.prepare(
@@ -130,6 +144,10 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
         detail_image = ?,
         stock = ?,
         is_active = ?,
+        workshop_name = ?,
+        workshop_location = ?,
+        workshop_address = ?,
+        workshop_contact = ?,
         updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`
     ).bind(
@@ -141,6 +159,10 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
       detail_image,
       stock,
       is_active ?? 1,
+      workshop_name || null,
+      workshop_location || null,
+      workshop_address || null,
+      workshop_contact || null,
       id
     ).run();
     

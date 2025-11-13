@@ -427,10 +427,16 @@ npm run db:migrate:prod
 - `GET /api/blog-reviews/analysis/keywords` - 키워드 추출
 
 ### 관리자 제품 관리 (Admin Products) 🛒
-- `POST /api/admin-products` - 제품 등록 (이미지 업로드 포함)
+- `POST /api/admin-products` - 제품 등록 (이미지 업로드 + **로컬 공방 정보** 포함)
 - `GET /api/admin-products` - 제품 목록 조회
 - `PUT /api/admin-products/:id` - 제품 수정
 - `DELETE /api/admin-products/:id` - 제품 삭제
+
+**제품 등록/수정 시 포함 가능한 로컬 공방 정보**:
+- `workshop_name` - 공방명 (예: 향기로운 하루 공방)
+- `workshop_location` - 지역 (서울, 경기, 부산 등 17개 선택)
+- `workshop_address` - 상세 주소
+- `workshop_contact` - 연락처 (전화번호)
 
 ## 🎯 최근 업데이트 (2025-11-13)
 
@@ -452,6 +458,9 @@ npm run db:migrate:prod
    - 대표 이미지 + 상세 이미지 업로드
    - Cloudflare R2 스토리지 연동
    - 제품 CRUD 완성
+   - **로컬 공방 정보 등록** ✅
+     - 공방명, 지역, 상세 주소, 연락처
+     - 제품 카드에 공방 정보 표시
 
 4. **블로그 임베드 도구**
    - 버튼 생성기: https://www.aromapulse.kr/static/blog-button-generator
@@ -519,5 +528,8 @@ curl -X POST https://your-domain/api/auth/create-admin \
 
 **관리자 페이지 접근**:
 - 제품 관리: `/admin-products`
+- 블로그 리뷰 분석: `/admin/blog-reviews`
+
+리: `/admin-products`
 - 블로그 리뷰 분석: `/admin/blog-reviews`
 
