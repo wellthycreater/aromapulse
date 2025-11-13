@@ -375,10 +375,21 @@ npm run db:migrate:prod
 ---
 
 **Last Updated**: 2025-11-13
-**Version**: 1.1.0 (AI Chatbot with Signup Flow)
+**Version**: 1.3.0 (Refresh Product Type & Volume Management)
 **Status**: ✅ Cloudflare Pages 배포 완료
 **Production URL**: https://aromapulse.pages.dev
 **Domain**: www.aromapulse.kr
+
+### 🆕 최신 업데이트 (v1.3.0)
+
+**리프레시 제품 유형 및 용량 관리 시스템** ✅
+- 제품 컨셉 구분: 증상케어 (타사 공방) vs 리프레시 (자사 브랜드)
+- 리프레시 제품 유형: 섬유 향수 ✅, 룸 스프레이 ✅, 섬유 탈취제 ⏳, 디퓨저 ⏳, 캔들 ⏳, 향수 ⏳
+- 용량 선택: 30ml ✅, 50ml ⏳, 100ml ⏳
+- 현재 등록 가능: 섬유 향수/룸 스프레이 30ml
+- 제품 카드에 유형 및 용량 자동 표시
+
+**이전 업데이트 (v1.2.0)** - 로컬 공방 정보 시스템
 
 ## 🔮 AI 확장 계획 (향후)
 
