@@ -94,6 +94,12 @@ app.get('/dashboard', (c) => c.redirect('/static/dashboard.html'));
 // Workshops page - redirect to static file
 app.get('/workshops', (c) => c.redirect('/static/workshops.html'));
 
+// Workshop detail page - redirect to static file with ID
+app.get('/workshop/:id', (c) => {
+  const id = c.req.param('id');
+  return c.redirect(`/static/workshop-detail.html?id=${id}`);
+});
+
 // Home page
 app.get('/', (c) => {
   return c.html(`

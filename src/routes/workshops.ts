@@ -233,4 +233,27 @@ workshops.delete('/:id', async (c) => {
   }
 });
 
+// 제공자 정보 조회 (Public)
+workshops.get('/provider/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    const provider = await c.env.DB.prepare(
+      `SELECT id, name, email, phone, b2b_business_name, b2b_category 
+       FROM users 
+       WHERE id = ? AND user_type = 'B2B'`
+    ).bind(id).first();
+    
+    if (!provider) {
+      return c.json({ error: '제공자를 찾을 수 없습니다' }, 404);
+    }
+    
+    return c.json(provider);
+    
+  } catch (error: any) {
+    console.error('제공자 정보 조회 오류:', error);
+    return c.json({ error: '제공자 정보 조회 실패', details: error.message }, 500);
+  }
+});
+
 export default workshops;

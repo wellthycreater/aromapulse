@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>워크샵 상세 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center space-x-2">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+                </a>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/workshops" class="text-gray-700 hover:text-teal-600">워크샵</a>
+                    <a href="/dashboard" class="text-gray-700 hover:text-teal-600">대시보드</a>
+                    <a href="/login" id="auth-link" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+                        로그인
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Loading State -->
+    <div id="loading" class="container mx-auto px-4 py-12 text-center">
+        <i class="fas fa-spinner fa-spin text-4xl text-teal-600 mb-4"></i>
+        <p class="text-gray-600">워크샵 정보를 불러오는 중...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="container mx-auto px-4 py-8" style="display: none;">
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Left Column - Workshop Details -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Image Gallery -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-lg">
+                    <div class="aspect-video bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center">
+                        <i class="fas fa-spa text-8xl text-white opacity-50"></i>
+                    </div>
+                </div>
+
+                <!-- Workshop Info -->
+                <div class="bg-white rounded-lg p-6 shadow-lg">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <span id="workshop-category" class="inline-block px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-semibold mb-2">
+                                카테고리
+                            </span>
+                            <h1 id="workshop-title" class="text-3xl font-bold text-gray-800 mb-2">
+                                워크샵 제목
+                            </h1>
+                            <div class="flex items-center text-gray-600 space-x-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    <span id="workshop-location">위치</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    <span id="workshop-duration">시간</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-teal-600" id="workshop-price">
+                                0원
+                            </div>
+                            <div class="text-sm text-gray-500">1인 기준</div>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4 mt-4">
+                        <h2 class="text-xl font-bold text-gray-800 mb-3">
+                            <i class="fas fa-info-circle mr-2 text-teal-600"></i>상세 설명
+                        </h2>
+                        <p id="workshop-description" class="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            워크샵 설명
+                        </p>
+                    </div>
+
+                    <div class="border-t pt-4 mt-4">
+                        <h2 class="text-xl font-bold text-gray-800 mb-3">
+                            <i class="fas fa-users mr-2 text-teal-600"></i>정원 정보
+                        </h2>
+                        <div class="flex items-center">
+                            <span class="text-gray-700">최대 참가 인원: </span>
+                            <span id="workshop-max-participants" class="ml-2 font-semibold text-teal-600">0명</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4 mt-4">
+                        <h2 class="text-xl font-bold text-gray-800 mb-3">
+                            <i class="fas fa-map mr-2 text-teal-600"></i>상세 주소
+                        </h2>
+                        <p id="workshop-address" class="text-gray-700">
+                            주소 정보
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Provider Info -->
+                <div class="bg-white rounded-lg p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-800 mb-3">
+                        <i class="fas fa-user-tie mr-2 text-teal-600"></i>제공자 정보
+                    </h2>
+                    <div id="provider-info" class="text-gray-700">
+                        로딩 중...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Booking Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg p-6 shadow-lg sticky top-24">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                        <i class="fas fa-calendar-check mr-2 text-teal-600"></i>예약하기
+                    </h2>
+
+                    <form id="booking-form" class="space-y-4">
+                        <!-- Step 1: Date Selection -->
+                        <div class="form-step">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-calendar mr-2"></i>예약 날짜
+                            </label>
+                            <input 
+                                type="date" 
+                                id="booking-date"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                required
+                            >
+                        </div>
+
+                        <!-- Step 2: Time Selection -->
+                        <div class="form-step">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-clock mr-2"></i>예약 시간
+                            </label>
+                            <select 
+                                id="booking-time"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                required
+                            >
+                                <option value="">시간을 선택하세요</option>
+                                <option value="10:00">오전 10:00</option>
+                                <option value="11:00">오전 11:00</option>
+                                <option value="14:00">오후 2:00</option>
+                                <option value="15:00">오후 3:00</option>
+                                <option value="16:00">오후 4:00</option>
+                                <option value="19:00">오후 7:00</option>
+                                <option value="20:00">오후 8:00</option>
+                            </select>
+                        </div>
+
+                        <!-- Step 3: Participants -->
+                        <div class="form-step">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-users mr-2"></i>참가 인원
+                            </label>
+                            <div class="flex items-center space-x-3">
+                                <button 
+                                    type="button" 
+                                    onclick="decreaseParticipants()"
+                                    class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center"
+                                >
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input 
+                                    type="number" 
+                                    id="participants"
+                                    value="1"
+                                    min="1"
+                                    max="10"
+                                    class="flex-1 text-center px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    readonly
+                                >
+                                <button 
+                                    type="button" 
+                                    onclick="increaseParticipants()"
+                                    class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center"
+                                >
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Contact Information -->
+                        <div class="form-step">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-phone mr-2"></i>연락처
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="contact-phone"
+                                placeholder="010-1234-5678"
+                                pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                required
+                            >
+                            <p class="text-xs text-gray-500 mt-1">예약 확인 연락을 위해 필요합니다</p>
+                        </div>
+
+                        <!-- Additional Requests -->
+                        <div class="form-step">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-comment mr-2"></i>추가 요청사항 (선택)
+                            </label>
+                            <textarea 
+                                id="booking-notes"
+                                rows="3"
+                                placeholder="알레르기, 특별 요청 등을 입력하세요"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            ></textarea>
+                        </div>
+
+                        <!-- Price Summary -->
+                        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                            <div class="flex justify-between text-gray-700">
+                                <span>1인 가격</span>
+                                <span id="unit-price">0원</span>
+                            </div>
+                            <div class="flex justify-between text-gray-700">
+                                <span>참가 인원</span>
+                                <span id="total-participants">1명</span>
+                            </div>
+                            <div class="border-t pt-2 flex justify-between text-lg font-bold text-gray-800">
+                                <span>총 결제 금액</span>
+                                <span id="total-price" class="text-teal-600">0원</span>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button 
+                            type="submit"
+                            class="w-full bg-teal-600 text-white py-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-check-circle"></i>
+                            <span>예약 신청하기</span>
+                        </button>
+
+                        <p class="text-xs text-gray-500 text-center">
+                            예약 신청 후 제공자의 승인이 필요합니다
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-3xl text-green-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">예약 신청 완료!</h3>
+            <p class="text-gray-600 mb-6">
+                예약 신청이 성공적으로 접수되었습니다.<br>
+                제공자의 승인 후 확정됩니다.
+            </p>
+            <div class="space-y-2">
+                <a href="/dashboard" class="block w-full bg-teal-600 text-white py-3 rounded-lg hover:bg-teal-700">
+                    대시보드로 이동
+                </a>
+                <button onclick="closeSuccessModal()" class="block w-full bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300">
+                    계속 둘러보기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Date input styling */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(0.6);
+        }
+
+        input[type="date"]:hover::-webkit-calendar-picker-indicator {
+            filter: invert(0.4);
+        }
+
+        /* Number input styling */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Animation */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-step {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+
+    <script src="/static/workshop-detail.js"></script>
+</body>
+</html>
