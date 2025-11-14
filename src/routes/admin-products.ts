@@ -24,7 +24,21 @@ async function checkAdminAuth(c: any, next: any) {
   }
 }
 
-// 모든 제품 목록 조회 (관리자)
+// 공개 제품 목록 조회 (사용자용 - 활성화된 제품만)
+adminProducts.get('/public', async (c) => {
+  try {
+    const result = await c.env.DB.prepare(
+      `SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC`
+    ).all();
+    
+    return c.json({ products: result.results });
+  } catch (error: any) {
+    console.error('제품 목록 조회 오류:', error);
+    return c.json({ error: '제품 목록 조회 실패', details: error.message }, 500);
+  }
+});
+
+// 모든 제품 목록 조회 (관리자 - 모든 제품)
 adminProducts.get('/', checkAdminAuth, async (c) => {
   try {
     const result = await c.env.DB.prepare(

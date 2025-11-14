@@ -35,11 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
 // Load products from API
 async function loadProducts() {
     try {
-        const response = await axios.get('/api/products');
+        const response = await axios.get('/api/admin-products/public');
         console.log('Products loaded:', response.data);
         
-        if (response.data && Array.isArray(response.data)) {
-            allProducts = response.data.filter(p => p.is_active === 1);
+        // API returns { products: [...] } - already filtered for is_active = 1
+        if (response.data && response.data.products && Array.isArray(response.data.products)) {
+            allProducts = response.data.products;
         } else {
             allProducts = [];
         }
