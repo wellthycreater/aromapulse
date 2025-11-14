@@ -155,10 +155,10 @@ blogReviews.post('/crawl-from-url', async (c) => {
     if (crawledComments.length === 0) {
       console.log('네이버 댓글 API 접근 실패 - 시뮬레이션 모드 사용')
       
-      // 실제 블로그 댓글 기반 시뮬레이션 데이터
+      // 실제 블로그 댓글 기반 시뮬레이션 데이터 (포스트별 고유 ID)
       crawledComments = [
         {
-          comment_id: 'comment_sim_1',
+          comment_id: `comment_sim_${postId}_1`,
           author_name: '소상공 지원 희망이',
           author_id: null,
           content: '안녕하세요, 이웃님! 정성 가득한 포스팅 잘 보고 갑니다! 6월이 성큼 다가온 요즘, 날씨만큼 마음도 환해지는 하루 되시길 바랍니다. 오늘도 건강하고 행복한 하루 보내세요~',
@@ -166,7 +166,7 @@ blogReviews.post('/crawl-from-url', async (c) => {
           parent_comment_id: null
         },
         {
-          comment_id: 'comment_sim_2',
+          comment_id: `comment_sim_${postId}_2`,
           author_name: 'my ordinary day',
           author_id: null,
           content: '화요일 퇴근길, 기분 좋은 밤입니다. 오늘도 좋은 포스팅 잘 보고 갑니다. 편안한 밤 되세요:)',
@@ -174,7 +174,7 @@ blogReviews.post('/crawl-from-url', async (c) => {
           parent_comment_id: null
         },
         {
-          comment_id: 'comment_sim_3',
+          comment_id: `comment_sim_${postId}_3`,
           author_name: '내인생봄날의원',
           author_id: null,
           content: '안녕하세요 이웃님 :) 포스팅 잘 보고 갑니다~❤️ 편안한 밤 보내세요~🤗',
@@ -182,7 +182,7 @@ blogReviews.post('/crawl-from-url', async (c) => {
           parent_comment_id: null
         },
         {
-          comment_id: 'comment_sim_4',
+          comment_id: `comment_sim_${postId}_4`,
           author_name: '여행에 힐링을 더하다',
           author_id: null,
           content: '캐리어오일에 에센셜오일(베르가못, 라벤더)을 섞어서 목과 데콜테 마사지 해주고 있는데 손님 반응이 좋아요. 제품문의는 어디로 드리면 될까요',
@@ -204,6 +204,16 @@ blogReviews.post('/crawl-from-url', async (c) => {
         continue // 빈 댓글 스킵
       }
       
+      // 중복 댓글 체크
+      const existingComment = await c.env.DB.prepare(`
+        SELECT id FROM blog_comments WHERE comment_id = ?
+      `).bind(comment.comment_id).first()
+      
+      if (existingComment) {
+        console.log(`댓글 스킵 (이미 존재): ${comment.comment_id}`)
+        continue // 이미 수집된 댓글은 스킵
+      }
+      
       // AI 분석 수행
       const sentiment = analyzeSentiment(comment.content)
       const userType = predictUserType(comment.content)
@@ -211,23 +221,28 @@ blogReviews.post('/crawl-from-url', async (c) => {
       const keywords = extractKeywords(comment.content)
       
       // 댓글 저장
-      const commentResult = await c.env.DB.prepare(`
-        INSERT INTO blog_comments (
-          post_id, comment_id, author_name, author_id, content,
-          sentiment, user_type_prediction, intent, keywords, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(
-        post.id,
-        comment.comment_id,
-        comment.author_name,
-        comment.author_id,
-        comment.content,
-        sentiment,
-        userType,
-        intent,
-        JSON.stringify(keywords),
-        comment.created_at
-      ).run()
+      try {
+        const commentResult = await c.env.DB.prepare(`
+          INSERT INTO blog_comments (
+            post_id, comment_id, author_name, author_id, content,
+            sentiment, user_type_prediction, intent, keywords, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          post.id,
+          comment.comment_id,
+          comment.author_name,
+          comment.author_id,
+          comment.content,
+          sentiment,
+          userType,
+          intent,
+          JSON.stringify(keywords),
+          comment.created_at
+        ).run()
+      } catch (insertError: any) {
+        console.error(`댓글 저장 실패 (${comment.comment_id}):`, insertError.message)
+        continue // 저장 실패 시 다음 댓글로
+      }
       
       totalComments++
       
