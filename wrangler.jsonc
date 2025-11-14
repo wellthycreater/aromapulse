@@ -19,14 +19,15 @@
       "database_name": "aromapulse-production",
       "database_id": "8ec629d0-47a9-46de-b2ab-5a197612230b"
     }
-  ],
+  ]
   
   // R2 Storage (Object Storage for images)
-  // 제품 이미지 저장용
-  "r2_buckets": [
-    {
-      "binding": "IMAGES",
-      "bucket_name": "aromapulse-products"
-    }
-  ]
+  // 제품 이미지 저장용 - 현재 비활성화
+  // 향후 이미지 업로드 기능 추가 시 아래 주석을 해제하고 R2 버킷 생성 필요
+  // "r2_buckets": [
+  //   {
+  //     "binding": "IMAGES",
+  //     "bucket_name": "aromapulse-products"
+  //   }
+  // ]
 }
