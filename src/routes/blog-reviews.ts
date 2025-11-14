@@ -137,6 +137,51 @@ blogReviews.post('/comments', async (c) => {
       UPDATE blog_posts SET comment_count = comment_count + 1 WHERE id = ?
     `).bind(post.id).run()
     
+    // 구매 의도나 문의가 감지되면 챗봇 세션 자동 생성
+    let chatbotSessionId = null
+    if (intent === '구매의도' || intent === '문의' || intent === 'B2B문의' || intent === '가격문의') {
+      try {
+        // 챗봇 세션 생성
+        const sessionResult = await c.env.DB.prepare(`
+          INSERT INTO chatbot_sessions (user_type, session_data, created_at)
+          VALUES (?, ?, CURRENT_TIMESTAMP)
+        `).bind(
+          userTypePrediction || 'unknown',
+          JSON.stringify({
+            source: 'blog_comment',
+            comment_id: result.meta.last_row_id,
+            post_id: post.id,
+            author_name: author_name || 'Anonymous',
+            initial_message: content,
+            sentiment,
+            intent,
+            keywords
+          })
+        ).run()
+        
+        chatbotSessionId = sessionResult.meta.last_row_id
+        
+        // 챗봇 메시지 생성 (초기 컨텍스트)
+        await c.env.DB.prepare(`
+          INSERT INTO chatbot_messages (session_id, role, content, created_at)
+          VALUES (?, 'system', ?, CURRENT_TIMESTAMP)
+        `).bind(
+          chatbotSessionId,
+          `블로그 댓글에서 시작된 대화입니다. 사용자: ${author_name || 'Anonymous'}, 의도: ${intent}, 감정: ${sentiment}, 키워드: ${keywords.join(', ')}`
+        ).run()
+        
+        // 사용자 메시지 추가
+        await c.env.DB.prepare(`
+          INSERT INTO chatbot_messages (session_id, role, content, created_at)
+          VALUES (?, 'user', ?, CURRENT_TIMESTAMP)
+        `).bind(chatbotSessionId, content).run()
+        
+      } catch (chatbotError) {
+        console.error('챗봇 세션 생성 실패:', chatbotError)
+        // 챗봇 연동 실패해도 댓글 등록은 성공으로 처리
+      }
+    }
+    
     return c.json({
       message: '댓글이 등록되었습니다',
       id: result.meta.last_row_id,
@@ -145,7 +190,9 @@ blogReviews.post('/comments', async (c) => {
         user_type_prediction: userTypePrediction,
         intent,
         keywords
-      }
+      },
+      chatbot_session_id: chatbotSessionId,
+      chatbot_url: chatbotSessionId ? `/chatbot?session=${chatbotSessionId}` : null
     })
   } catch (error) {
     console.error('댓글 등록 실패:', error)

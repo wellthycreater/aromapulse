@@ -644,4 +644,162 @@ chatbot.get('/conversion-stats', async (c) => {
   }
 })
 
+// 블로그 댓글에서 챗봇 세션 시작
+chatbot.post('/session/from-comment', async (c) => {
+  try {
+    const { comment_id } = await c.req.json()
+    
+    if (!comment_id) {
+      return c.json({ error: '댓글 ID가 필요합니다' }, 400)
+    }
+    
+    // 댓글 정보 조회
+    const comment = await c.env.DB.prepare(`
+      SELECT bc.*, bp.title as post_title, bp.url as post_url
+      FROM blog_comments bc
+      JOIN blog_posts bp ON bc.post_id = bp.id
+      WHERE bc.id = ?
+    `).bind(comment_id).first()
+    
+    if (!comment) {
+      return c.json({ error: '댓글을 찾을 수 없습니다' }, 404)
+    }
+    
+    // 이미 챗봇 세션이 존재하는지 확인
+    const existingSession = await c.env.DB.prepare(`
+      SELECT id, session_id FROM chatbot_sessions
+      WHERE session_data LIKE ?
+    `).bind(`%"comment_id":${comment_id}%`).first()
+    
+    if (existingSession) {
+      return c.json({
+        message: '기존 세션을 사용합니다',
+        session_id: existingSession.session_id,
+        chatbot_url: `/chatbot?session=${existingSession.session_id}`
+      })
+    }
+    
+    // 새 챗봇 세션 생성
+    const sessionId = generateSessionId()
+    const visitorId = generateVisitorId()
+    
+    const sessionResult = await c.env.DB.prepare(`
+      INSERT INTO chatbot_sessions (
+        session_id, visitor_id, detected_user_type, session_data, created_at
+      ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `).bind(
+      sessionId,
+      visitorId,
+      comment.user_type_prediction || 'unknown',
+      JSON.stringify({
+        source: 'blog_comment',
+        comment_id: comment.id,
+        post_id: comment.post_id,
+        post_title: comment.post_title,
+        post_url: comment.post_url,
+        author_name: comment.author_name,
+        initial_message: comment.content,
+        sentiment: comment.sentiment,
+        intent: comment.intent,
+        keywords: JSON.parse(comment.keywords || '[]')
+      })
+    ).run()
+    
+    // 시스템 메시지 생성 (컨텍스트 제공)
+    await c.env.DB.prepare(`
+      INSERT INTO chatbot_messages (session_id, sender, content, created_at)
+      VALUES (?, 'system', ?, CURRENT_TIMESTAMP)
+    `).bind(
+      sessionResult.meta.last_row_id,
+      `블로그 댓글에서 시작된 대화입니다.\n포스트: ${comment.post_title}\n작성자: ${comment.author_name}\n의도: ${comment.intent}\n감정: ${comment.sentiment}\n키워드: ${JSON.parse(comment.keywords || '[]').join(', ')}`
+    ).run()
+    
+    // 사용자 댓글을 첫 메시지로 추가
+    await c.env.DB.prepare(`
+      INSERT INTO chatbot_messages (session_id, sender, content, intent, sentiment, created_at)
+      VALUES (?, 'user', ?, ?, ?, CURRENT_TIMESTAMP)
+    `).bind(
+      sessionResult.meta.last_row_id,
+      comment.content,
+      comment.intent,
+      comment.sentiment
+    ).run()
+    
+    // AI 응답 생성
+    const aiResponse = generateResponseFromComment(comment)
+    
+    await c.env.DB.prepare(`
+      INSERT INTO chatbot_messages (session_id, sender, content, created_at)
+      VALUES (?, 'assistant', ?, CURRENT_TIMESTAMP)
+    `).bind(
+      sessionResult.meta.last_row_id,
+      aiResponse
+    ).run()
+    
+    return c.json({
+      message: '챗봇 세션이 생성되었습니다',
+      session_id: sessionId,
+      chatbot_url: `/chatbot?session=${sessionId}`,
+      initial_response: aiResponse
+    })
+    
+  } catch (error) {
+    console.error('댓글 연동 세션 생성 실패:', error)
+    return c.json({ error: '세션 생성 실패' }, 500)
+  }
+})
+
+// 댓글 기반 AI 응답 생성
+function generateResponseFromComment(comment: any): string {
+  const intent = comment.intent
+  const sentiment = comment.sentiment
+  const keywords = JSON.parse(comment.keywords || '[]')
+  const userType = comment.user_type_prediction
+  
+  // 인사말
+  let response = `안녕하세요, ${comment.author_name}님! 블로그 댓글 감사합니다. 😊\n\n`
+  
+  // 의도별 응답
+  if (intent === '구매의도') {
+    response += `구매에 관심 가져주셔서 감사합니다!\n`
+    if (keywords.length > 0) {
+      response += `${keywords.join(', ')} 관련 제품을 추천해드릴 수 있습니다.\n\n`
+    }
+    if (userType === 'B2B') {
+      response += `🏢 기업 고객님께는 다음과 같은 혜택을 제공합니다:\n• 대량 구매 20% 할인\n• 전담 매니저 배정\n• 샘플 무료 제공\n\n`
+    } else {
+      response += `🎁 첫 구매 고객님께 특별 혜택을 드립니다:\n• 첫 구매 10% 할인\n• 적립금 5%\n• 무료 배송\n\n`
+    }
+    response += `제품 상담이나 주문을 원하시면 말씀해주세요!`
+  }
+  else if (intent === '문의' || intent === '가격문의') {
+    response += `궁금하신 점이 있으신가요? 무엇이든 물어보세요!\n\n`
+    if (keywords.length > 0) {
+      response += `${keywords.join(', ')} 관련 정보를 도와드리겠습니다.`
+    }
+  }
+  else if (intent === 'B2B문의') {
+    response += `🏢 비즈니스 문의 감사합니다!\n\n`
+    response += `다음과 같은 서비스를 제공하고 있습니다:\n`
+    response += `• 워크샵 & 클래스 제휴\n`
+    response += `• 대량 납품 (에스테틱, 미용실, 웰니스 가게 등)\n`
+    response += `• 기능성/효능성 제품 공급\n`
+    response += `• 파트너사 협업\n\n`
+    response += `어떤 서비스가 필요하신가요?`
+  }
+  else if (intent === '긍정리뷰') {
+    response += `긍정적인 의견 정말 감사합니다! ${sentiment === 'positive' ? '😊' : ''}\n\n`
+    response += `더 궁금하신 점이나 추가로 필요한 제품이 있으시면 알려주세요!`
+  }
+  else {
+    response += `댓글 남겨주셔서 감사합니다!\n\n`
+    if (keywords.length > 0) {
+      response += `${keywords.join(', ')} 관련해서 도움을 드릴 수 있습니다.\n\n`
+    }
+    response += `궁금하신 점이 있으시면 편하게 물어보세요! 😊`
+  }
+  
+  return response
+}
+
 export default chatbot
