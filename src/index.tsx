@@ -299,6 +299,32 @@ app.get('/', (c) => {
                 // Redirect to signup or appropriate page
                 location.href = '/signup?type=' + userType + '&sub=' + subType;
             }
+            
+            // 페이지 로드 시 메뉴 가시성 제어
+            document.addEventListener('DOMContentLoaded', function() {
+                const token = localStorage.getItem('token');
+                const workshopLink = document.querySelector('a[href="/workshops"]');
+                
+                if (workshopLink) {
+                    if (token) {
+                        try {
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            // B2B 사용자만 워크샵 메뉴 표시
+                            if (payload.userType === 'B2B') {
+                                workshopLink.style.display = 'inline-block';
+                            } else {
+                                workshopLink.style.display = 'none';
+                            }
+                        } catch (e) {
+                            // 토큰 파싱 오류 시 워크샵 숨김
+                            workshopLink.style.display = 'none';
+                        }
+                    } else {
+                        // 비로그인 사용자는 워크샵 숨김
+                        workshopLink.style.display = 'none';
+                    }
+                }
+            });
         </script>
     </body>
     </html>

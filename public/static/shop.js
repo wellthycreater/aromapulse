@@ -4,7 +4,7 @@ let allProducts = [];
 let filteredProducts = [];
 let cart = [];
 
-// Auth check
+// Auth check and menu visibility
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (token) {
@@ -13,8 +13,29 @@ function checkAuth() {
             document.getElementById('auth-buttons').style.display = 'none';
             document.getElementById('user-info').style.display = 'flex';
             document.getElementById('user-name').textContent = payload.name || payload.email;
+            
+            // 메뉴 가시성 제어: B2B 사용자만 워크샵 메뉴 표시
+            updateMenuVisibility(payload.userType);
         } catch (e) {
             console.error('Token parse error:', e);
+        }
+    } else {
+        // 비로그인 사용자는 워크샵 숨김
+        updateMenuVisibility(null);
+    }
+}
+
+// 사용자 타입에 따라 메뉴 가시성 업데이트
+function updateMenuVisibility(userType) {
+    const workshopLink = document.querySelector('a[href="/workshops"]');
+    
+    if (workshopLink) {
+        // B2B 사용자(perfumer, company, shop)만 워크샵 표시
+        if (userType === 'B2B') {
+            workshopLink.style.display = 'block';
+        } else {
+            // B2C 사용자 또는 비로그인 사용자는 워크샵 숨김
+            workshopLink.style.display = 'none';
         }
     }
 }

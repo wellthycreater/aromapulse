@@ -25,6 +25,9 @@ async function loadUserData() {
         // 헤더에 사용자 이름 표시
         document.getElementById('user-name').textContent = currentUser.name;
         
+        // 워크샵 메뉴 가시성 제어: B2B만 표시
+        updateWorkshopMenuVisibility(currentUser.user_type);
+        
         // 사용자 타입에 따라 대시보드 표시
         if (currentUser.user_type === 'B2C') {
             await loadB2CDashboard();
@@ -39,6 +42,29 @@ async function loadUserData() {
         console.error('사용자 데이터 로드 오류:', error);
         alert('데이터를 불러오는 중 오류가 발생했습니다.');
         window.location.href = '/login';
+    }
+}
+
+// 워크샵 메뉴 가시성 제어
+function updateWorkshopMenuVisibility(userType) {
+    // 모든 워크샵 관련 링크/버튼 찾기
+    const workshopButtons = document.querySelectorAll('button[onclick*="workshops"], a[href*="/workshops"]');
+    const workshopSections = document.querySelectorAll('[id*="workshop"]');
+    
+    workshopButtons.forEach(button => {
+        if (userType === 'B2B') {
+            button.style.display = '';
+        } else {
+            button.style.display = 'none';
+        }
+    });
+    
+    // B2C 사용자의 경우 추천 워크샵 섹션 숨기기
+    if (userType === 'B2C') {
+        const recommendedSection = document.querySelector('[id*="recommended-workshops"]')?.closest('.bg-white');
+        if (recommendedSection) {
+            recommendedSection.style.display = 'none';
+        }
     }
 }
 
