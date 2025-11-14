@@ -357,14 +357,9 @@ blogReviews.get('/posts', async (c) => {
           WHERE post_id = ?
         `).bind(post.id).first()
         
-        // 챗봇 세션 수 (댓글 기반 세션)
-        const chatbotSessions = await c.env.DB.prepare(`
-          SELECT COUNT(DISTINCT cs.id) as chatbot_session_count
-          FROM chatbot_sessions cs
-          JOIN chatbot_messages cm ON cs.id = cm.session_id
-          JOIN blog_comments bc ON cm.content LIKE '%' || bc.content || '%'
-          WHERE bc.post_id = ?
-        `).bind(post.id).first()
+        // 챗봇 세션 수 - TODO: chatbot_sessions에 comment_id 추가 후 수정
+        // 현재는 간단하게 B2B + 구매의도 댓글 수로 추정
+        const chatbotSessionCount = (commentStats?.b2b_count || 0) + (commentStats?.purchase_intent_count || 0);
         
         return {
           ...post,
@@ -372,7 +367,7 @@ blogReviews.get('/posts', async (c) => {
           purchase_intent_count: commentStats?.purchase_intent_count || 0,
           b2c_count: commentStats?.b2c_count || 0,
           b2b_count: commentStats?.b2b_count || 0,
-          chatbot_session_count: chatbotSessions?.chatbot_session_count || 0
+          chatbot_session_count: chatbotSessionCount
         }
       })
     )
