@@ -142,28 +142,23 @@ blogReviews.post('/comments', async (c) => {
     if (intent === '구매의도' || intent === '문의' || intent === 'B2B문의' || intent === '가격문의') {
       try {
         // 챗봇 세션 생성
+        const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+        const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+        
         const sessionResult = await c.env.DB.prepare(`
-          INSERT INTO chatbot_sessions (user_type, session_data, created_at)
-          VALUES (?, ?, CURRENT_TIMESTAMP)
+          INSERT INTO chatbot_sessions (session_id, visitor_id, detected_user_type, started_at)
+          VALUES (?, ?, ?, CURRENT_TIMESTAMP)
         `).bind(
-          userTypePrediction || 'unknown',
-          JSON.stringify({
-            source: 'blog_comment',
-            comment_id: result.meta.last_row_id,
-            post_id: post.id,
-            author_name: author_name || 'Anonymous',
-            initial_message: content,
-            sentiment,
-            intent,
-            keywords
-          })
+          sessionId,
+          visitorId,
+          userTypePrediction || 'unknown'
         ).run()
         
         chatbotSessionId = sessionResult.meta.last_row_id
         
         // 챗봇 메시지 생성 (초기 컨텍스트)
         await c.env.DB.prepare(`
-          INSERT INTO chatbot_messages (session_id, role, content, created_at)
+          INSERT INTO chatbot_messages (session_id, sender, content, created_at)
           VALUES (?, 'system', ?, CURRENT_TIMESTAMP)
         `).bind(
           chatbotSessionId,
@@ -172,9 +167,17 @@ blogReviews.post('/comments', async (c) => {
         
         // 사용자 메시지 추가
         await c.env.DB.prepare(`
-          INSERT INTO chatbot_messages (session_id, role, content, created_at)
-          VALUES (?, 'user', ?, CURRENT_TIMESTAMP)
-        `).bind(chatbotSessionId, content).run()
+          INSERT INTO chatbot_messages (session_id, sender, content, intent, sentiment, created_at)
+          VALUES (?, 'user', ?, ?, ?, CURRENT_TIMESTAMP)
+        `).bind(chatbotSessionId, content, intent, sentiment).run()
+        
+        // AI 응답 생성
+        const aiResponse = generateAIResponseFromComment(content, intent, sentiment, keywords, userTypePrediction)
+        
+        await c.env.DB.prepare(`
+          INSERT INTO chatbot_messages (session_id, sender, content, created_at)
+          VALUES (?, 'assistant', ?, CURRENT_TIMESTAMP)
+        `).bind(chatbotSessionId, aiResponse).run()
         
       } catch (chatbotError) {
         console.error('챗봇 세션 생성 실패:', chatbotError)
@@ -404,5 +407,57 @@ blogReviews.get('/leads', async (c) => {
     return c.json({ error: '리드 조회 실패' }, 500)
   }
 })
+
+// AI 응답 생성 함수
+function generateAIResponseFromComment(
+  content: string,
+  intent: string,
+  sentiment: string,
+  keywords: string[],
+  userType: string | null
+): string {
+  let response = `안녕하세요! 블로그 댓글 감사합니다. 😊\n\n`
+  
+  if (intent === '구매의도') {
+    response += `구매에 관심 가져주셔서 감사합니다!\n`
+    if (keywords.length > 0) {
+      response += `${keywords.join(', ')} 관련 제품을 추천해드릴 수 있습니다.\n\n`
+    }
+    if (userType === 'B2B') {
+      response += `🏢 기업 고객님께는 다음과 같은 혜택을 제공합니다:\n• 대량 구매 20% 할인\n• 전담 매니저 배정\n• 샘플 무료 제공\n\n`
+    } else {
+      response += `🎁 첫 구매 고객님께 특별 혜택을 드립니다:\n• 첫 구매 10% 할인\n• 적립금 5%\n• 무료 배송\n\n`
+    }
+    response += `제품 상담이나 주문을 원하시면 말씀해주세요!`
+  }
+  else if (intent === '문의' || intent === '가격문의') {
+    response += `궁금하신 점이 있으신가요? 무엇이든 물어보세요!\n\n`
+    if (keywords.length > 0) {
+      response += `${keywords.join(', ')} 관련 정보를 도와드리겠습니다.`
+    }
+  }
+  else if (intent === 'B2B문의') {
+    response += `🏢 비즈니스 문의 감사합니다!\n\n`
+    response += `다음과 같은 서비스를 제공하고 있습니다:\n`
+    response += `• 워크샵 & 클래스 제휴\n`
+    response += `• 대량 납품 (에스테틱, 미용실, 웰니스 가게 등)\n`
+    response += `• 기능성/효능성 제품 공급\n`
+    response += `• 파트너사 협업\n\n`
+    response += `어떤 서비스가 필요하신가요?`
+  }
+  else if (intent === '긍정리뷰') {
+    response += `긍정적인 의견 정말 감사합니다! ${sentiment === 'positive' ? '😊' : ''}\n\n`
+    response += `더 궁금하신 점이나 추가로 필요한 제품이 있으시면 알려주세요!`
+  }
+  else {
+    response += `댓글 남겨주셔서 감사합니다!\n\n`
+    if (keywords.length > 0) {
+      response += `${keywords.join(', ')} 관련해서 도움을 드릴 수 있습니다.\n\n`
+    }
+    response += `궁금하신 점이 있으시면 편하게 물어보세요! 😊`
+  }
+  
+  return response
+}
 
 export default blogReviews
