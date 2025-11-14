@@ -27,10 +27,200 @@ blogReviews.post('/posts', async (c) => {
   }
 })
 
-// 블로그 포스트 목록 조회
+// 블로그 URL에서 댓글 자동 수집 및 분석 (관리자)
+blogReviews.post('/crawl-from-url', async (c) => {
+  try {
+    const { url } = await c.req.json()
+    
+    if (!url) {
+      return c.json({ error: 'URL이 필요합니다' }, 400)
+    }
+    
+    // URL 검증
+    if (!url.includes('blog.naver.com')) {
+      return c.json({ error: '네이버 블로그 URL만 지원됩니다' }, 400)
+    }
+    
+    // URL에서 포스트 ID 추출
+    const postIdMatch = url.match(/\/(\d+)$/)
+    if (!postIdMatch) {
+      return c.json({ error: '올바른 네이버 블로그 URL이 아닙니다 (예: https://blog.naver.com/aromapulse/223921529276)' }, 400)
+    }
+    
+    const postId = postIdMatch[1]
+    
+    // 포스트 정보 등록 (이미 존재하면 기존 것 사용)
+    let post = await c.env.DB.prepare(`
+      SELECT * FROM blog_posts WHERE post_id = ?
+    `).bind(postId).first()
+    
+    if (!post) {
+      // 새 포스트 등록
+      const postResult = await c.env.DB.prepare(`
+        INSERT INTO blog_posts (post_id, title, url, published_at, comment_count)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP, 0)
+      `).bind(postId, `블로그 게시물 ${postId}`, url).run()
+      
+      post = { 
+        id: postResult.meta.last_row_id, 
+        post_id: postId,
+        comment_count: 0
+      }
+    }
+    
+    // ⚠️ 실제 환경에서는 네이버 블로그 댓글 크롤링 또는 API 호출이 필요
+    // 현재는 데모/시뮬레이션 모드로 더미 데이터 생성
+    
+    // 시뮬레이션: 5개의 더미 댓글 생성
+    const dummyComments = [
+      {
+        author_name: '김민수',
+        content: '라벤더 향수 구매하고 싶은데 가격이 얼마인가요? 회사에서 직원 복지용으로 대량 구매 가능한가요?',
+        intent: 'B2B문의',
+        sentiment: 'neutral',
+        userType: 'B2B'
+      },
+      {
+        author_name: '박지영',
+        content: '불면증이 심해서 고민인데 라벤더 제품 효과가 있을까요? 구매 링크 있나요?',
+        intent: '구매의도',
+        sentiment: 'neutral',
+        userType: 'B2C'
+      },
+      {
+        author_name: '이수진',
+        content: '지난주에 구매했는데 정말 좋아요! 향도 은은하고 수면에 도움이 많이 되는 것 같아요. 추천합니다!',
+        intent: '긍정리뷰',
+        sentiment: 'positive',
+        userType: 'B2C'
+      },
+      {
+        author_name: '최대호',
+        content: '사무실용으로 룸스프레이 필요한데 가격 문의 좀 드려요. 대량 구매 할인 있나요?',
+        intent: '가격문의',
+        sentiment: 'neutral',
+        userType: 'B2B'
+      },
+      {
+        author_name: '정서연',
+        content: '향기 정말 좋네요! 우울할 때 써보니 기분이 좀 나아지는 것 같아요',
+        intent: '긍정리뷰',
+        sentiment: 'positive',
+        userType: 'B2C'
+      }
+    ]
+    
+    let totalComments = 0
+    let purchaseIntentCount = 0
+    let b2cCount = 0
+    let b2bCount = 0
+    let chatbotSessionsCreated = 0
+    
+    for (const dummy of dummyComments) {
+      // 키워드 추출
+      const keywords = extractKeywords(dummy.content)
+      
+      // 댓글 저장
+      const commentResult = await c.env.DB.prepare(`
+        INSERT INTO blog_comments (
+          post_id, comment_id, author_name, content,
+          sentiment, user_type_prediction, intent, keywords
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        post.id,
+        `comment_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        dummy.author_name,
+        dummy.content,
+        dummy.sentiment,
+        dummy.userType,
+        dummy.intent,
+        JSON.stringify(keywords)
+      ).run()
+      
+      totalComments++
+      
+      if (dummy.intent === '구매의도' || dummy.intent === '문의' || dummy.intent === 'B2B문의' || dummy.intent === '가격문의') {
+        purchaseIntentCount++
+      }
+      
+      if (dummy.userType === 'B2C') b2cCount++
+      if (dummy.userType === 'B2B') b2bCount++
+      
+      // 구매 의도가 있는 댓글에 대해 챗봇 세션 자동 생성
+      if (dummy.intent === '구매의도' || dummy.intent === 'B2B문의' || dummy.intent === '가격문의') {
+        try {
+          const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+          const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+          
+          const sessionResult = await c.env.DB.prepare(`
+            INSERT INTO chatbot_sessions (session_id, visitor_id, detected_user_type, started_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+          `).bind(sessionId, visitorId, dummy.userType).run()
+          
+          const chatbotSessionId = sessionResult.meta.last_row_id
+          
+          // 시스템 메시지
+          await c.env.DB.prepare(`
+            INSERT INTO chatbot_messages (session_id, sender, content, created_at)
+            VALUES (?, 'system', ?, CURRENT_TIMESTAMP)
+          `).bind(
+            chatbotSessionId,
+            `블로그 댓글에서 시작된 대화입니다. 사용자: ${dummy.author_name}, 의도: ${dummy.intent}, 감정: ${dummy.sentiment}, 키워드: ${keywords.join(', ')}`
+          ).run()
+          
+          // 사용자 메시지
+          await c.env.DB.prepare(`
+            INSERT INTO chatbot_messages (session_id, sender, content, intent, sentiment, created_at)
+            VALUES (?, 'user', ?, ?, ?, CURRENT_TIMESTAMP)
+          `).bind(chatbotSessionId, dummy.content, dummy.intent, dummy.sentiment).run()
+          
+          // AI 응답
+          const aiResponse = generateAIResponseFromComment(
+            dummy.content, 
+            dummy.intent, 
+            dummy.sentiment, 
+            keywords, 
+            dummy.userType
+          )
+          
+          await c.env.DB.prepare(`
+            INSERT INTO chatbot_messages (session_id, sender, content, created_at)
+            VALUES (?, 'assistant', ?, CURRENT_TIMESTAMP)
+          `).bind(chatbotSessionId, aiResponse).run()
+          
+          chatbotSessionsCreated++
+        } catch (chatbotError) {
+          console.error('챗봇 세션 생성 실패:', chatbotError)
+        }
+      }
+    }
+    
+    // 포스트의 댓글 수 업데이트
+    await c.env.DB.prepare(`
+      UPDATE blog_posts SET comment_count = comment_count + ? WHERE id = ?
+    `).bind(totalComments, post.id).run()
+    
+    return c.json({
+      message: '댓글 수집 및 분석 완료',
+      post_id: postId,
+      total_comments: totalComments,
+      purchase_intent_count: purchaseIntentCount,
+      b2c_count: b2cCount,
+      b2b_count: b2bCount,
+      chatbot_sessions_created: chatbotSessionsCreated,
+      note: '현재는 시뮬레이션 모드입니다. 실제 네이버 블로그 API 연동은 추가 개발이 필요합니다.'
+    })
+    
+  } catch (error) {
+    console.error('댓글 수집 실패:', error)
+    return c.json({ error: '댓글 수집 실패: ' + error }, 500)
+  }
+})
+
+// 블로그 포스트 목록 조회 (통계 포함)
 blogReviews.get('/posts', async (c) => {
   const category = c.req.query('category')
-  const limit = parseInt(c.req.query('limit') || '20')
+  const limit = parseInt(c.req.query('limit') || '50')
   const offset = parseInt(c.req.query('offset') || '0')
   
   try {
@@ -44,9 +234,43 @@ blogReviews.get('/posts', async (c) => {
     const params = category ? [category, limit, offset] : [limit, offset]
     const posts = await c.env.DB.prepare(query).bind(...params).all()
     
+    // 각 포스트의 통계 정보 추가
+    const postsWithStats = await Promise.all(
+      (posts.results as any[]).map(async (post) => {
+        // 댓글 통계
+        const commentStats = await c.env.DB.prepare(`
+          SELECT 
+            COUNT(*) as total_comments,
+            SUM(CASE WHEN intent IN ('구매의도', '문의', 'B2B문의', '가격문의') THEN 1 ELSE 0 END) as purchase_intent_count,
+            SUM(CASE WHEN user_type_prediction = 'B2C' THEN 1 ELSE 0 END) as b2c_count,
+            SUM(CASE WHEN user_type_prediction = 'B2B' THEN 1 ELSE 0 END) as b2b_count
+          FROM blog_comments
+          WHERE post_id = ?
+        `).bind(post.id).first()
+        
+        // 챗봇 세션 수 (댓글 기반 세션)
+        const chatbotSessions = await c.env.DB.prepare(`
+          SELECT COUNT(DISTINCT cs.id) as chatbot_session_count
+          FROM chatbot_sessions cs
+          JOIN chatbot_messages cm ON cs.id = cm.session_id
+          JOIN blog_comments bc ON cm.content LIKE '%' || bc.content || '%'
+          WHERE bc.post_id = ?
+        `).bind(post.id).first()
+        
+        return {
+          ...post,
+          comment_count: commentStats?.total_comments || 0,
+          purchase_intent_count: commentStats?.purchase_intent_count || 0,
+          b2c_count: commentStats?.b2c_count || 0,
+          b2b_count: commentStats?.b2b_count || 0,
+          chatbot_session_count: chatbotSessions?.chatbot_session_count || 0
+        }
+      })
+    )
+    
     return c.json({
-      posts: posts.results,
-      count: posts.results.length
+      posts: postsWithStats,
+      count: postsWithStats.length
     })
   } catch (error) {
     console.error('포스트 조회 실패:', error)
@@ -79,6 +303,38 @@ blogReviews.get('/posts/:post_id', async (c) => {
   } catch (error) {
     console.error('포스트 조회 실패:', error)
     return c.json({ error: '포스트 조회 실패' }, 500)
+  }
+})
+
+// 특정 포스트의 댓글 목록 조회
+blogReviews.get('/posts/:post_id/comments', async (c) => {
+  const postId = c.req.param('post_id')
+  
+  try {
+    // post_id로 blog_posts 검색
+    const post = await c.env.DB.prepare(`
+      SELECT id FROM blog_posts WHERE post_id = ?
+    `).bind(postId).first()
+    
+    if (!post) {
+      return c.json({ error: '포스트를 찾을 수 없습니다' }, 404)
+    }
+    
+    // 댓글 목록 조회
+    const comments = await c.env.DB.prepare(`
+      SELECT * FROM blog_comments 
+      WHERE post_id = ? 
+      ORDER BY created_at DESC
+    `).bind(post.id).all()
+    
+    return c.json({
+      post_id: postId,
+      comments: comments.results,
+      count: comments.results.length
+    })
+  } catch (error) {
+    console.error('댓글 조회 실패:', error)
+    return c.json({ error: '댓글 조회 실패' }, 500)
   }
 })
 

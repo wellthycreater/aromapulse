@@ -63,6 +63,9 @@
                 <button onclick="switchTab('refresh')" id="tab-refresh" class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300">
                     <i class="fas fa-spray-can mr-2"></i>리프레시 (<span id="count-refresh">0</span>)
                 </button>
+                <button onclick="switchTab('blog')" id="tab-blog" class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-blog mr-2"></i>블로그 관리 (<span id="count-blog">0</span>)
+                </button>
             </nav>
         </div>
 
@@ -75,6 +78,42 @@
         <div id="loading" class="text-center py-12">
             <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
             <p class="text-gray-600">제품을 불러오는 중...</p>
+        </div>
+
+        <!-- Blog Management Section -->
+        <div id="blog-management-section" class="hidden">
+            <!-- 블로그 URL 입력 카드 -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-link text-purple-600 mr-2"></i>블로그 게시물 등록
+                </h3>
+                <p class="text-sm text-gray-600 mb-4">
+                    네이버 블로그 게시물 URL을 입력하면 댓글을 자동으로 수집하고 분석합니다.
+                </p>
+                <div class="flex gap-4">
+                    <input type="text" id="blog-url-input" 
+                        placeholder="예: https://blog.naver.com/aromapulse/223921529276"
+                        class="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <button onclick="crawlBlogComments()" 
+                        class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 font-semibold whitespace-nowrap">
+                        <i class="fas fa-download mr-2"></i>댓글 수집 및 분석
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    구매 의도가 감지된 댓글은 자동으로 챗봇 세션이 생성됩니다.
+                </p>
+            </div>
+
+            <!-- 등록된 블로그 게시물 목록 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-list text-purple-600 mr-2"></i>등록된 블로그 게시물
+                </h3>
+                <div id="blog-posts-list">
+                    <!-- 블로그 게시물 목록이 동적으로 추가됩니다 -->
+                </div>
+            </div>
         </div>
 
         <!-- Empty State -->

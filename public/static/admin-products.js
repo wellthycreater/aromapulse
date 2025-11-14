@@ -6,11 +6,13 @@ let filteredProducts = [];
 let currentTab = 'all';
 let isEditing = false;
 let editingProductId = null;
+let blogPosts = [];
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   loadProducts();
+  loadBlogPosts();
   
   // 폼 제출 이벤트
   document.getElementById('product-form').addEventListener('submit', handleFormSubmit);
@@ -40,8 +42,18 @@ function switchTab(tab) {
   activeTab.classList.add('active', 'border-purple-600', 'text-purple-600');
   activeTab.classList.remove('border-transparent', 'text-gray-500');
   
-  // 제품 필터링 및 렌더링
-  filterAndRenderProducts();
+  // 블로그 관리 탭인 경우
+  if (tab === 'blog') {
+    document.getElementById('products-grid').style.display = 'none';
+    document.getElementById('blog-management-section').classList.remove('hidden');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'none';
+  } else {
+    document.getElementById('products-grid').style.display = 'grid';
+    document.getElementById('blog-management-section').classList.add('hidden');
+    // 제품 필터링 및 렌더링
+    filterAndRenderProducts();
+  }
 }
 
 // 제품 필터링 및 렌더링
@@ -82,10 +94,12 @@ function updateProductCounts() {
   const allCount = currentProducts.length;
   const symptomCareCount = currentProducts.filter(p => p.concept === 'symptom_care').length;
   const refreshCount = currentProducts.filter(p => p.concept === 'refresh').length;
+  const blogCount = blogPosts.length;
   
   document.getElementById('count-all').textContent = allCount;
   document.getElementById('count-symptom-care').textContent = symptomCareCount;
   document.getElementById('count-refresh').textContent = refreshCount;
+  document.getElementById('count-blog').textContent = blogCount;
 }
 
 // 제품 컨셉 변경 시 필드 토글
@@ -642,5 +656,201 @@ function logout() {
   if (confirm('로그아웃 하시겠습니까?')) {
     localStorage.removeItem('auth_token');
     window.location.href = '/login';
+  }
+}
+
+// ============================================
+// 블로그 관리 기능
+// ============================================
+
+// 블로그 게시물 목록 로드
+async function loadBlogPosts() {
+  const token = localStorage.getItem('auth_token');
+  
+  try {
+    const response = await fetch('/api/blog-reviews/posts', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('블로그 게시물 목록 로드 실패');
+    }
+    
+    const data = await response.json();
+    blogPosts = data.posts || [];
+    
+    // 블로그 개수 업데이트
+    document.getElementById('count-blog').textContent = blogPosts.length;
+    
+    // 블로그 게시물 목록 렌더링
+    renderBlogPosts();
+    
+  } catch (error) {
+    console.error('블로그 게시물 로드 오류:', error);
+  }
+}
+
+// 블로그 게시물 목록 렌더링
+function renderBlogPosts() {
+  const listEl = document.getElementById('blog-posts-list');
+  
+  if (blogPosts.length === 0) {
+    listEl.innerHTML = `
+      <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-blog text-6xl mb-4"></i>
+        <p class="text-lg">등록된 블로그 게시물이 없습니다.</p>
+        <p class="text-sm mt-2">상단의 URL 입력란에 블로그 게시물 URL을 입력해주세요.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  listEl.innerHTML = '';
+  
+  blogPosts.forEach(post => {
+    const card = document.createElement('div');
+    card.className = 'border-b border-gray-200 py-4 last:border-b-0';
+    
+    const commentCount = post.comment_count || 0;
+    const purchaseIntentCount = post.purchase_intent_count || 0;
+    
+    card.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="flex-1">
+          <h4 class="font-bold text-gray-800 mb-2">${post.title || '제목 없음'}</h4>
+          <div class="flex gap-4 text-sm text-gray-600 mb-2">
+            <span><i class="fas fa-link mr-1"></i>게시물 ID: ${post.post_id}</span>
+            <span><i class="fas fa-comments mr-1"></i>댓글: ${commentCount}개</span>
+            <span><i class="fas fa-shopping-cart mr-1 text-purple-600"></i>구매 의도: ${purchaseIntentCount}개</span>
+          </div>
+          <div class="flex gap-2 text-xs">
+            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">B2C: ${post.b2c_count || 0}</span>
+            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded">B2B: ${post.b2b_count || 0}</span>
+            <span class="px-2 py-1 bg-green-100 text-green-800 rounded">챗봇 세션: ${post.chatbot_session_count || 0}</span>
+          </div>
+        </div>
+        <div class="flex gap-2 ml-4">
+          <a href="${post.url}" target="_blank" 
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm whitespace-nowrap">
+            <i class="fas fa-external-link-alt mr-1"></i>게시물 보기
+          </a>
+          <button onclick="viewBlogComments('${post.post_id}')" 
+            class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 text-sm whitespace-nowrap">
+            <i class="fas fa-list mr-1"></i>댓글 보기
+          </button>
+        </div>
+      </div>
+    `;
+    
+    listEl.appendChild(card);
+  });
+}
+
+// 블로그 댓글 수집 및 분석
+async function crawlBlogComments() {
+  const urlInput = document.getElementById('blog-url-input');
+  const url = urlInput.value.trim();
+  
+  if (!url) {
+    alert('블로그 게시물 URL을 입력해주세요.');
+    return;
+  }
+  
+  // URL 검증 (네이버 블로그)
+  if (!url.includes('blog.naver.com')) {
+    alert('네이버 블로그 URL만 지원됩니다.\n예: https://blog.naver.com/aromapulse/223921529276');
+    return;
+  }
+  
+  const token = localStorage.getItem('auth_token');
+  const button = event.target;
+  const originalText = button.innerHTML;
+  
+  button.disabled = true;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>수집 중...';
+  
+  try {
+    const response = await fetch('/api/blog-reviews/crawl-from-url', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ url })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '댓글 수집 실패');
+    }
+    
+    const data = await response.json();
+    
+    alert(
+      `댓글 수집 완료!\n\n` +
+      `- 총 댓글: ${data.total_comments}개\n` +
+      `- 구매 의도: ${data.purchase_intent_count}개\n` +
+      `- B2C: ${data.b2c_count}개\n` +
+      `- B2B: ${data.b2b_count}개\n` +
+      `- 생성된 챗봇 세션: ${data.chatbot_sessions_created}개`
+    );
+    
+    // URL 입력란 초기화
+    urlInput.value = '';
+    
+    // 블로그 게시물 목록 다시 로드
+    loadBlogPosts();
+    
+  } catch (error) {
+    console.error('댓글 수집 오류:', error);
+    alert(`댓글 수집 중 오류가 발생했습니다:\n${error.message}`);
+  } finally {
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+}
+
+// 블로그 댓글 보기 (모달 또는 새 창)
+async function viewBlogComments(postId) {
+  const token = localStorage.getItem('auth_token');
+  
+  try {
+    const response = await fetch(`/api/blog-reviews/posts/${postId}/comments`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('댓글 로드 실패');
+    }
+    
+    const data = await response.json();
+    const comments = data.comments || [];
+    
+    // 간단한 alert로 표시 (추후 모달로 개선 가능)
+    if (comments.length === 0) {
+      alert('댓글이 없습니다.');
+      return;
+    }
+    
+    let message = `총 ${comments.length}개의 댓글\n\n`;
+    comments.slice(0, 5).forEach((comment, index) => {
+      message += `${index + 1}. ${comment.author_name}\n`;
+      message += `   ${comment.content.substring(0, 50)}...\n`;
+      message += `   의도: ${comment.intent} | 감정: ${comment.sentiment}\n\n`;
+    });
+    
+    if (comments.length > 5) {
+      message += `... 외 ${comments.length - 5}개의 댓글`;
+    }
+    
+    alert(message);
+    
+  } catch (error) {
+    console.error('댓글 로드 오류:', error);
+    alert('댓글을 불러오는 중 오류가 발생했습니다.');
   }
 }
