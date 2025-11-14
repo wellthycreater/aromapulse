@@ -152,9 +152,6 @@ app.get('/', (c) => {
                         <a href="/shop" class="text-gray-700 hover:text-purple-600">
                             <i class="fas fa-shopping-bag mr-1"></i>쇼핑
                         </a>
-                        <a href="/chatbot" class="text-gray-700 hover:text-purple-600">
-                            <i class="fas fa-robot mr-1"></i>AI 상담
-                        </a>
                         <a href="/dashboard" class="text-gray-700 hover:text-purple-600">대시보드</a>
                         <a href="#features" class="text-gray-700 hover:text-purple-600">서비스</a>
                         <a href="#user-type" class="text-gray-700 hover:text-purple-600">회원가입</a>
