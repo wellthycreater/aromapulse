@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제품 쇼핑 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .tab-button.active {
+            border-color: #7c3aed !important;
+            color: #7c3aed !important;
+        }
+        .product-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center space-x-2">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+                </a>
+                
+                <div class="hidden md:flex space-x-6">
+                    <a href="/workshops" class="text-gray-700 hover:text-purple-600">워크샵</a>
+                    <a href="/shop" class="text-purple-600 font-semibold">쇼핑</a>
+                    <a href="/chatbot" class="text-gray-700 hover:text-purple-600">
+                        <i class="fas fa-robot mr-1"></i>AI 상담
+                    </a>
+                    <a href="/dashboard" class="text-gray-700 hover:text-purple-600">대시보드</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/cart" class="relative text-gray-700 hover:text-purple-600">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" style="display: none;">0</span>
+                    </a>
+                    <div id="auth-buttons">
+                        <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800">로그인</button>
+                    </div>
+                    <div id="user-info" style="display: none;" class="flex items-center space-x-2">
+                        <span id="user-name" class="text-gray-700 font-semibold"></span>
+                        <button onclick="logout()" class="text-red-500 hover:text-red-600">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-shopping-bag text-purple-600 mr-2"></i>아로마펄스 쇼핑
+            </h1>
+            <p class="text-gray-600">증상케어 전문 제품과 리프레시 브랜드 제품을 만나보세요</p>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="flex space-x-8">
+                <button onclick="switchTab('all')" id="tab-all" 
+                        class="tab-button active pb-4 px-1 border-b-2 border-purple-600 font-semibold text-purple-600">
+                    <i class="fas fa-box mr-2"></i>전체 제품 (<span id="count-all">0</span>)
+                </button>
+                <button onclick="switchTab('symptom_care')" id="tab-symptom-care" 
+                        class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-heart-pulse mr-2"></i>증상케어 (<span id="count-symptom-care">0</span>)
+                </button>
+                <button onclick="switchTab('refresh')" id="tab-refresh" 
+                        class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-spray-can mr-2"></i>리프레시 (<span id="count-refresh">0</span>)
+                </button>
+            </nav>
+        </div>
+
+        <!-- Filter & Sort -->
+        <div class="mb-6 flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex gap-2">
+                <select id="sort-select" onchange="sortProducts()" class="px-4 py-2 border rounded-lg">
+                    <option value="newest">최신순</option>
+                    <option value="price-low">가격 낮은순</option>
+                    <option value="price-high">가격 높은순</option>
+                    <option value="name">이름순</option>
+                </select>
+            </div>
+            <div class="text-sm text-gray-600">
+                총 <span id="total-count" class="font-bold text-purple-600">0</span>개 제품
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
+            <p class="text-gray-600">제품을 불러오는 중...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" style="display: none;" class="text-center py-12">
+            <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-600 text-lg">등록된 제품이 없습니다</p>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Products will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-6">
+                <img src="/static/wellthy-korea-footer.png" alt="웰씨코리아" 
+                     class="mx-auto mb-4" style="max-width: 600px; width: 100%;">
+            </div>
+            <div class="text-center">
+                <p class="text-gray-400">© 2025 아로마펄스. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script src="/static/shop.js"></script>
+</body>
+</html>

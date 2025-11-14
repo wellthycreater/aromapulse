@@ -110,6 +110,9 @@ app.get('/workshop/:id', (c) => {
   return c.redirect(`/static/workshop-detail.html?id=${id}`);
 });
 
+// Shop page - redirect to static file
+app.get('/shop', (c) => c.redirect('/static/shop.html'));
+
 // Admin product management page
 app.get('/admin/products', (c) => c.redirect('/static/admin-products.html'));
 app.get('/admin-products', (c) => c.redirect('/static/admin-products.html'));
@@ -146,6 +149,9 @@ app.get('/', (c) => {
                     </a>
                     <div class="hidden md:flex space-x-6">
                         <a href="/workshops" class="text-gray-700 hover:text-purple-600">워크샵</a>
+                        <a href="/shop" class="text-gray-700 hover:text-purple-600">
+                            <i class="fas fa-shopping-bag mr-1"></i>쇼핑
+                        </a>
                         <a href="/chatbot" class="text-gray-700 hover:text-purple-600">
                             <i class="fas fa-robot mr-1"></i>AI 상담
                         </a>
