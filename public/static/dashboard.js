@@ -87,12 +87,6 @@ async function loadB2CDashboard() {
     // 통계 데이터 로드
     await loadB2CStats();
     
-    // 예약 내역 로드
-    await loadMyBookings();
-    
-    // 추천 워크샵 로드
-    await loadRecommendedWorkshops();
-    
     // 활동 통계 로드
     await loadActivityStats();
 }
@@ -116,12 +110,6 @@ async function loadB2BDashboard() {
     
     // 통계 데이터 로드
     await loadB2BStats();
-    
-    // 워크샵 목록 로드
-    await loadMyWorkshops();
-    
-    // 예약 현황 로드
-    await loadRecentBookings();
 }
 
 // B2C 통계 로드

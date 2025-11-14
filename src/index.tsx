@@ -148,12 +148,12 @@ app.get('/', (c) => {
                         <img src="/static/logo-light.png" alt="아로마펄스" class="h-20">
                     </a>
                     <div class="hidden md:flex space-x-6">
-                        <a href="/workshops" class="text-gray-700 hover:text-purple-600">워크샵</a>
                         <a href="/shop" class="text-gray-700 hover:text-purple-600">
                             <i class="fas fa-shopping-bag mr-1"></i>쇼핑
                         </a>
                         <a href="/dashboard" class="text-gray-700 hover:text-purple-600">대시보드</a>
                         <a href="#features" class="text-gray-700 hover:text-purple-600">서비스</a>
+                        <a href="#business" class="text-gray-700 hover:text-purple-600">비즈니스</a>
                         <a href="#user-type" class="text-gray-700 hover:text-purple-600">회원가입</a>
                     </div>
                     <div class="flex space-x-4">
