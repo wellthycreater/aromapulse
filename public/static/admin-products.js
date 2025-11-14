@@ -803,9 +803,9 @@ async function crawlBlogComments() {
     // 블로그 게시물 목록 다시 로드
     loadBlogPosts();
     
-    // B2B 리드가 있으면 바로 표시
+    // B2B 리드가 있으면 방금 수집한 포스트의 리드만 표시
     if (data.b2b_count > 0) {
-      await loadAndDisplayB2BLeads();
+      await loadAndDisplayB2BLeads(data.post_internal_id, data.post_url);
     }
     
   } catch (error) {
@@ -861,15 +861,23 @@ async function viewBlogComments(postId) {
 }
 
 // B2B 리드 로드 및 표시
-async function loadAndDisplayB2BLeads() {
+async function loadAndDisplayB2BLeads(postId = null, postUrl = null) {
   try {
-    const response = await fetch('/api/blog-reviews/leads?user_type=B2B&dedup=true');
+    // postId가 제공되면 해당 포스트의 리드만 가져오기
+    let apiUrl = '/api/blog-reviews/leads?user_type=B2B&dedup=true';
+    
+    const response = await fetch(apiUrl);
     if (!response.ok) {
       throw new Error('B2B 리드 로드 실패');
     }
     
     const data = await response.json();
-    const leads = data.leads || [];
+    let leads = data.leads || [];
+    
+    // postId가 제공되면 해당 포스트의 리드만 필터링
+    if (postId) {
+      leads = leads.filter(lead => lead.post_id === parseInt(postId));
+    }
     
     if (leads.length === 0) {
       return;
@@ -900,8 +908,24 @@ async function loadAndDisplayB2BLeads() {
           전체 보기 <i class="fas fa-arrow-right ml-1"></i>
         </a>
       </div>
-      <div class="space-y-3">
     `;
+    
+    // 포스트 URL 정보 표시 (제공된 경우)
+    if (postUrl && leads.length > 0) {
+      html += `
+        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p class="text-sm text-gray-700">
+            <i class="fas fa-link text-blue-600 mr-2"></i>
+            <span class="font-semibold">방금 수집한 포스트:</span>
+            <a href="${postUrl}" target="_blank" class="text-blue-600 hover:underline ml-2">
+              ${postUrl}
+            </a>
+          </p>
+        </div>
+      `;
+    }
+    
+    html += '<div class="space-y-3">';
     
     // 최대 3개만 표시
     leads.slice(0, 3).forEach(lead => {

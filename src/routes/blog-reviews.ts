@@ -309,8 +309,10 @@ blogReviews.post('/crawl-from-url', async (c) => {
     
     return c.json({
       message: '댓글 수집 및 분석 완료',
-      post_id: postId,
+      post_id: postId, // 네이버 포스트 번호
+      post_internal_id: post.id, // 내부 데이터베이스 ID
       blog_id: blogId,
+      post_url: url,
       total_comments: totalComments,
       purchase_intent_count: purchaseIntentCount,
       b2c_count: b2cCount,
