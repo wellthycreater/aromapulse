@@ -159,13 +159,13 @@ blogReviews.post('/crawl-from-url', async (c) => {
           
           const chatbotSessionId = sessionResult.meta.last_row_id
           
-          // 시스템 메시지
+          // 시스템 메시지 (bot으로 전송)
           await c.env.DB.prepare(`
             INSERT INTO chatbot_messages (session_id, sender, content, created_at)
-            VALUES (?, 'system', ?, CURRENT_TIMESTAMP)
+            VALUES (?, 'bot', ?, CURRENT_TIMESTAMP)
           `).bind(
             chatbotSessionId,
-            `블로그 댓글에서 시작된 대화입니다. 사용자: ${dummy.author_name}, 의도: ${dummy.intent}, 감정: ${dummy.sentiment}, 키워드: ${keywords.join(', ')}`
+            `[시스템] 블로그 댓글에서 시작된 대화입니다. 사용자: ${dummy.author_name}, 의도: ${dummy.intent}, 감정: ${dummy.sentiment}, 키워드: ${keywords.join(', ')}`
           ).run()
           
           // 사용자 메시지
@@ -185,7 +185,7 @@ blogReviews.post('/crawl-from-url', async (c) => {
           
           await c.env.DB.prepare(`
             INSERT INTO chatbot_messages (session_id, sender, content, created_at)
-            VALUES (?, 'assistant', ?, CURRENT_TIMESTAMP)
+            VALUES (?, 'bot', ?, CURRENT_TIMESTAMP)
           `).bind(chatbotSessionId, aiResponse).run()
           
           chatbotSessionsCreated++
