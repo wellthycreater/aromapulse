@@ -118,10 +118,15 @@ app.get('/admin/products', (c) => c.redirect('/static/admin-products.html'));
 app.get('/admin-products', (c) => c.redirect('/static/admin-products.html'));
 
 // Chatbot page
-app.get('/chatbot', (c) => c.redirect('/static/chatbot'));
+app.get('/chatbot', (c) => c.redirect('/static/chatbot.html'));
+app.get('/admin/chatbot', (c) => c.redirect('/static/chatbot.html'));
 
 // Blog review analysis page
 app.get('/admin/blog-reviews', (c) => c.redirect('/static/blog-reviews.html'));
+
+// B2B Leads management page
+app.get('/admin/b2b-leads', (c) => c.redirect('/static/b2b-leads.html'));
+app.get('/b2b-leads', (c) => c.redirect('/static/b2b-leads.html'));
 
 // Admin creation page
 app.get('/create-admin', (c) => c.redirect('/static/create-admin.html'));

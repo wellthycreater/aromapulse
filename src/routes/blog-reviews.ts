@@ -752,6 +752,7 @@ blogReviews.get('/stats/keywords', async (c) => {
 blogReviews.get('/leads', async (c) => {
   const userType = c.req.query('user_type') // 'B2B' or 'B2C'
   const intent = c.req.query('intent')
+  const dedup = c.req.query('dedup') // 'true'로 설정 시 작성자별로 중복 제거
   
   try {
     let query = `
@@ -775,10 +776,24 @@ blogReviews.get('/leads', async (c) => {
     query += ' ORDER BY bc.created_at DESC LIMIT 50'
     
     const leads = await c.env.DB.prepare(query).bind(...params).all()
+    let results = leads.results as any[]
+    
+    // 중복 제거 옵션이 활성화된 경우, 작성자별로 가장 최근 리드만 유지
+    if (dedup === 'true') {
+      const seenAuthors = new Set<string>()
+      results = results.filter((lead: any) => {
+        if (seenAuthors.has(lead.author_name)) {
+          return false
+        }
+        seenAuthors.add(lead.author_name)
+        return true
+      })
+    }
     
     return c.json({
-      leads: leads.results,
-      count: leads.results.length
+      leads: results,
+      count: results.length,
+      total_before_dedup: leads.results.length
     })
   } catch (error) {
     console.error('리드 조회 실패:', error)

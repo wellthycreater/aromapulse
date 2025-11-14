@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B 리드 관리 - 아로마펄스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <a href="/admin-products" class="text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-arrow-left"></i> 돌아가기
+                    </a>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-briefcase text-purple-600 mr-2"></i>
+                        B2B 리드 관리
+                    </h1>
+                </div>
+                <div id="stats-summary" class="flex items-center space-x-4 text-sm">
+                    <div class="bg-blue-100 px-3 py-1 rounded-full">
+                        <span class="text-blue-800 font-semibold">총 <span id="total-leads">0</span>개</span>
+                    </div>
+                    <div class="bg-yellow-100 px-3 py-1 rounded-full">
+                        <span class="text-yellow-800 font-semibold">응답대기 <span id="waiting-leads">0</span>개</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="flex flex-wrap gap-3">
+                <button onclick="filterLeads('all')" id="filter-all" class="filter-btn active px-4 py-2 rounded-lg border-2 border-purple-600 bg-purple-600 text-white font-semibold transition">
+                    전체
+                </button>
+                <button onclick="filterLeads('new')" id="filter-new" class="filter-btn px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:border-blue-500 hover:bg-blue-50 transition">
+                    <i class="fas fa-star text-yellow-500 mr-1"></i> 신규
+                </button>
+                <button onclick="filterLeads('waiting')" id="filter-waiting" class="filter-btn px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:border-yellow-500 hover:bg-yellow-50 transition">
+                    <i class="fas fa-clock text-yellow-600 mr-1"></i> 응답대기
+                </button>
+                <button onclick="filterLeads('consulting')" id="filter-consulting" class="filter-btn px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:border-green-500 hover:bg-green-50 transition">
+                    <i class="fas fa-comments text-green-600 mr-1"></i> 상담중
+                </button>
+            </div>
+        </div>
+
+        <!-- Leads List -->
+        <div id="leads-container" class="space-y-4">
+            <!-- Lead cards will be dynamically inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-16">
+            <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+            <p class="text-gray-500 text-lg">아직 B2B 리드가 없습니다</p>
+            <p class="text-gray-400 mt-2">블로그 댓글을 수집하면 자동으로 리드가 생성됩니다</p>
+            <a href="/admin-products" class="inline-block mt-6 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-blog mr-2"></i>
+                블로그 관리로 이동
+            </a>
+        </div>
+    </main>
+
+    <script>
+        let allLeads = [];
+        let currentFilter = 'all';
+
+        // Load leads on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadB2BLeads();
+        });
+
+        // Load B2B leads from API
+        async function loadB2BLeads() {
+            try {
+                // dedup=true 파라미터로 작성자별 중복 제거
+                const response = await fetch('/api/blog-reviews/leads?user_type=B2B&dedup=true');
+                const data = await response.json();
+                
+                allLeads = data.leads || [];
+                
+                // 중복 제거 정보 표시 (디버깅용)
+                if (data.total_before_dedup && data.total_before_dedup > data.count) {
+                    console.log(`중복 제거: ${data.total_before_dedup}개 → ${data.count}개`);
+                }
+                
+                updateStats();
+                renderLeads();
+            } catch (error) {
+                console.error('B2B 리드 로드 오류:', error);
+                showError('리드를 불러오는 중 오류가 발생했습니다');
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('total-leads').textContent = allLeads.length;
+            
+            // Count waiting leads (those with chatbot sessions that have only 3 messages - initial bot response)
+            const waitingCount = allLeads.filter(lead => {
+                // If chatbot session exists but customer hasn't responded yet
+                return lead.intent === 'B2B문의' || lead.intent === '구매의도' || lead.intent === '가격문의';
+            }).length;
+            
+            document.getElementById('waiting-leads').textContent = waitingCount;
+        }
+
+        // Render leads based on current filter
+        function renderLeads() {
+            const container = document.getElementById('leads-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            let filteredLeads = allLeads;
+            
+            // Apply filter
+            if (currentFilter === 'new') {
+                // Leads from last 24 hours
+                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                filteredLeads = allLeads.filter(lead => new Date(lead.created_at) > oneDayAgo);
+            } else if (currentFilter === 'waiting') {
+                filteredLeads = allLeads.filter(lead => 
+                    lead.intent === 'B2B문의' || lead.intent === '구매의도' || lead.intent === '가격문의'
+                );
+            } else if (currentFilter === 'consulting') {
+                // Future: filter by status
+                filteredLeads = [];
+            }
+            
+            if (filteredLeads.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            container.innerHTML = filteredLeads.map(lead => createLeadCard(lead)).join('');
+        }
+
+        // Create lead card HTML
+        function createLeadCard(lead) {
+            const keywords = JSON.parse(lead.keywords || '[]');
+            const timeAgo = getTimeAgo(lead.created_at);
+            
+            // Determine status badge
+            let statusBadge = '';
+            if (lead.intent === 'B2B문의') {
+                statusBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-semibold"><i class="fas fa-clock mr-1"></i>응답대기</span>';
+            } else if (lead.intent === '구매의도') {
+                statusBadge = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold"><i class="fas fa-shopping-cart mr-1"></i>구매의도</span>';
+            } else if (lead.intent === '가격문의') {
+                statusBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold"><i class="fas fa-won-sign mr-1"></i>가격문의</span>';
+            }
+            
+            return `
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center">
+                                <i class="fas fa-user text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-900">${lead.author_name || '익명'}</h3>
+                                <p class="text-sm text-gray-500">${timeAgo}</p>
+                            </div>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-gray-700 leading-relaxed">${lead.content}</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        ${keywords.map(keyword => 
+                            `<span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                                <i class="fas fa-tag mr-1"></i>${keyword}
+                            </span>`
+                        ).join('')}
+                    </div>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t">
+                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                            <span><i class="fas fa-chart-line mr-1"></i> ${lead.sentiment === 'positive' ? '긍정적' : lead.sentiment === 'negative' ? '부정적' : '중립'}</span>
+                            <span><i class="fas fa-briefcase mr-1"></i> ${lead.user_type_prediction || '미분류'}</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="viewChatbot(${lead.id})" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition font-semibold">
+                                <i class="fas fa-comments mr-1"></i> 챗봇 보기
+                            </button>
+                            <button onclick="addMemo(${lead.id})" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition font-semibold">
+                                <i class="fas fa-sticky-note mr-1"></i> 메모
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Filter leads
+        function filterLeads(filter) {
+            currentFilter = filter;
+            
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-purple-600', 'text-white', 'border-purple-600');
+                btn.classList.add('border-gray-300', 'text-gray-700');
+            });
+            
+            const activeBtn = document.getElementById(`filter-${filter}`);
+            activeBtn.classList.add('active', 'bg-purple-600', 'text-white', 'border-purple-600');
+            activeBtn.classList.remove('border-gray-300', 'text-gray-700');
+            
+            renderLeads();
+        }
+
+        // View chatbot conversation
+        function viewChatbot(leadId) {
+            // Find chatbot session for this lead
+            // For now, redirect to chatbot page
+            window.location.href = '/chatbot';
+        }
+
+        // Add memo
+        function addMemo(leadId) {
+            const memo = prompt('메모를 입력하세요:');
+            if (memo) {
+                alert('메모 기능은 곧 추가됩니다!');
+                // TODO: Save memo to database
+            }
+        }
+
+        // Get time ago string
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            if (seconds < 60) return '방금 전';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}분 전`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}시간 전`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}일 전`;
+            return date.toLocaleDateString('ko-KR');
+        }
+
+        // Show error message
+        function showError(message) {
+            alert(message);
+        }
+    </script>
+</body>
+</html>

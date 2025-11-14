@@ -803,6 +803,11 @@ async function crawlBlogComments() {
     // 블로그 게시물 목록 다시 로드
     loadBlogPosts();
     
+    // B2B 리드가 있으면 바로 표시
+    if (data.b2b_count > 0) {
+      await loadAndDisplayB2BLeads();
+    }
+    
   } catch (error) {
     console.error('댓글 수집 오류:', error);
     alert(`댓글 수집 중 오류가 발생했습니다:\n${error.message}`);
@@ -852,5 +857,103 @@ async function viewBlogComments(postId) {
   } catch (error) {
     console.error('댓글 로드 오류:', error);
     alert('댓글을 불러오는 중 오류가 발생했습니다.');
+  }
+}
+
+// B2B 리드 로드 및 표시
+async function loadAndDisplayB2BLeads() {
+  try {
+    const response = await fetch('/api/blog-reviews/leads?user_type=B2B&dedup=true');
+    if (!response.ok) {
+      throw new Error('B2B 리드 로드 실패');
+    }
+    
+    const data = await response.json();
+    const leads = data.leads || [];
+    
+    if (leads.length === 0) {
+      return;
+    }
+    
+    // B2B 리드 표시 영역이 없으면 생성
+    let leadsSection = document.getElementById('b2b-leads-section');
+    if (!leadsSection) {
+      leadsSection = document.createElement('div');
+      leadsSection.id = 'b2b-leads-section';
+      leadsSection.className = 'bg-white rounded-xl shadow-md p-6 mt-6';
+      
+      // 블로그 게시물 목록 섹션 다음에 추가
+      const blogSection = document.getElementById('blog-management-section');
+      if (blogSection) {
+        blogSection.appendChild(leadsSection);
+      }
+    }
+    
+    // B2B 리드 HTML 생성
+    let html = `
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-800">
+          <i class="fas fa-briefcase text-purple-600 mr-2"></i>
+          수집된 B2B 리드 (${leads.length}개)
+        </h3>
+        <a href="/admin/b2b-leads" class="text-purple-600 hover:text-purple-700 font-semibold">
+          전체 보기 <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+      </div>
+      <div class="space-y-3">
+    `;
+    
+    // 최대 3개만 표시
+    leads.slice(0, 3).forEach(lead => {
+      const keywords = JSON.parse(lead.keywords || '[]');
+      const keywordTags = keywords.slice(0, 3).map(k => 
+        `<span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">${k}</span>`
+      ).join(' ');
+      
+      html += `
+        <div class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="font-semibold text-gray-800">${lead.author_name}</span>
+              <span class="text-xs text-gray-500 ml-2">${new Date(lead.created_at).toLocaleDateString('ko-KR')}</span>
+            </div>
+            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+              ${lead.intent}
+            </span>
+          </div>
+          <p class="text-sm text-gray-600 mb-2">${lead.content.substring(0, 100)}${lead.content.length > 100 ? '...' : ''}</p>
+          <div class="flex items-center justify-between">
+            <div class="flex gap-2">
+              ${keywordTags}
+            </div>
+            <button onclick="window.location.href='/admin/chatbot'" 
+              class="text-purple-600 hover:text-purple-700 text-sm font-semibold">
+              챗봇 보기 <i class="fas fa-robot ml-1"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    
+    if (leads.length > 3) {
+      html += `
+        <div class="text-center pt-3">
+          <a href="/admin/b2b-leads" class="text-gray-500 hover:text-purple-600 text-sm">
+            + ${leads.length - 3}개 더 보기
+          </a>
+        </div>
+      `;
+    }
+    
+    html += '</div>';
+    leadsSection.innerHTML = html;
+    
+    // 스크롤해서 리드 섹션 보이기
+    setTimeout(() => {
+      leadsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 300);
+    
+  } catch (error) {
+    console.error('B2B 리드 로드 오류:', error);
   }
 }
