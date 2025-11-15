@@ -1,319 +1,305 @@
-// Global state
-let currentTab = 'all';
+// Shopping Mall JavaScript
 let allProducts = [];
-let filteredProducts = [];
 let cart = [];
+let currentCategory = 'all';
 
-// Auth check and menu visibility
-function checkAuth() {
-    const token = localStorage.getItem('token');
-    if (token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            document.getElementById('auth-buttons').style.display = 'none';
-            document.getElementById('user-info').style.display = 'flex';
-            document.getElementById('user-name').textContent = payload.name || payload.email;
-            
-            // 메뉴 가시성 제어: B2B 사용자만 워크샵 메뉴 표시
-            updateMenuVisibility(payload.userType);
-        } catch (e) {
-            console.error('Token parse error:', e);
-        }
-    } else {
-        // 비로그인 사용자는 워크샵 숨김
-        updateMenuVisibility(null);
-    }
-}
-
-// 사용자 타입에 따라 메뉴 가시성 업데이트
-function updateMenuVisibility(userType) {
-    const workshopLink = document.querySelector('a[href="/workshops"]');
-    
-    if (workshopLink) {
-        // B2B 사용자(perfumer, company, shop)만 워크샵 표시
-        if (userType === 'B2B') {
-            workshopLink.style.display = 'block';
-        } else {
-            // B2C 사용자 또는 비로그인 사용자는 워크샵 숨김
-            workshopLink.style.display = 'none';
-        }
-    }
-}
-
-// Logout
-function logout() {
-    localStorage.removeItem('token');
-    location.href = '/login';
-}
-
-// Initialize
+// 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
-    loadCart();
-    loadProducts();
+  loadProducts();
+  loadCartFromLocalStorage();
+  updateCartUI();
 });
 
-// Load products from API
+// 제품 목록 로드
 async function loadProducts() {
-    try {
-        const response = await axios.get('/api/admin-products/public');
-        console.log('Products loaded:', response.data);
-        
-        // API returns { products: [...] } - already filtered for is_active = 1
-        if (response.data && response.data.products && Array.isArray(response.data.products)) {
-            allProducts = response.data.products;
-        } else {
-            allProducts = [];
-        }
-        
-        updateCounts();
-        filterAndRenderProducts();
-        
-    } catch (error) {
-        console.error('제품 로드 오류:', error);
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('empty-state').style.display = 'block';
-    }
-}
-
-// Update product counts
-function updateCounts() {
-    const symptomCareCount = allProducts.filter(p => p.concept === 'symptom_care').length;
-    const refreshCount = allProducts.filter(p => p.concept === 'refresh').length;
+  const loadingEl = document.getElementById('loading');
+  const gridEl = document.getElementById('products-grid');
+  
+  loadingEl.style.display = 'block';
+  gridEl.innerHTML = '';
+  
+  try {
+    const response = await fetch('/api/admin-products/public');
     
-    document.getElementById('count-all').textContent = allProducts.length;
-    document.getElementById('count-symptom-care').textContent = symptomCareCount;
-    document.getElementById('count-refresh').textContent = refreshCount;
-}
-
-// Switch tab
-function switchTab(tab) {
-    currentTab = tab;
-    
-    // Update tab styles
-    document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active', 'border-purple-600', 'text-purple-600');
-        btn.classList.add('border-transparent', 'text-gray-500');
-    });
-    
-    const activeTab = document.getElementById(`tab-${tab}`);
-    activeTab.classList.add('active', 'border-purple-600', 'text-purple-600');
-    activeTab.classList.remove('border-transparent', 'text-gray-500');
-    
-    filterAndRenderProducts();
-}
-
-// Filter and render products
-function filterAndRenderProducts() {
-    // Filter by tab
-    if (currentTab === 'all') {
-        filteredProducts = [...allProducts];
-    } else if (currentTab === 'symptom_care') {
-        filteredProducts = allProducts.filter(p => p.concept === 'symptom_care');
-    } else if (currentTab === 'refresh') {
-        filteredProducts = allProducts.filter(p => p.concept === 'refresh');
+    if (!response.ok) {
+      throw new Error('제품 로드 실패');
     }
     
-    // Apply sorting
-    sortProducts();
-}
-
-// Sort products
-function sortProducts() {
-    const sortValue = document.getElementById('sort-select').value;
-    
-    switch(sortValue) {
-        case 'newest':
-            filteredProducts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            break;
-        case 'price-low':
-            filteredProducts.sort((a, b) => a.price - b.price);
-            break;
-        case 'price-high':
-            filteredProducts.sort((a, b) => b.price - a.price);
-            break;
-        case 'name':
-            filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
-            break;
-    }
-    
-    renderProducts();
-}
-
-// Render products
-function renderProducts() {
-    const gridEl = document.getElementById('products-grid');
-    const loadingEl = document.getElementById('loading');
-    const emptyEl = document.getElementById('empty-state');
+    const data = await response.json();
+    allProducts = data.products || [];
     
     loadingEl.style.display = 'none';
     
-    if (filteredProducts.length === 0) {
-        emptyEl.style.display = 'block';
-        gridEl.innerHTML = '';
-        document.getElementById('total-count').textContent = '0';
-        return;
-    }
+    filterAndRenderProducts();
     
-    emptyEl.style.display = 'none';
-    document.getElementById('total-count').textContent = filteredProducts.length;
-    
-    gridEl.innerHTML = filteredProducts.map(product => createProductCard(product)).join('');
+  } catch (error) {
+    console.error('제품 로드 오류:', error);
+    loadingEl.style.display = 'none';
+    document.getElementById('empty-state').style.display = 'block';
+  }
 }
 
-// Create product card HTML
+// 카테고리 전환
+function switchCategory(category) {
+  currentCategory = category;
+  
+  // 버튼 스타일 업데이트
+  document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.classList.remove('text-purple-600', 'border-b-4', 'border-purple-600');
+    btn.classList.add('text-gray-500');
+  });
+  
+  const activeBtn = document.getElementById(`cat-${category}`);
+  activeBtn.classList.add('text-purple-600', 'border-b-4', 'border-purple-600');
+  activeBtn.classList.remove('text-gray-500');
+  
+  filterAndRenderProducts();
+}
+
+// 제품 필터링 및 렌더링
+function filterAndRenderProducts() {
+  let products = allProducts;
+  
+  // 카테고리 필터
+  if (currentCategory !== 'all') {
+    products = products.filter(p => p.concept === currentCategory);
+  }
+  
+  const gridEl = document.getElementById('products-grid');
+  gridEl.innerHTML = '';
+  
+  if (products.length === 0) {
+    document.getElementById('empty-state').style.display = 'block';
+    return;
+  }
+  
+  document.getElementById('empty-state').style.display = 'none';
+  
+  products.forEach(product => {
+    const card = createProductCard(product);
+    gridEl.appendChild(card);
+  });
+}
+
+// 제품 카드 생성
 function createProductCard(product) {
-    const isSymptomCare = product.concept === 'symptom_care';
-    const isRefresh = product.concept === 'refresh';
-    
-    // Stock badge
-    let stockBadge = '';
-    if (product.stock === 0) {
-        stockBadge = '<span class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">품절</span>';
-    } else if (product.stock < 10) {
-        stockBadge = `<span class="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded">재고 ${product.stock}개</span>`;
-    }
-    
-    // Concept badge
-    const conceptBadge = isSymptomCare 
-        ? '<span class="inline-block bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded-full mb-2"><i class="fas fa-heart-pulse mr-1"></i>증상케어</span>'
-        : '<span class="inline-block bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full mb-2"><i class="fas fa-spray-can mr-1"></i>리프레시</span>';
-    
-    // Category or type info
-    let categoryInfo = '';
-    if (isSymptomCare && product.category) {
-        const categoryMap = {
-            'insomnia': '불면',
-            'depression': '우울',
-            'anxiety': '불안',
-            'stress': '스트레스'
-        };
-        categoryInfo = `<p class="text-sm text-gray-600 mb-1"><i class="fas fa-tag mr-1"></i>${categoryMap[product.category] || product.category}</p>`;
-    } else if (isRefresh && product.refresh_type) {
-        const typeMap = {
-            'fabric_perfume': '섬유 향수',
-            'room_spray': '룸 스프레이',
-            'fabric_deodorizer': '섬유 탈취제',
-            'diffuser': '디퓨저',
-            'candle': '캔들',
-            'perfume': '향수'
-        };
-        categoryInfo = `<p class="text-sm text-gray-600 mb-1"><i class="fas fa-spray-can mr-1"></i>${typeMap[product.refresh_type] || product.refresh_type}</p>`;
-    }
-    
-    // Volume info for refresh products
-    let volumeInfo = '';
-    if (isRefresh && product.volume) {
-        volumeInfo = `<p class="text-sm text-gray-600 mb-2"><i class="fas fa-flask mr-1"></i>용량: ${product.volume}</p>`;
-    }
-    
-    // Workshop info for symptom care products
-    let workshopInfo = '';
-    if (isSymptomCare && product.workshop_name) {
-        workshopInfo = `
-            <div class="mt-2 pt-2 border-t border-gray-200">
-                <p class="text-xs text-gray-500 mb-1"><i class="fas fa-home mr-1"></i><strong>공방:</strong> ${product.workshop_name}</p>
-                ${product.workshop_location ? `<p class="text-xs text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i>${product.workshop_location}</p>` : ''}
-            </div>
-        `;
-    }
-    
-    // Image
-    const imageUrl = product.thumbnail_image || product.detail_image || '/static/placeholder-product.png';
-    
-    // Price format
-    const priceFormatted = product.price.toLocaleString('ko-KR');
-    
-    // Buy button
-    const buyButton = product.stock > 0 
-        ? `<button onclick="addToCart(${product.id})" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">
-               <i class="fas fa-shopping-cart mr-2"></i>장바구니 담기
-           </button>`
-        : `<button disabled class="w-full bg-gray-300 text-gray-500 py-2 rounded-lg cursor-not-allowed">
-               품절
-           </button>`;
-    
-    return `
-        <div class="product-card bg-white rounded-lg shadow-md overflow-hidden relative">
-            ${stockBadge}
-            <div class="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
-                <img src="${imageUrl}" alt="${product.name}" 
-                     class="w-full h-full object-cover"
-                     onerror="this.src='/static/placeholder-product.png'">
-            </div>
-            <div class="p-4">
-                ${conceptBadge}
-                <h3 class="text-lg font-bold text-gray-800 mb-2">${product.name}</h3>
-                ${categoryInfo}
-                ${volumeInfo}
-                ${product.description ? `<p class="text-sm text-gray-600 mb-3 line-clamp-2">${product.description}</p>` : ''}
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-2xl font-bold text-purple-600">${priceFormatted}원</span>
-                </div>
-                ${workshopInfo}
-                <div class="mt-3">
-                    ${buyButton}
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Cart functions
-function loadCart() {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-        cart = JSON.parse(savedCart);
-        updateCartBadge();
-    }
-}
-
-function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartBadge();
-}
-
-function updateCartBadge() {
-    const badge = document.getElementById('cart-badge');
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    
-    if (totalItems > 0) {
-        badge.textContent = totalItems;
-        badge.style.display = 'flex';
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-function addToCart(productId) {
-    const product = allProducts.find(p => p.id === productId);
-    
-    if (!product || product.stock === 0) {
-        alert('죄송합니다. 해당 제품은 품절되었습니다.');
-        return;
-    }
-    
-    // Check if already in cart
-    const existingItem = cart.find(item => item.productId === productId);
-    
-    if (existingItem) {
-        if (existingItem.quantity < product.stock) {
-            existingItem.quantity++;
-            saveCart();
-            alert('장바구니에 추가되었습니다!');
-        } else {
-            alert('재고가 부족합니다.');
+  const card = document.createElement('div');
+  card.className = 'bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all hover:scale-105';
+  
+  const thumbnailUrl = product.thumbnail_image || 'https://via.placeholder.com/400x400?text=No+Image';
+  
+  const conceptBadge = product.concept === 'refresh'
+    ? '<span class="absolute top-2 left-2 px-3 py-1 bg-purple-500 text-white text-xs font-bold rounded-full">리프레시</span>'
+    : '<span class="absolute top-2 left-2 px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">증상 케어</span>';
+  
+  card.innerHTML = `
+    <div class="relative">
+      <img src="${thumbnailUrl}" alt="${product.name}" class="w-full h-64 object-cover">
+      ${conceptBadge}
+    </div>
+    <div class="p-5">
+      <h3 class="font-bold text-lg mb-2 text-gray-800 line-clamp-2">${product.name}</h3>
+      <p class="text-sm text-gray-600 mb-4 line-clamp-2">${product.description || '상세한 제품 정보는 상세 페이지에서 확인하세요.'}</p>
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-2xl font-bold text-purple-600">${product.price.toLocaleString()}원</span>
+        ${product.stock > 0 
+          ? `<span class="text-sm text-green-600"><i class="fas fa-check-circle mr-1"></i>재고 있음</span>`
+          : `<span class="text-sm text-red-600"><i class="fas fa-times-circle mr-1"></i>품절</span>`
         }
-    } else {
-        cart.push({
-            productId: productId,
-            name: product.name,
-            price: product.price,
-            thumbnail: product.thumbnail_image,
-            quantity: 1,
-            maxStock: product.stock
-        });
-        saveCart();
-        alert('장바구니에 추가되었습니다!');
+      </div>
+      <div class="flex gap-2">
+        <button onclick="viewProductDetail(${product.id})" class="flex-1 bg-gray-200 text-gray-800 px-4 py-3 rounded-lg font-semibold hover:bg-gray-300">
+          <i class="fas fa-info-circle mr-1"></i>상세보기
+        </button>
+        <button onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''} 
+          class="flex-1 bg-purple-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+          <i class="fas fa-cart-plus mr-1"></i>담기
+        </button>
+      </div>
+    </div>
+  `;
+  
+  return card;
+}
+
+// 제품 상세보기
+function viewProductDetail(productId) {
+  window.location.href = `/product.html?id=${productId}`;
+}
+
+// 장바구니에 추가
+function addToCart(productId) {
+  const product = allProducts.find(p => p.id === productId);
+  if (!product) return;
+  
+  // 이미 장바구니에 있는지 확인
+  const existingItem = cart.find(item => item.id === productId);
+  
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      thumbnail_image: product.thumbnail_image,
+      quantity: 1,
+      stock: product.stock
+    });
+  }
+  
+  saveCartToLocalStorage();
+  updateCartUI();
+  
+  // 애니메이션 효과
+  showNotification('장바구니에 추가되었습니다! 🛒');
+}
+
+// 장바구니 토글
+function toggleCart() {
+  const sidebar = document.getElementById('cart-sidebar');
+  const overlay = document.getElementById('cart-overlay');
+  
+  if (sidebar.classList.contains('hidden')) {
+    sidebar.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+  } else {
+    sidebar.classList.add('hidden');
+    overlay.classList.add('hidden');
+  }
+}
+
+// 장바구니 UI 업데이트
+function updateCartUI() {
+  const cartItemsEl = document.getElementById('cart-items');
+  const cartCountEl = document.getElementById('cart-count');
+  const cartTotalEl = document.getElementById('cart-total');
+  
+  // 장바구니 개수
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  cartCountEl.textContent = totalItems;
+  
+  // 장바구니 비어있음
+  if (cart.length === 0) {
+    cartItemsEl.innerHTML = `
+      <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-shopping-cart text-6xl mb-4"></i>
+        <p>장바구니가 비어있습니다</p>
+      </div>
+    `;
+    cartTotalEl.textContent = '0원';
+    return;
+  }
+  
+  // 장바구니 아이템 렌더링
+  cartItemsEl.innerHTML = '';
+  let total = 0;
+  
+  cart.forEach((item, index) => {
+    total += item.price * item.quantity;
+    
+    const itemEl = document.createElement('div');
+    itemEl.className = 'flex items-center gap-4 border-b pb-4';
+    itemEl.innerHTML = `
+      <img src="${item.thumbnail_image || 'https://via.placeholder.com/80'}" alt="${item.name}" class="w-20 h-20 object-cover rounded-lg">
+      <div class="flex-1">
+        <h4 class="font-semibold text-gray-800 mb-1">${item.name}</h4>
+        <p class="text-purple-600 font-bold">${item.price.toLocaleString()}원</p>
+        <div class="flex items-center gap-2 mt-2">
+          <button onclick="updateQuantity(${index}, ${item.quantity - 1})" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+            <i class="fas fa-minus"></i>
+          </button>
+          <span class="font-semibold">${item.quantity}</span>
+          <button onclick="updateQuantity(${index}, ${item.quantity + 1})" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+            <i class="fas fa-plus"></i>
+          </button>
+          <button onclick="removeFromCart(${index})" class="ml-auto text-red-500 hover:text-red-700">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    cartItemsEl.appendChild(itemEl);
+  });
+  
+  cartTotalEl.textContent = `${total.toLocaleString()}원`;
+}
+
+// 수량 업데이트
+function updateQuantity(index, newQuantity) {
+  if (newQuantity <= 0) {
+    removeFromCart(index);
+    return;
+  }
+  
+  const item = cart[index];
+  if (newQuantity > item.stock) {
+    showNotification(`재고가 부족합니다. (재고: ${item.stock}개)`);
+    return;
+  }
+  
+  cart[index].quantity = newQuantity;
+  saveCartToLocalStorage();
+  updateCartUI();
+}
+
+// 장바구니에서 제거
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  saveCartToLocalStorage();
+  updateCartUI();
+  showNotification('장바구니에서 제거되었습니다');
+}
+
+// 결제 진행
+function proceedToCheckout() {
+  if (cart.length === 0) {
+    showNotification('장바구니가 비어있습니다');
+    return;
+  }
+  
+  // 결제 페이지로 이동
+  window.location.href = '/checkout.html';
+}
+
+// 로컬스토리지에 장바구니 저장
+function saveCartToLocalStorage() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+// 로컬스토리지에서 장바구니 로드
+function loadCartFromLocalStorage() {
+  const savedCart = localStorage.getItem('cart');
+  if (savedCart) {
+    try {
+      cart = JSON.parse(savedCart);
+    } catch (e) {
+      cart = [];
     }
+  }
+}
+
+// 알림 표시
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'fixed top-20 right-4 bg-purple-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce';
+  notification.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+// 제품 섹션으로 스크롤
+function scrollToProducts() {
+  const productsSection = document.getElementById('products-grid');
+  productsSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// 사용자 메뉴 토글
+function toggleUserMenu() {
+  // TODO: 사용자 메뉴 구현
+  alert('사용자 메뉴 준비 중입니다');
 }

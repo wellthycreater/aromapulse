@@ -18,6 +18,7 @@ import adminProductsRoutes from './routes/admin-products';
 import blogAnalysisRoutes from './routes/blog-analysis';
 import chatbotRoutes from './routes/chatbot';
 import blogReviewsRoutes from './routes/blog-reviews';
+import ordersRoutes from './routes/orders';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -42,6 +43,7 @@ app.route('/api/admin-products', adminProductsRoutes);
 app.route('/api/blog-analysis', blogAnalysisRoutes);
 app.route('/api/chatbot', chatbotRoutes);
 app.route('/api/blog-reviews', blogReviewsRoutes);
+app.route('/api/orders', ordersRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
@@ -112,10 +114,17 @@ app.get('/workshop/:id', (c) => {
 
 // Shop page - redirect to static file
 app.get('/shop', (c) => c.redirect('/static/shop.html'));
+app.get('/shop.html', (c) => c.redirect('/static/shop.html'));
+
+// Checkout pages
+app.get('/checkout', (c) => c.redirect('/static/checkout.html'));
+app.get('/checkout.html', (c) => c.redirect('/static/checkout.html'));
+app.get('/order-complete.html', (c) => c.redirect('/static/order-complete.html'));
 
 // Admin product management page
 app.get('/admin/products', (c) => c.redirect('/static/admin-products.html'));
 app.get('/admin-products', (c) => c.redirect('/static/admin-products.html'));
+app.get('/admin-products.html', (c) => c.redirect('/static/admin-products.html'));
 
 // Chatbot page
 app.get('/chatbot', (c) => c.redirect('/static/chatbot.html'));

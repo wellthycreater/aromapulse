@@ -7,12 +7,14 @@ let currentTab = 'all';
 let isEditing = false;
 let editingProductId = null;
 let blogPosts = [];
+let currentPeriod = 'all'; // 대시보드 기간 필터 (today, week, month, all)
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   loadProducts();
   loadBlogPosts();
+  loadDashboardStats(); // 대시보드 통계 로드
   
   // 폼 제출 이벤트
   document.getElementById('product-form').addEventListener('submit', handleFormSubmit);
@@ -42,15 +44,27 @@ function switchTab(tab) {
   activeTab.classList.add('active', 'border-purple-600', 'text-purple-600');
   activeTab.classList.remove('border-transparent', 'text-gray-500');
   
+  // 섹션 표시/숨김
+  document.getElementById('dashboard-section').classList.add('hidden');
+  document.getElementById('products-grid').style.display = 'none';
+  document.getElementById('blog-management-section').classList.add('hidden');
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('product-search-filter').style.display = 'none';
+  
+  // 대시보드 탭
+  if (tab === 'dashboard') {
+    document.getElementById('dashboard-section').classList.remove('hidden');
+    loadDashboardStats(); // 통계 새로고침
+  } 
   // 블로그 관리 탭인 경우
-  if (tab === 'blog') {
-    document.getElementById('products-grid').style.display = 'none';
+  else if (tab === 'blog') {
     document.getElementById('blog-management-section').classList.remove('hidden');
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('empty-state').style.display = 'none';
-  } else {
+  } 
+  // 제품 목록 탭
+  else {
     document.getElementById('products-grid').style.display = 'grid';
-    document.getElementById('blog-management-section').classList.add('hidden');
+    document.getElementById('product-search-filter').style.display = 'block';
     // 제품 필터링 및 렌더링
     filterAndRenderProducts();
   }
@@ -70,20 +84,78 @@ function filterAndRenderProducts() {
     filteredProducts = currentProducts.filter(p => p.concept === 'refresh');
   }
   
+  // 검색/필터 적용
+  applySearchAndFilter();
+}
+
+// 검색 및 필터 적용
+function applySearchAndFilter() {
+  const searchInput = document.getElementById('search-input');
+  const priceFilter = document.getElementById('price-filter');
+  const sortFilter = document.getElementById('sort-filter');
+  
+  if (!searchInput || !priceFilter || !sortFilter) return;
+  
+  const searchTerm = searchInput.value.toLowerCase();
+  const priceRange = priceFilter.value;
+  const sortOption = sortFilter.value;
+  
+  // 검색어 필터링
+  let results = filteredProducts.filter(product => {
+    return product.name.toLowerCase().includes(searchTerm) ||
+           (product.description && product.description.toLowerCase().includes(searchTerm));
+  });
+  
+  // 가격 범위 필터링
+  if (priceRange) {
+    const [minPrice, maxPrice] = priceRange.split('-').map(Number);
+    results = results.filter(product => {
+      return product.price >= minPrice && product.price <= maxPrice;
+    });
+  }
+  
+  // 정렬
+  results.sort((a, b) => {
+    switch (sortOption) {
+      case 'newest':
+        return new Date(b.created_at) - new Date(a.created_at);
+      case 'oldest':
+        return new Date(a.created_at) - new Date(b.created_at);
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'name':
+        return a.name.localeCompare(b.name, 'ko');
+      default:
+        return 0;
+    }
+  });
+  
+  // 결과 렌더링
+  const gridEl = document.getElementById('products-grid');
+  gridEl.innerHTML = '';
+  
+  // 검색 결과 카운트 업데이트
+  const countEl = document.getElementById('filter-result-count');
+  if (countEl) {
+    countEl.textContent = results.length;
+  }
+  
   // 빈 상태 확인
-  if (filteredProducts.length === 0) {
+  if (results.length === 0) {
     gridEl.innerHTML = `
       <div class="col-span-full text-center py-12 text-gray-500">
-        <i class="fas fa-box-open text-6xl mb-4"></i>
-        <p class="text-lg">이 카테고리에 등록된 제품이 없습니다.</p>
-        <p class="text-sm mt-2">상단의 "제품 등록" 버튼을 클릭하여 제품을 등록해보세요.</p>
+        <i class="fas fa-search text-6xl mb-4"></i>
+        <p class="text-lg">검색 결과가 없습니다.</p>
+        <p class="text-sm mt-2">다른 검색어나 필터를 시도해보세요.</p>
       </div>
     `;
     return;
   }
   
   // 제품 카드 렌더링
-  filteredProducts.forEach(product => {
+  results.forEach(product => {
     const card = createProductCard(product);
     gridEl.appendChild(card);
   });
@@ -173,7 +245,7 @@ function toggleProductFields() {
 
 // 인증 확인
 async function checkAuth() {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   if (!token) {
     alert('로그인이 필요합니다.');
     window.location.href = '/login';
@@ -202,7 +274,7 @@ async function checkAuth() {
     // 관리자 권한 확인 (role이 'admin' 또는 'super_admin'인 경우만 허용)
     if (user.role !== 'admin' && user.role !== 'super_admin') {
       alert('관리자 권한이 필요합니다.\n\n관리자 계정으로 로그인해주세요.');
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('adminToken'); localStorage.removeItem('auth_token');
       window.location.href = '/login';
       return false;
     }
@@ -214,7 +286,7 @@ async function checkAuth() {
   } catch (error) {
     console.error('인증 오류:', error);
     alert('인증에 실패했습니다. 다시 로그인해주세요.');
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('adminToken'); localStorage.removeItem('auth_token');
     window.location.href = '/login';
     return false;
   }
@@ -222,7 +294,7 @@ async function checkAuth() {
 
 // 제품 목록 로드
 async function loadProducts() {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   const loadingEl = document.getElementById('loading');
   const gridEl = document.getElementById('products-grid');
   
@@ -267,6 +339,7 @@ async function loadProducts() {
 function createProductCard(product) {
   const card = document.createElement('div');
   card.className = 'bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow';
+  card.setAttribute('data-product-id', product.id); // 대시보드에서 스크롤 이동용
   
   const statusBadge = product.is_active 
     ? '<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">활성</span>'
@@ -435,6 +508,82 @@ function closeModal() {
 }
 
 // 이미지 업로드
+// 이미지 자동 압축 함수
+async function compressImage(file, maxSizeKB = 500, maxWidth = 1200, maxHeight = 1200) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      const img = new Image();
+      
+      img.onload = () => {
+        // Canvas 생성
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 이미지 비율 유지하면서 크기 조정
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = width * ratio;
+          height = height * ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // 이미지 그리기
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // 압축 품질 조정하면서 목표 크기 달성
+        let quality = 0.9;
+        const tryCompress = () => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('이미지 압축 실패'));
+              return;
+            }
+            
+            const sizeKB = blob.size / 1024;
+            
+            // 목표 크기 이하면 완료
+            if (sizeKB <= maxSizeKB || quality <= 0.1) {
+              // Blob을 File로 변환
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              
+              console.log(`이미지 압축 완료: ${Math.round(file.size / 1024)}KB → ${Math.round(compressedFile.size / 1024)}KB (품질: ${Math.round(quality * 100)}%)`);
+              resolve(compressedFile);
+            } else {
+              // 품질 낮춰서 재시도
+              quality -= 0.1;
+              tryCompress();
+            }
+          }, 'image/jpeg', quality);
+        };
+        
+        tryCompress();
+      };
+      
+      img.onerror = () => {
+        reject(new Error('이미지 로드 실패'));
+      };
+      
+      img.src = e.target.result;
+    };
+    
+    reader.onerror = () => {
+      reject(new Error('파일 읽기 실패'));
+    };
+    
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadImage(type) {
   const inputId = type === 'thumbnail' ? 'thumbnail-upload' : 'detail-upload';
   const input = document.getElementById(inputId);
@@ -445,28 +594,41 @@ async function uploadImage(type) {
     return;
   }
   
-  // 파일 크기 확인 (10MB 제한)
-  if (file.size > 10 * 1024 * 1024) {
-    alert('이미지 파일 크기는 10MB 이하여야 합니다.');
-    return;
-  }
-  
   // 파일 형식 확인
   if (!file.type.startsWith('image/')) {
     alert('이미지 파일만 업로드 가능합니다.');
     return;
   }
   
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   const uploadBtn = event.target;
   const originalText = uploadBtn.textContent;
   
   uploadBtn.disabled = true;
-  uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> 업로드 중...';
+  uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> 압축 중...';
   
   try {
+    let processedFile = file;
+    
+    // 파일 크기가 500KB보다 크면 자동 압축
+    const maxSize = 500 * 1024; // 500KB
+    if (file.size > maxSize) {
+      console.log(`이미지 크기가 큽니다 (${Math.round(file.size / 1024)}KB). 자동 압축을 시작합니다...`);
+      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> 자동 압축 중...';
+      
+      // 대표 이미지는 1200x1200, 상세 이미지는 750px 너비로 제한
+      const maxWidth = type === 'thumbnail' ? 1200 : 750;
+      const maxHeight = type === 'thumbnail' ? 1200 : 10000; // 상세 이미지는 세로로 길 수 있음
+      
+      processedFile = await compressImage(file, 500, maxWidth, maxHeight);
+      
+      alert(`✅ 이미지 자동 압축 완료!\n원본: ${Math.round(file.size / 1024)}KB → 압축 후: ${Math.round(processedFile.size / 1024)}KB`);
+    }
+    
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> 업로드 중...';
+    
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image', processedFile);
     
     const response = await fetch('/api/admin-products/upload-image', {
       method: 'POST',
@@ -477,7 +639,8 @@ async function uploadImage(type) {
     });
     
     if (!response.ok) {
-      throw new Error('이미지 업로드 실패');
+      const errorData = await response.json();
+      throw new Error(errorData.error || '이미지 업로드 실패');
     }
     
     const data = await response.json();
@@ -509,7 +672,7 @@ async function uploadImage(type) {
 async function handleFormSubmit(e) {
   e.preventDefault();
   
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   const submitBtn = document.getElementById('submit-btn');
   const originalText = submitBtn.textContent;
   
@@ -658,7 +821,7 @@ async function deleteProduct(productId, productName) {
     return;
   }
   
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   
   try {
     const response = await fetch(`/api/admin-products/${productId}`, {
@@ -684,7 +847,7 @@ async function deleteProduct(productId, productName) {
 // 로그아웃
 function logout() {
   if (confirm('로그아웃 하시겠습니까?')) {
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('adminToken'); localStorage.removeItem('auth_token');
     window.location.href = '/login';
   }
 }
@@ -695,7 +858,7 @@ function logout() {
 
 // 블로그 게시물 목록 로드
 async function loadBlogPosts() {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   
   try {
     const response = await fetch('/api/blog-reviews/posts', {
@@ -797,7 +960,7 @@ async function crawlBlogComments() {
     return;
   }
   
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   const button = event.target;
   const originalText = button.innerHTML;
   
@@ -852,7 +1015,7 @@ async function crawlBlogComments() {
 
 // 블로그 댓글 보기 (모달 또는 새 창)
 async function viewBlogComments(postId) {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   
   console.log('=== 댓글 보기 클릭 ===');
   console.log('요청한 게시물 ID:', postId);
@@ -1043,7 +1206,7 @@ async function addManualComment() {
     return;
   }
   
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   const button = event.target;
   const originalText = button.innerHTML;
   
@@ -1353,7 +1516,7 @@ async function submitManualComment() {
     return;
   }
   
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   const submitButton = document.querySelector('#add-comment-form button[type="submit"]');
   const originalText = submitButton.innerHTML;
   
@@ -1448,27 +1611,239 @@ async function submitManualComment() {
   }
 }
 
+// ============================================
+// 대시보드 기능
+// ============================================
+
+// 기간 변경
+function changePeriod(period) {
+  currentPeriod = period;
+  
+  // 버튼 스타일 업데이트
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.classList.remove('bg-purple-600', 'text-white');
+    btn.classList.add('border-gray-300', 'text-gray-700');
+  });
+  
+  const activeBtn = document.getElementById(`period-${period}`);
+  activeBtn.classList.add('bg-purple-600', 'text-white');
+  activeBtn.classList.remove('border-gray-300', 'text-gray-700');
+  
+  // 통계 새로고침
+  loadDashboardStats();
+}
+
+// 날짜 범위 계산
+function getDateRange(period) {
+  const now = new Date();
+  let startDate;
+  
+  switch (period) {
+    case 'today':
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      break;
+    case 'week':
+      // 이번 주 월요일
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      startDate = new Date(now.getFullYear(), now.getMonth(), diff);
+      break;
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'all':
+    default:
+      return null; // 전체 기간
+  }
+  
+  return startDate.toISOString();
+}
+
+// 대시보드 통계 로드
+async function loadDashboardStats() {
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+  
+  try {
+    const dateFilter = getDateRange(currentPeriod);
+    let url = '/api/admin-products/dashboard/stats';
+    if (dateFilter) {
+      url += `?start_date=${encodeURIComponent(dateFilter)}`;
+    }
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('통계 조회 실패');
+    }
+    
+    const data = await response.json();
+    
+    // 제품 통계
+    document.getElementById('stat-total-products').textContent = data.products.total_products || 0;
+    document.getElementById('stat-active-products').textContent = data.products.active_products || 0;
+    document.getElementById('stat-inactive-products').textContent = data.products.inactive_products || 0;
+    document.getElementById('stat-symptom-care').textContent = data.products.symptom_care_count || 0;
+    document.getElementById('stat-refresh').textContent = data.products.refresh_count || 0;
+    
+    // 블로그 통계
+    document.getElementById('stat-total-posts').textContent = data.blog.total_posts || 0;
+    document.getElementById('stat-total-comments').textContent = data.blog.total_comments || 0;
+    
+    // 댓글 통계
+    document.getElementById('stat-b2b-comments').textContent = data.comments.b2b_comments || 0;
+    document.getElementById('stat-b2c-comments').textContent = data.comments.b2c_comments || 0;
+    document.getElementById('stat-purchase-intent').textContent = data.comments.purchase_intent_comments || 0;
+    document.getElementById('stat-positive-comments').textContent = data.comments.positive_comments || 0;
+    document.getElementById('stat-neutral-comments').textContent = data.comments.neutral_comments || 0;
+    document.getElementById('stat-negative-comments').textContent = data.comments.negative_comments || 0;
+    
+    // 챗봇 통계
+    document.getElementById('stat-total-sessions').textContent = data.chatbot.total_sessions || 0;
+    document.getElementById('stat-active-sessions').textContent = data.chatbot.active_sessions || 0;
+    document.getElementById('stat-completed-sessions').textContent = data.chatbot.completed_sessions || 0;
+    
+    // 최근 제품 렌더링
+    renderRecentProducts(data.recent.products || []);
+    
+    // 최근 포스트 렌더링
+    renderRecentPosts(data.recent.posts || []);
+    
+    // 최근 댓글 렌더링
+    renderRecentComments(data.recent.comments || []);
+    
+  } catch (error) {
+    console.error('대시보드 통계 로드 오류:', error);
+  }
+}
+
+// 최근 제품 렌더링
+function renderRecentProducts(products) {
+  const container = document.getElementById('recent-products-list');
+  
+  if (products.length === 0) {
+    container.innerHTML = '<p class="text-sm text-gray-500">최근 등록된 제품이 없습니다.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  products.forEach(product => {
+    const item = document.createElement('div');
+    item.className = 'border-l-4 border-purple-500 pl-3 py-2 hover:bg-gray-50 cursor-pointer transition';
+    item.onclick = () => {
+      switchTab('all');
+      setTimeout(() => {
+        const productCard = document.querySelector(`[data-product-id="${product.id}"]`);
+        if (productCard) {
+          productCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          productCard.classList.add('ring-2', 'ring-purple-500');
+          setTimeout(() => productCard.classList.remove('ring-2', 'ring-purple-500'), 2000);
+        }
+      }, 100);
+    };
+    
+    const conceptBadge = product.concept === 'refresh' ? '🌿' : '💊';
+    const date = new Date(product.created_at).toLocaleDateString('ko-KR');
+    
+    item.innerHTML = `
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-sm font-semibold text-gray-800">${conceptBadge} ${product.name}</span>
+      </div>
+      <div class="flex items-center justify-between text-xs text-gray-500">
+        <span>${product.price.toLocaleString()}원</span>
+        <span>${date}</span>
+      </div>
+    `;
+    
+    container.appendChild(item);
+  });
+}
+
+// 최근 포스트 렌더링
+function renderRecentPosts(posts) {
+  const container = document.getElementById('recent-posts-list');
+  
+  if (posts.length === 0) {
+    container.innerHTML = '<p class="text-sm text-gray-500">최근 등록된 포스트가 없습니다.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  posts.forEach(post => {
+    const item = document.createElement('div');
+    item.className = 'border-l-4 border-blue-500 pl-3 py-2 hover:bg-gray-50 cursor-pointer transition';
+    item.onclick = () => {
+      switchTab('blog');
+    };
+    
+    const date = new Date(post.published_at).toLocaleDateString('ko-KR');
+    
+    item.innerHTML = `
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-sm font-semibold text-gray-800 line-clamp-1">${post.title}</span>
+      </div>
+      <div class="flex items-center justify-between text-xs text-gray-500">
+        <span>💬 ${post.comment_count}개</span>
+        <span>${date}</span>
+      </div>
+    `;
+    
+    container.appendChild(item);
+  });
+}
+
+// 최근 댓글 렌더링
+function renderRecentComments(comments) {
+  const container = document.getElementById('recent-comments-list');
+  
+  if (comments.length === 0) {
+    container.innerHTML = '<p class="text-sm text-gray-500">최근 댓글이 없습니다.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  comments.forEach(comment => {
+    const item = document.createElement('div');
+    item.className = 'border-l-4 border-green-500 pl-3 py-2 hover:bg-gray-50 transition';
+    
+    const userTypeBadge = comment.user_type_prediction === 'B2B' ? '🏢' : 
+                          comment.user_type_prediction === 'B2C' ? '🛍️' : '👤';
+    const intentIcon = comment.intent === '구매의도' ? '💰' : 
+                      comment.intent === 'B2B문의' ? '📧' : '💬';
+    
+    const date = new Date(comment.created_at).toLocaleDateString('ko-KR');
+    
+    item.innerHTML = `
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-sm font-semibold text-gray-800">${userTypeBadge} ${comment.author_name}</span>
+        <span class="text-xs">${intentIcon}</span>
+      </div>
+      <p class="text-xs text-gray-600 line-clamp-2 mb-1">${comment.content}</p>
+      <div class="flex items-center justify-between text-xs text-gray-500">
+        <span class="line-clamp-1">${comment.post_title || '게시물 없음'}</span>
+        <span>${date}</span>
+      </div>
+    `;
+    
+    container.appendChild(item);
+  });
+}
+
 // 새 블로그 게시물 추가
 async function addNewBlogPost() {
   const urlInput = document.getElementById('new-post-url-input');
   const dateInput = document.getElementById('new-post-date-input');
   const url = urlInput.value.trim();
-  const publishedDate = dateInput.value;
+  const dateInput_value = dateInput.value;
   
   if (!url) {
     alert('블로그 게시물 URL을 입력해주세요.');
-    return;
-  }
-  
-  if (!publishedDate) {
-    alert('작성 날짜를 입력해주세요.\n\n형식: 2025-05-27 13:55 또는 2025-05-27 13:55:00');
-    return;
-  }
-  
-  // 날짜 형식 검증 (YYYY-MM-DD HH:MM 또는 YYYY-MM-DD HH:MM:SS)
-  const datePattern = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?$/;
-  if (!datePattern.test(publishedDate.trim())) {
-    alert('올바른 날짜 형식이 아닙니다.\n\n형식: 2025-05-27 13:55 또는 2025-05-27 13:55:00');
     return;
   }
   
@@ -1496,17 +1871,42 @@ async function addNewBlogPost() {
   
   const finalTitle = title.trim() || `블로그 게시물 ${postId}`;
   
-  // 텍스트 날짜를 표준 형식으로 변환 (초가 없으면 :00 추가)
-  let formattedDate = publishedDate.trim();
-  if (!formattedDate.match(/:\d{2}:\d{2}$/)) {
-    formattedDate += ':00';
+  // 날짜 처리 - 댓글과 동일한 로직
+  let publishedAtFormatted;
+  if (dateInput_value && dateInput_value.trim()) {
+    const trimmedInput = dateInput_value.trim();
+    
+    try {
+      // "2025-04-29 09:00" 또는 "2025-04-29" 형식 파싱
+      if (trimmedInput.includes(' ') && trimmedInput.includes(':')) {
+        // "2025-04-29 09:00" 형식 - 초 추가하여 사용
+        publishedAtFormatted = trimmedInput.includes(':') && trimmedInput.split(':').length === 2
+          ? trimmedInput + ':00'
+          : trimmedInput;
+      } else if (trimmedInput.includes(':')) {
+        // "09:00" 형식 - 오늘 날짜와 결합
+        const today = new Date().toISOString().split('T')[0];
+        publishedAtFormatted = `${today} ${trimmedInput}:00`;
+      } else {
+        // "2025-04-29" 형식 - 현재 시간 추가
+        const now = new Date();
+        const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+        publishedAtFormatted = `${trimmedInput} ${timeString}`;
+      }
+    } catch (error) {
+      console.error('날짜 파싱 오류:', error);
+      // 현재 시간으로 대체
+      const now = new Date();
+      publishedAtFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+    }
+  } else {
+    // 입력 없으면 현재 시간
+    const now = new Date();
+    publishedAtFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
   }
   
-  // "YYYY-MM-DD HH:MM:SS" 형식으로 전송 (ISO 형식 대신)
-  const publishedAtFormatted = formattedDate;
-  
   try {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
     
     const response = await fetch('/api/blog-reviews/posts', {
       method: 'POST',

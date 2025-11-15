@@ -4,6 +4,56 @@ import type { Bindings } from '../types'
 const blogReviews = new Hono<{ Bindings: Bindings }>()
 
 // 블로그 포스트 등록 (관리자)
+// 날짜 형식 정규화 함수 (YYYY-MM-DD HH:MM:SS로 통일)
+function normalizeDateFormat(dateStr: string): string {
+  if (!dateStr) {
+    // 날짜가 없으면 현재 시간 (로컬 시간대)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+  
+  // 이미 표준 형식이면 그대로 반환
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+  
+  // "YYYY-MM-DD HH:MM" 형식 (초 없음) → 초 추가
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}$/.test(dateStr)) {
+    return dateStr + ':00';
+  }
+  
+  // "YYYY. M. D. HH:MM:SS" 또는 "YYYY. M. D. HH:MM" 형식 → 표준 형식으로 변환
+  const dotMatch = dateStr.match(/^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (dotMatch) {
+    const [, year, month, day, hours, minutes, seconds] = dotMatch;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hours}:${minutes}:${seconds || '00'}`;
+  }
+  
+  // ISO 8601 형식 (2025-05-27T18:00:00+09:00) → YYYY-MM-DD HH:MM:SS
+  const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (isoMatch) {
+    const [, year, month, day, hours, minutes, seconds] = isoMatch;
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+  
+  // 기타 형식은 현재 시간 반환
+  console.warn(`알 수 없는 날짜 형식: ${dateStr}, 현재 시간 사용`);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 blogReviews.post('/posts', async (c) => {
   const { post_id, title, content, category, url, published_at } = await c.req.json()
   
@@ -21,6 +71,9 @@ blogReviews.post('/posts', async (c) => {
       return c.json({ error: '이미 등록된 게시물입니다' }, 400)
     }
     
+    // 날짜 형식 정규화
+    const normalizedDate = normalizeDateFormat(published_at);
+    
     const result = await c.env.DB.prepare(`
       INSERT INTO blog_posts (post_id, title, content, category, url, published_at, comment_count)
       VALUES (?, ?, ?, ?, ?, ?, 0)
@@ -30,13 +83,14 @@ blogReviews.post('/posts', async (c) => {
       content || null, 
       category || null, 
       url, 
-      published_at || new Date().toISOString()
+      normalizedDate
     ).run()
     
     return c.json({
       message: '블로그 포스트가 등록되었습니다',
       id: result.meta.last_row_id,
-      post_id: post_id
+      post_id: post_id,
+      published_at: normalizedDate
     })
   } catch (error) {
     console.error('포스트 등록 실패:', error)

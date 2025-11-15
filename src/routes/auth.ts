@@ -605,4 +605,128 @@ auth.get('/admins', async (c) => {
   }
 });
 
+// ========== 관리자 전용 인증 API ==========
+
+// 관리자 로그인 (role이 admin인 사용자만)
+auth.post('/admin-login', async (c) => {
+  try {
+    const { email, password } = await c.req.json();
+    
+    if (!email || !password) {
+      return c.json({ error: '이메일과 비밀번호를 입력해주세요' }, 400);
+    }
+    
+    // 비밀번호 해싱
+    const password_hash = await hashPassword(password);
+    
+    // 관리자 사용자 조회 (role이 admin이고 oauth_provider가 email인 사용자)
+    const user = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE email = ? AND password_hash = ? AND oauth_provider = ? AND role = ?'
+    ).bind(email, password_hash, 'email', 'admin').first();
+    
+    if (!user) {
+      return c.json({ error: '이메일 또는 비밀번호가 잘못되었습니다' }, 401);
+    }
+    
+    // 마지막 로그인 시간 업데이트
+    await c.env.DB.prepare(
+      'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).bind(user.id).run();
+    
+    // JWT 토큰 생성
+    const token = await generateToken(user as any, c.env.JWT_SECRET);
+    
+    return c.json({ 
+      message: '로그인 성공',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        user_type: user.user_type,
+        role: user.role || 'user',
+        b2c_category: user.b2c_category,
+        b2b_category: user.b2b_category
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('Admin login error:', error);
+    return c.json({ error: '로그인 실패', details: error.message }, 500);
+  }
+});
+
+// 관리자 회원가입
+auth.post('/admin-register', async (c) => {
+  try {
+    const data = await c.req.json();
+    const { 
+      email, 
+      password, 
+      name,
+      secret_key // 보안을 위한 비밀 키
+    } = data;
+    
+    // 비밀 키 검증 (환경 변수로 설정된 키와 비교)
+    const ADMIN_SECRET_KEY = c.env.ADMIN_SECRET_KEY || 'aromapulse-admin-2025';
+    if (secret_key !== ADMIN_SECRET_KEY) {
+      return c.json({ error: '관리자 생성 권한이 없습니다' }, 403);
+    }
+    
+    // 필수 필드 검증
+    if (!email || !password || !name) {
+      return c.json({ error: '필수 정보를 입력해주세요' }, 400);
+    }
+    
+    // 이메일 중복 체크
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE email = ?'
+    ).bind(email).first();
+    
+    if (existing) {
+      return c.json({ error: '이미 가입된 이메일입니다' }, 400);
+    }
+    
+    // 비밀번호 해싱
+    const password_hash = await hashPassword(password);
+    
+    // 관리자 계정 생성
+    const result = await c.env.DB.prepare(
+      `INSERT INTO users (
+        email, password_hash, name, user_type, role, oauth_provider
+      ) VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(
+      email,
+      password_hash,
+      name,
+      'B2B', // 관리자는 B2B로 설정
+      'admin', // role을 admin으로 설정
+      'email'
+    ).run();
+    
+    // 생성된 관리자 정보 조회
+    const userId = result.meta.last_row_id;
+    const admin = await c.env.DB.prepare(
+      `SELECT id, email, name, user_type, role, created_at 
+       FROM users WHERE id = ?`
+    ).bind(userId).first();
+    
+    // JWT 토큰 발급
+    const token = await generateToken(admin as any, c.env.JWT_SECRET);
+    
+    return c.json({ 
+      message: '관리자 계정 생성 성공',
+      token,
+      user: admin
+    }, 201);
+    
+  } catch (error: any) {
+    console.error('Admin registration error:', error);
+    return c.json({ 
+      error: '관리자 계정 생성 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 export default auth;
