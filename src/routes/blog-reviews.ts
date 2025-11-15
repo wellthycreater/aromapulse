@@ -424,11 +424,11 @@ blogReviews.get('/posts/:post_id/comments', async (c) => {
       return c.json({ error: '포스트를 찾을 수 없습니다' }, 404)
     }
     
-    // 댓글 목록 조회
+    // 댓글 목록 조회 (오래된 댓글이 위로)
     const comments = await c.env.DB.prepare(`
       SELECT * FROM blog_comments 
       WHERE post_id = ? 
-      ORDER BY created_at DESC
+      ORDER BY created_at ASC
     `).bind(post.id).all()
     
     return c.json({
