@@ -906,27 +906,31 @@ async function addManualComment() {
     // 날짜 처리 - 사용자가 입력한 텍스트를 파싱
     let createdAt;
     if (date && date.trim()) {
-      // "2025-11-15 10:30" 또는 "2025-11-15" 형식 파싱
       const trimmedInput = date.trim();
       
-      // 시간 포함 여부 확인
-      if (trimmedInput.includes(':')) {
-        // "2025-11-15 10:30" 형식
-        createdAt = new Date(trimmedInput).toISOString();
-      } else {
-        // "2025-11-15" 형식 - 현재 시간 사용
-        const datePart = trimmedInput;
-        const now = new Date();
-        const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        createdAt = new Date(`${datePart} ${timeString}`).toISOString();
+      try {
+        // "2025-11-15 10:30" 또는 "2025-11-15" 형식 파싱
+        if (trimmedInput.includes(' ') && trimmedInput.includes(':')) {
+          // "2025-11-15 10:30" 형식 - 그대로 사용
+          createdAt = new Date(trimmedInput + ':00+09:00').toISOString();
+        } else if (trimmedInput.includes(':')) {
+          // "10:30" 형식 - 오늘 날짜와 결합
+          const today = new Date().toISOString().split('T')[0];
+          createdAt = new Date(`${today} ${trimmedInput}:00+09:00`).toISOString();
+        } else {
+          // "2025-11-15" 형식 - 현재 시간 추가
+          const now = new Date();
+          const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+          createdAt = new Date(`${trimmedInput} ${timeString}+09:00`).toISOString();
+        }
+      } catch (error) {
+        console.error('날짜 파싱 오류:', error);
+        createdAt = new Date().toISOString();
       }
     } else {
       // 입력 없으면 현재 시간
       createdAt = new Date().toISOString();
     }
-    
-    // 댓글 ID 생성
-    const commentId = `manual_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     const response = await fetch('/api/blog-reviews/comments/manual', {
       method: 'POST',
@@ -936,7 +940,6 @@ async function addManualComment() {
       },
       body: JSON.stringify({
         post_internal_id: parseInt(postId),
-        comment_id: commentId,
         author_name: author,
         content: content,
         created_at: createdAt
@@ -1213,19 +1216,26 @@ async function submitManualComment() {
     // 날짜 처리 - 사용자가 입력한 텍스트를 파싱
     let createdAt;
     if (dateInput && dateInput.trim()) {
-      // "2025-11-15 10:30" 또는 "2025-11-15" 형식 파싱
       const trimmedInput = dateInput.trim();
       
-      // 시간 포함 여부 확인
-      if (trimmedInput.includes(':')) {
-        // "2025-11-15 10:30" 형식
-        createdAt = new Date(trimmedInput).toISOString();
-      } else {
-        // "2025-11-15" 형식 - 현재 시간 사용
-        const datePart = trimmedInput;
-        const now = new Date();
-        const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        createdAt = new Date(`${datePart} ${timeString}`).toISOString();
+      try {
+        // "2025-11-15 10:30" 또는 "2025-11-15" 형식 파싱
+        if (trimmedInput.includes(' ') && trimmedInput.includes(':')) {
+          // "2025-11-15 10:30" 형식 - 그대로 사용
+          createdAt = new Date(trimmedInput + ':00+09:00').toISOString();
+        } else if (trimmedInput.includes(':')) {
+          // "10:30" 형식 - 오늘 날짜와 결합
+          const today = new Date().toISOString().split('T')[0];
+          createdAt = new Date(`${today} ${trimmedInput}:00+09:00`).toISOString();
+        } else {
+          // "2025-11-15" 형식 - 현재 시간 추가
+          const now = new Date();
+          const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+          createdAt = new Date(`${trimmedInput} ${timeString}+09:00`).toISOString();
+        }
+      } catch (error) {
+        console.error('날짜 파싱 오류:', error);
+        createdAt = new Date().toISOString();
       }
     } else {
       // 입력 없으면 현재 시간
