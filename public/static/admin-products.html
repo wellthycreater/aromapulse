@@ -205,8 +205,8 @@
     </div>
 
     <!-- 제품 등록/수정 모달 -->
-    <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 my-8">
+    <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
+        <div class="bg-white rounded-lg p-8 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800" id="modal-title">제품 등록</h3>
                 <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
@@ -214,7 +214,7 @@
                 </button>
             </div>
 
-            <form id="product-form" class="space-y-4">
+            <form id="product-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- 제품 컨셉 -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -297,7 +297,7 @@
                 </div>
 
                 <!-- 제품 설명 -->
-                <div>
+                <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
                         제품 설명
                     </label>
@@ -336,7 +336,7 @@
                 </div>
 
                 <!-- 로컬 공방 정보 섹션 (증상 케어 제품일 때만 표시) -->
-                <div id="workshop-info-section" class="border-t pt-4 mt-4" style="display: none;">
+                <div id="workshop-info-section" class="md:col-span-2 border-t pt-4 mt-4" style="display: none;">
                     <h4 class="text-lg font-bold text-gray-800 mb-4">
                         <i class="fas fa-store text-purple-600 mr-2"></i>로컬 공방 정보
                     </h4>
@@ -345,8 +345,9 @@
                         증상 케어 제품의 경우 제작 공방 정보를 입력할 수 있습니다
                     </p>
                     
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- 공방명 -->
-                    <div class="mb-4">
+                    <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             공방명
                         </label>
@@ -356,7 +357,7 @@
                     </div>
 
                     <!-- 지역 -->
-                    <div class="mb-4">
+                    <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             지역
                         </label>
@@ -384,7 +385,7 @@
                     </div>
 
                     <!-- 상세 주소 -->
-                    <div class="mb-4">
+                    <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             상세 주소
                         </label>
@@ -394,7 +395,7 @@
                     </div>
 
                     <!-- 연락처 -->
-                    <div class="mb-4">
+                    <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             연락처
                         </label>
@@ -402,58 +403,67 @@
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
                             placeholder="예: 02-1234-5678">
                     </div>
+                    </div>
                 </div>
 
-                <!-- 대표 이미지 업로드 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        대표 이미지 (썸네일) <span class="text-red-500">*</span>
-                    </label>
-                    <p class="text-xs text-gray-600 mb-2">
-                        <i class="fas fa-info-circle text-blue-500 mr-1"></i>
-                        <strong>권장 사이즈:</strong> 1000×1000px (정사각형) 또는 1200×1200px (고해상도)
-                    </p>
-                    <div class="flex items-center space-x-4">
-                        <input type="file" id="thumbnail-upload" accept="image/*"
-                            class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <button type="button" onclick="uploadImage('thumbnail')"
-                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                            <i class="fas fa-upload mr-2"></i>업로드
-                        </button>
-                    </div>
-                    <div id="thumbnail-preview" class="mt-2" style="display: none;">
-                        <img id="thumbnail-preview-img" src="" alt="Thumbnail Preview" class="w-32 h-32 object-cover rounded-lg">
-                        <p class="text-xs text-gray-500 mt-1" id="thumbnail-url"></p>
-                    </div>
-                    <input type="hidden" id="thumbnail-image-url">
-                </div>
+                <!-- 이미지 업로드 섹션 -->
+                <div class="md:col-span-2">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">
+                        <i class="fas fa-image text-purple-600 mr-2"></i>제품 이미지
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 대표 이미지 -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                대표 이미지 (썸네일) <span class="text-red-500">*</span>
+                            </label>
+                            <p class="text-xs text-gray-600 mb-2">
+                                <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                                <strong>권장 사이즈:</strong> 1000×1000px (정사각형) 또는 1200×1200px (고해상도)
+                            </p>
+                            <div class="flex items-center space-x-2">
+                                <input type="file" id="thumbnail-upload" accept="image/*"
+                                    class="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <button type="button" onclick="uploadImage('thumbnail')"
+                                    class="bg-blue-500 text-white px-3 py-2 text-sm rounded-lg hover:bg-blue-600 whitespace-nowrap">
+                                    <i class="fas fa-upload mr-1"></i>업로드
+                                </button>
+                            </div>
+                            <div id="thumbnail-preview" class="mt-2" style="display: none;">
+                                <img id="thumbnail-preview-img" src="" alt="Thumbnail Preview" class="w-24 h-24 object-cover rounded-lg">
+                                <p class="text-xs text-gray-500 mt-1" id="thumbnail-url"></p>
+                            </div>
+                            <input type="hidden" id="thumbnail-image-url">
+                        </div>
 
-                <!-- 상세 이미지 업로드 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        상세 이미지 (일체형) <span class="text-red-500">*</span>
-                    </label>
-                    <p class="text-xs text-gray-600 mb-2">
-                        <i class="fas fa-info-circle text-blue-500 mr-1"></i>
-                        <strong>권장 사이즈:</strong> 750px × 무제한 (모바일 최적) | 최대 높이: 20,000px
-                    </p>
-                    <div class="flex items-center space-x-4">
-                        <input type="file" id="detail-upload" accept="image/*"
-                            class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <button type="button" onclick="uploadImage('detail')"
-                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                            <i class="fas fa-upload mr-2"></i>업로드
-                        </button>
+                        <!-- 상세 이미지 -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                상세 이미지 (일체형) <span class="text-red-500">*</span>
+                            </label>
+                            <p class="text-xs text-gray-600 mb-2">
+                                <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                                <strong>권장 사이즈:</strong> 750px × 무제한 (모바일 최적) | 최대 높이: 20,000px
+                            </p>
+                            <div class="flex items-center space-x-2">
+                                <input type="file" id="detail-upload" accept="image/*"
+                                    class="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <button type="button" onclick="uploadImage('detail')"
+                                    class="bg-blue-500 text-white px-3 py-2 text-sm rounded-lg hover:bg-blue-600 whitespace-nowrap">
+                                    <i class="fas fa-upload mr-1"></i>업로드
+                                </button>
+                            </div>
+                            <div id="detail-preview" class="mt-2" style="display: none;">
+                                <img id="detail-preview-img" src="" alt="Detail Preview" class="w-full max-w-xs rounded-lg">
+                                <p class="text-xs text-gray-500 mt-1" id="detail-url"></p>
+                            </div>
+                            <input type="hidden" id="detail-image-url">
+                        </div>
                     </div>
-                    <div id="detail-preview" class="mt-2" style="display: none;">
-                        <img id="detail-preview-img" src="" alt="Detail Preview" class="w-full max-w-md rounded-lg">
-                        <p class="text-xs text-gray-500 mt-1" id="detail-url"></p>
-                    </div>
-                    <input type="hidden" id="detail-image-url">
                 </div>
 
                 <!-- 제출 버튼 -->
-                <div class="flex space-x-4 pt-4">
+                <div class="md:col-span-2 flex space-x-4 pt-4">
                     <button type="submit" id="submit-btn"
                         class="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-semibold">
                         <i class="fas fa-save mr-2"></i>저장
