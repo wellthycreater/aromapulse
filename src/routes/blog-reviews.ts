@@ -353,7 +353,7 @@ blogReviews.get('/posts', async (c) => {
     let query = `
       SELECT * FROM blog_posts
       ${category ? 'WHERE category = ?' : ''}
-      ORDER BY published_at DESC
+      ORDER BY published_at ASC
       LIMIT ? OFFSET ?
     `
     
