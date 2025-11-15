@@ -108,20 +108,24 @@ function toggleProductFields() {
   const symptomField = document.getElementById('symptom-category-field');
   const refreshField = document.getElementById('refresh-type-field');
   const volumeField = document.getElementById('volume-field');
+  const itemsPerBoxField = document.getElementById('items-per-box-field');
   const workshopSection = document.getElementById('workshop-info-section');
   const categorySelect = document.getElementById('product-category');
   const refreshSelect = document.getElementById('refresh-type');
   const volumeSelect = document.getElementById('product-volume');
+  const itemsPerBoxInput = document.getElementById('items-per-box');
   
   if (concept === 'symptom_care') {
     // 증상케어 제품
     symptomField.style.display = 'block';
     refreshField.style.display = 'none';
     volumeField.style.display = 'none';
+    itemsPerBoxField.style.display = 'none';
     workshopSection.style.display = 'block';
     categorySelect.required = true;
     refreshSelect.required = false;
     volumeSelect.required = false;
+    itemsPerBoxInput.required = false;
     refreshSelect.value = '';
     volumeSelect.value = '';
   } else if (concept === 'refresh') {
@@ -129,10 +133,12 @@ function toggleProductFields() {
     symptomField.style.display = 'none';
     refreshField.style.display = 'block';
     volumeField.style.display = 'block';
+    itemsPerBoxField.style.display = 'block';
     workshopSection.style.display = 'none';
     categorySelect.required = false;
     refreshSelect.required = true;
     volumeSelect.required = true;
+    itemsPerBoxInput.required = true;
     categorySelect.value = '';
     // 공방 정보 초기화
     document.getElementById('workshop-name').value = '';
@@ -144,10 +150,12 @@ function toggleProductFields() {
     symptomField.style.display = 'none';
     refreshField.style.display = 'none';
     volumeField.style.display = 'none';
+    itemsPerBoxField.style.display = 'none';
     workshopSection.style.display = 'none';
     categorySelect.required = false;
     refreshSelect.required = false;
     volumeSelect.required = false;
+    itemsPerBoxInput.required = false;
   }
 }
 
@@ -385,6 +393,7 @@ async function editProduct(productId) {
   else if (concept === 'refresh') {
     document.getElementById('refresh-type').value = product.refresh_type || '';
     document.getElementById('product-volume').value = product.volume || '';
+    document.getElementById('items-per-box').value = product.items_per_box || 2;
   }
   
   // 이미지 URL 및 미리보기 설정
@@ -539,9 +548,16 @@ async function handleFormSubmit(e) {
       return;
     }
     
+    const itemsPerBox = parseInt(document.getElementById('items-per-box').value);
+    if (!itemsPerBox || itemsPerBox < 1) {
+      alert('1박스당 개수를 입력해주세요. (최소 1개)');
+      return;
+    }
+    
     productData.category = 'refresh'; // 리프레시 제품은 category를 'refresh'로 설정
     productData.refresh_type = refreshType;
     productData.volume = volume;
+    productData.items_per_box = itemsPerBox;
     
     // 리프레시 제품은 공방 정보 없음
     productData.workshop_name = null;

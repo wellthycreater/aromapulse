@@ -119,9 +119,9 @@ adminProducts.post('/', checkAdminAuth, async (c) => {
     
     const result = await c.env.DB.prepare(
       `INSERT INTO products (
-        name, description, concept, category, refresh_type, volume, price, thumbnail_image, detail_image, stock,
+        name, description, concept, category, refresh_type, volume, items_per_box, price, thumbnail_image, detail_image, stock,
         workshop_name, workshop_location, workshop_address, workshop_contact
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       name,
       description || null,
@@ -129,6 +129,7 @@ adminProducts.post('/', checkAdminAuth, async (c) => {
       category || null,
       refresh_type || null,
       volume || null,
+      data.items_per_box || 2,
       price,
       thumbnail_image || null,
       detail_image || null,
@@ -181,6 +182,7 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
         category = ?, 
         refresh_type = ?,
         volume = ?,
+        items_per_box = ?,
         price = ?,
         thumbnail_image = ?,
         detail_image = ?,
@@ -199,6 +201,7 @@ adminProducts.put('/:id', checkAdminAuth, async (c) => {
       category || null,
       refresh_type || null,
       volume || null,
+      data.items_per_box || 2,
       price,
       thumbnail_image,
       detail_image,
