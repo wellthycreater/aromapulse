@@ -838,29 +838,136 @@ async function viewBlogComments(postId) {
     const data = await response.json();
     const comments = data.comments || [];
     
-    // 간단한 alert로 표시 (추후 모달로 개선 가능)
     if (comments.length === 0) {
       alert('댓글이 없습니다.');
       return;
     }
     
-    let message = `총 ${comments.length}개의 댓글\n\n`;
-    comments.slice(0, 5).forEach((comment, index) => {
-      message += `${index + 1}. ${comment.author_name}\n`;
-      message += `   ${comment.content.substring(0, 50)}...\n`;
-      message += `   의도: ${comment.intent} | 감정: ${comment.sentiment}\n\n`;
-    });
-    
-    if (comments.length > 5) {
-      message += `... 외 ${comments.length - 5}개의 댓글`;
-    }
-    
-    alert(message);
+    // 모달 표시
+    displayCommentsModal(comments, postId);
     
   } catch (error) {
     console.error('댓글 로드 오류:', error);
     alert('댓글을 불러오는 중 오류가 발생했습니다.');
   }
+}
+
+// 댓글 모달 표시
+function displayCommentsModal(comments, postId) {
+  const modal = document.getElementById('view-comments-modal');
+  const container = document.getElementById('comments-container');
+  const postInfo = document.getElementById('comment-modal-post-info');
+  
+  // 포스트 정보 표시
+  postInfo.textContent = `총 ${comments.length}개의 댓글`;
+  
+  // 컨테이너 초기화
+  container.innerHTML = '';
+  
+  // 댓글이 없는 경우
+  if (comments.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-comments text-6xl mb-4 text-gray-300"></i>
+        <p class="text-lg">등록된 댓글이 없습니다.</p>
+      </div>
+    `;
+  } else {
+    // 댓글 카드 생성
+    comments.forEach((comment, index) => {
+      const card = createCommentCard(comment, index + 1);
+      container.appendChild(card);
+    });
+  }
+  
+  // 모달 표시
+  modal.classList.remove('hidden');
+}
+
+// 댓글 카드 생성
+function createCommentCard(comment, index) {
+  const card = document.createElement('div');
+  card.className = 'bg-white border border-gray-200 rounded-xl p-5 mb-4 hover:shadow-lg transition duration-200';
+  
+  // 감정 이모지
+  const sentimentEmoji = comment.sentiment === 'positive' ? '😊' : 
+                        comment.sentiment === 'negative' ? '😔' : '😐';
+  
+  // 의도 색상
+  const intentColor = comment.intent === 'B2B문의' ? 'bg-purple-100 text-purple-800' :
+                     comment.intent === '구매의도' ? 'bg-green-100 text-green-800' :
+                     comment.intent === '가격문의' ? 'bg-blue-100 text-blue-800' :
+                     comment.intent === '긍정리뷰' ? 'bg-pink-100 text-pink-800' :
+                     'bg-gray-100 text-gray-800';
+  
+  // 사용자 타입 배지
+  const userTypeBadge = comment.user_type_prediction === 'B2B' ? 
+    '<span class="px-2 py-1 bg-purple-500 text-white text-xs font-semibold rounded-full">B2B</span>' :
+    comment.user_type_prediction === 'B2C' ?
+    '<span class="px-2 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full">B2C</span>' :
+    '<span class="px-2 py-1 bg-gray-400 text-white text-xs font-semibold rounded-full">일반</span>';
+  
+  // 날짜 포맷팅
+  const date = new Date(comment.created_at);
+  const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+  
+  // 키워드 파싱
+  let keywords = [];
+  try {
+    keywords = comment.keywords ? JSON.parse(comment.keywords) : [];
+  } catch (e) {
+    keywords = [];
+  }
+  
+  card.innerHTML = `
+    <div class="flex items-start justify-between mb-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+          ${comment.author_name.charAt(0)}
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h4 class="font-bold text-gray-800">${comment.author_name}</h4>
+            ${userTypeBadge}
+          </div>
+          <p class="text-xs text-gray-500">
+            <i class="far fa-clock mr-1"></i>${formattedDate}
+          </p>
+        </div>
+      </div>
+      <span class="text-2xl">${sentimentEmoji}</span>
+    </div>
+    
+    <div class="mb-3">
+      <p class="text-gray-700 leading-relaxed">${comment.content}</p>
+    </div>
+    
+    <div class="flex flex-wrap gap-2 mb-3">
+      <span class="px-3 py-1 ${intentColor} text-xs font-semibold rounded-full">
+        <i class="fas fa-tag mr-1"></i>${comment.intent}
+      </span>
+      ${keywords.map(kw => 
+        `<span class="px-3 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
+          <i class="fas fa-key mr-1"></i>${kw}
+        </span>`
+      ).join('')}
+    </div>
+    
+    <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+      <div class="flex items-center space-x-4 text-xs text-gray-500">
+        <span><i class="fas fa-heart mr-1 text-red-400"></i>감정: ${comment.sentiment}</span>
+        <span><i class="fas fa-bullseye mr-1 text-blue-400"></i>의도: ${comment.intent}</span>
+      </div>
+      <span class="text-xs font-semibold text-gray-400">#${index}</span>
+    </div>
+  `;
+  
+  return card;
+}
+
+// 댓글 모달 닫기
+function closeViewCommentsModal() {
+  document.getElementById('view-comments-modal').classList.add('hidden');
 }
 
 // 수동 댓글 추가
