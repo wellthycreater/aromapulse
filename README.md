@@ -3,7 +3,7 @@
 ## 🏢 회사 정보
 
 **브랜드**: 아로마펄스 (AromaPulse)  
-**운영사**: 웰씨코리아 (WellC Korea)  
+**운영사**: 웰씨코리아 (Wellthy Korea)  
 **향후 법인**: (주)센펄스 (Senpulse Co., Ltd.) - 법인 설립 예정
 
 ## 🎯 프로젝트 개요

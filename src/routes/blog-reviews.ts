@@ -706,12 +706,17 @@ function predictUserType(text: string): string | null {
     /^(안녕|좋은|감사|고마|잘|힘내|화이팅|응원|파이팅)/,
     /포스팅.*보고.*갑니다/,
     /이웃님/,
-    /블로그.*구경/,
+    /블로그.*(구경|방문|들렀)/,
     /놀러.*왔/,
-    /(좋은|행복한|편안한|건강한).*(하루|밤|주말|시간)/,
+    /(좋은|행복한|편안한|건강한|즐거운).*(하루|밤|주말|시간|아침|저녁|오후)/,
     /잘.*보고.*갑니다/,
     /소통.*해요/,
-    /공감.*누르고.*갑니다/
+    /공감.*누르고.*갑니다/,
+    /정성스럽게.*올려주신/,
+    /감사한.*마음/,
+    /인사드리/,
+    /좋은.*글/,
+    /(보내세요|되세요|되시길)/
   ]
   
   // 단순 인사말인지 확인
@@ -722,16 +727,21 @@ function predictUserType(text: string): string | null {
     '구매', '주문', '살', '사고', '결제', '구입', '장바구니',
     '가격', '얼마', '비용', '견적',
     '문의', '궁금', '알고싶', '질문',
-    '어디서', '어떻게',
-    '효과', '사용', '써봤', '써보', '쓰고',
-    '추천', '괜찮', '좋을까',
-    '제품', '상품', '향', '오일', '스프레이', '디퓨저'
+    '어디서 구', '어디서 살', '어떻게 구',
+    '효과.*있', '사용.*방법', '써봤', '써보고 싶', '쓰고 싶',
+    '추천.*주', '괜찮을까', '좋을까요',
+    '제품.*구', '상품.*구', '향.*구매', '오일.*구', '스프레이.*구', '디퓨저.*구'
   ]
   
-  const hasPurchaseIntent = purchaseSignals.some(signal => lowerText.includes(signal))
+  const hasPurchaseIntent = purchaseSignals.some(signal => lowerText.includes(signal) || new RegExp(signal).test(lowerText))
   
-  // 단순 인사말이고 구매 의도가 없으면 일반으로 분류
-  if (isSimpleGreeting && !hasPurchaseIntent) {
+  // 구매 의도가 없으면 무조건 일반으로 분류 (강화된 로직)
+  if (!hasPurchaseIntent) {
+    return null
+  }
+  
+  // 단순 인사말이면서 구매 의도가 있어도 일반으로 (안전장치)
+  if (isSimpleGreeting) {
     return null
   }
   
