@@ -891,7 +891,7 @@ blogReviews.get('/leads', async (c) => {
       params.push(intent)
     }
     
-    query += ' ORDER BY bc.created_at DESC LIMIT 50'
+    query += ' ORDER BY bc.created_at DESC, bc.id DESC LIMIT 50'
     
     const leads = await c.env.DB.prepare(query).bind(...params).all()
     let results = leads.results as any[]
