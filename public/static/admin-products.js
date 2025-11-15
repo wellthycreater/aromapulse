@@ -17,6 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // 폼 제출 이벤트
   document.getElementById('product-form').addEventListener('submit', handleFormSubmit);
   
+  // 박스 구성 변경 시 도움말 업데이트
+  document.getElementById('items-per-box').addEventListener('change', function() {
+    const stockHelperText = document.getElementById('stock-helper-text');
+    const itemsPerBox = this.value || '2';
+    if (stockHelperText) {
+      stockHelperText.textContent = `1박스 = ${itemsPerBox}개입 기준`;
+    }
+  });
+  
   // 취소 버튼
   document.getElementById('cancel-btn').addEventListener('click', closeModal);
   
@@ -114,6 +123,9 @@ function toggleProductFields() {
   const refreshSelect = document.getElementById('refresh-type');
   const volumeSelect = document.getElementById('product-volume');
   const itemsPerBoxInput = document.getElementById('items-per-box');
+  const stockLabel = document.getElementById('stock-label');
+  const stockHelper = document.getElementById('stock-helper');
+  const stockHelperText = document.getElementById('stock-helper-text');
   
   if (concept === 'symptom_care') {
     // 증상케어 제품
@@ -128,6 +140,10 @@ function toggleProductFields() {
     itemsPerBoxInput.required = false;
     refreshSelect.value = '';
     volumeSelect.value = '';
+    
+    // 재고 라벨 변경 (개별 개수)
+    stockLabel.textContent = '재고 수량';
+    stockHelper.style.display = 'none';
   } else if (concept === 'refresh') {
     // 리프레시 제품
     symptomField.style.display = 'none';
@@ -145,6 +161,12 @@ function toggleProductFields() {
     document.getElementById('workshop-location').value = '';
     document.getElementById('workshop-address').value = '';
     document.getElementById('workshop-contact').value = '';
+    
+    // 재고 라벨 변경 (박스 수)
+    stockLabel.textContent = '재고 수량 (박스)';
+    stockHelper.style.display = 'block';
+    const itemsPerBox = itemsPerBoxInput.value || '2';
+    stockHelperText.textContent = `1박스 = ${itemsPerBox}개입 기준`;
   } else {
     // 선택 안 함
     symptomField.style.display = 'none';
@@ -281,6 +303,7 @@ function createProductCard(product) {
     ? `<div class="text-xs text-purple-600 mb-2 font-semibold">
          <i class="fas fa-spray-can mr-1"></i>${refreshTypeLabels[product.refresh_type] || product.refresh_type}
          ${product.volume ? ` · ${product.volume}` : ''}
+         ${product.items_per_box ? ` · <span class="text-purple-800">${product.items_per_box}개입</span>` : ''}
        </div>`
     : '';
   
@@ -307,7 +330,7 @@ function createProductCard(product) {
       <p class="text-sm text-gray-600 mb-3 line-clamp-2">${product.description || '설명 없음'}</p>
       <div class="flex items-center justify-between mb-3">
         <span class="text-lg font-bold text-purple-600">${product.price.toLocaleString()}원</span>
-        <span class="text-sm text-gray-500">재고: ${product.stock}개</span>
+        <span class="text-sm text-gray-500">재고: ${product.stock}${product.concept === 'refresh' ? '박스' : '개'}</span>
       </div>
       <div class="flex gap-2">
         <button onclick="editProduct(${product.id})" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
@@ -550,7 +573,7 @@ async function handleFormSubmit(e) {
     
     const itemsPerBox = parseInt(document.getElementById('items-per-box').value);
     if (!itemsPerBox || itemsPerBox < 1) {
-      alert('1박스당 개수를 입력해주세요. (최소 1개)');
+      alert('박스 구성을 선택해주세요.');
       return;
     }
     
