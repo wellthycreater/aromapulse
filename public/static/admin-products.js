@@ -17,15 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 폼 제출 이벤트
   document.getElementById('product-form').addEventListener('submit', handleFormSubmit);
   
-  // 박스 구성 변경 시 도움말 업데이트
-  document.getElementById('items-per-box').addEventListener('change', function() {
-    const stockHelperText = document.getElementById('stock-helper-text');
-    const itemsPerBox = this.value || '2';
-    if (stockHelperText) {
-      stockHelperText.textContent = `1박스 = ${itemsPerBox}개입 기준`;
-    }
-  });
-  
   // 취소 버튼
   document.getElementById('cancel-btn').addEventListener('click', closeModal);
   
@@ -165,8 +156,7 @@ function toggleProductFields() {
     // 재고 라벨 변경 (박스 수)
     stockLabel.textContent = '재고 수량 (박스)';
     stockHelper.style.display = 'block';
-    const itemsPerBox = itemsPerBoxInput.value || '2';
-    stockHelperText.textContent = `1박스 = ${itemsPerBox}개입 기준`;
+    stockHelperText.textContent = '1박스 = 2개입 기준';
   } else {
     // 선택 안 함
     symptomField.style.display = 'none';
@@ -416,7 +406,8 @@ async function editProduct(productId) {
   else if (concept === 'refresh') {
     document.getElementById('refresh-type').value = product.refresh_type || '';
     document.getElementById('product-volume').value = product.volume || '';
-    document.getElementById('items-per-box').value = product.items_per_box || 2;
+    // items_per_box는 항상 2로 고정
+    document.getElementById('items-per-box').value = 2;
   }
   
   // 이미지 URL 및 미리보기 설정
