@@ -1461,7 +1461,14 @@ async function addNewBlogPost() {
   }
   
   if (!publishedDate) {
-    alert('작성 날짜를 입력해주세요.\n\n블로그에 실제 작성된 날짜와 시간을 입력하세요.');
+    alert('작성 날짜를 입력해주세요.\n\n형식: 2025-05-27 13:55 또는 2025-05-27 13:55:00');
+    return;
+  }
+  
+  // 날짜 형식 검증 (YYYY-MM-DD HH:MM 또는 YYYY-MM-DD HH:MM:SS)
+  const datePattern = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?$/;
+  if (!datePattern.test(publishedDate.trim())) {
+    alert('올바른 날짜 형식이 아닙니다.\n\n형식: 2025-05-27 13:55 또는 2025-05-27 13:55:00');
     return;
   }
   
@@ -1489,8 +1496,14 @@ async function addNewBlogPost() {
   
   const finalTitle = title.trim() || `블로그 게시물 ${postId}`;
   
-  // datetime-local 형식을 ISO 형식으로 변환
-  const publishedAtISO = new Date(publishedDate).toISOString();
+  // 텍스트 날짜를 표준 형식으로 변환 (초가 없으면 :00 추가)
+  let formattedDate = publishedDate.trim();
+  if (!formattedDate.match(/:\d{2}:\d{2}$/)) {
+    formattedDate += ':00';
+  }
+  
+  // "YYYY-MM-DD HH:MM:SS" 형식으로 전송 (ISO 형식 대신)
+  const publishedAtFormatted = formattedDate;
   
   try {
     const token = localStorage.getItem('auth_token');
@@ -1505,7 +1518,7 @@ async function addNewBlogPost() {
         post_id: postId,
         url: url,
         title: finalTitle,
-        published_at: publishedAtISO
+        published_at: publishedAtFormatted
       })
     });
     
