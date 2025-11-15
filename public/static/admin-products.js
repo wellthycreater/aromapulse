@@ -687,6 +687,9 @@ async function loadBlogPosts() {
     // 블로그 게시물 목록 렌더링
     renderBlogPosts();
     
+    // 수동 댓글 추가 드롭다운 업데이트
+    updateManualCommentPostSelect();
+    
   } catch (error) {
     console.error('블로그 게시물 로드 오류:', error);
   }
@@ -739,6 +742,10 @@ function renderBlogPosts() {
           <button onclick="viewBlogComments('${post.post_id}')" 
             class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 text-sm whitespace-nowrap">
             <i class="fas fa-list mr-1"></i>댓글 보기
+          </button>
+          <button onclick="openAddCommentModal(${post.id}, '${post.post_id}', '${post.title?.replace(/'/g, "\\'")}', '${post.url}')" 
+            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-sm whitespace-nowrap">
+            <i class="fas fa-plus mr-1"></i>댓글 추가
           </button>
         </div>
       </div>
@@ -860,6 +867,126 @@ async function viewBlogComments(postId) {
   }
 }
 
+// 수동 댓글 추가
+async function addManualComment() {
+  const postSelect = document.getElementById('manual-comment-post-select');
+  const authorInput = document.getElementById('manual-comment-author');
+  const contentInput = document.getElementById('manual-comment-content');
+  const dateInput = document.getElementById('manual-comment-date');
+  
+  const postId = postSelect.value;
+  const author = authorInput.value.trim();
+  const content = contentInput.value.trim();
+  const date = dateInput.value;
+  
+  // 유효성 검사
+  if (!postId) {
+    alert('블로그 게시물을 선택해주세요.');
+    return;
+  }
+  
+  if (!author) {
+    alert('작성자명을 입력해주세요.');
+    return;
+  }
+  
+  if (!content) {
+    alert('댓글 내용을 입력해주세요.');
+    return;
+  }
+  
+  const token = localStorage.getItem('auth_token');
+  const button = event.target;
+  const originalText = button.innerHTML;
+  
+  button.disabled = true;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>분석 중...';
+  
+  try {
+    // 날짜 처리 (선택되지 않으면 현재 시간)
+    const createdAt = date ? new Date(date).toISOString() : new Date().toISOString();
+    
+    // 댓글 ID 생성
+    const commentId = `manual_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    
+    const response = await fetch('/api/blog-reviews/comments/manual', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        post_internal_id: parseInt(postId),
+        comment_id: commentId,
+        author_name: author,
+        content: content,
+        created_at: createdAt
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '댓글 추가 실패');
+    }
+    
+    const data = await response.json();
+    
+    alert(
+      `댓글 추가 및 분석 완료!\n\n` +
+      `작성자: ${author}\n` +
+      `감정: ${data.sentiment}\n` +
+      `사용자 타입: ${data.user_type || '미분류'}\n` +
+      `의도: ${data.intent}\n` +
+      `키워드: ${data.keywords.join(', ')}\n\n` +
+      (data.chatbot_created ? '✅ 챗봇 세션이 자동 생성되었습니다!' : '')
+    );
+    
+    // 폼 초기화
+    clearManualCommentForm();
+    
+    // 블로그 게시물 목록 다시 로드
+    loadBlogPosts();
+    
+    // B2B 리드가 생성되었으면 표시
+    if (data.user_type === 'B2B' && (data.intent === 'B2B문의' || data.intent === '구매의도')) {
+      await loadAndDisplayB2BLeads(parseInt(postId), null);
+    }
+    
+  } catch (error) {
+    console.error('수동 댓글 추가 오류:', error);
+    alert(`댓글 추가 중 오류가 발생했습니다:\n${error.message}`);
+  } finally {
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+}
+
+// 수동 댓글 폼 초기화
+function clearManualCommentForm() {
+  document.getElementById('manual-comment-post-select').value = '';
+  document.getElementById('manual-comment-author').value = '';
+  document.getElementById('manual-comment-content').value = '';
+  document.getElementById('manual-comment-date').value = '';
+}
+
+// 블로그 포스트 선택 드롭다운 업데이트
+function updateManualCommentPostSelect() {
+  const select = document.getElementById('manual-comment-post-select');
+  
+  // 기존 옵션 제거 (첫 번째 옵션 제외)
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+  
+  // 블로그 포스트 목록 추가
+  blogPosts.forEach(post => {
+    const option = document.createElement('option');
+    option.value = post.id; // 내부 ID 사용
+    option.textContent = `${post.title} (ID: ${post.post_id})`;
+    select.appendChild(option);
+  });
+}
+
 // B2B 리드 로드 및 표시
 async function loadAndDisplayB2BLeads(postId = null, postUrl = null) {
   try {
@@ -979,5 +1106,131 @@ async function loadAndDisplayB2BLeads(postId = null, postUrl = null) {
     
   } catch (error) {
     console.error('B2B 리드 로드 오류:', error);
+  }
+}
+
+// 댓글 추가 모달 관련 변수
+let selectedPostForComment = null;
+
+// 댓글 추가 모달 열기
+function openAddCommentModal(postInternalId, postId, postTitle, postUrl) {
+  selectedPostForComment = {
+    internalId: postInternalId,
+    postId: postId,
+    title: postTitle,
+    url: postUrl
+  };
+  
+  // 포스트 정보 표시
+  document.getElementById('add-comment-post-info').innerHTML = `
+    <div>
+      <p class="text-sm font-semibold text-gray-700 mb-1">선택한 게시물:</p>
+      <p class="text-gray-800 font-medium">${postTitle}</p>
+      <a href="${postUrl}" target="_blank" class="text-blue-600 hover:underline text-sm">
+        <i class="fas fa-external-link-alt mr-1"></i>${postUrl}
+      </a>
+    </div>
+  `;
+  
+  // 폼 초기화
+  document.getElementById('comment-author').value = '';
+  document.getElementById('comment-content').value = '';
+  document.getElementById('comment-date').value = '';
+  
+  // 모달 표시
+  document.getElementById('add-comment-modal').classList.remove('hidden');
+}
+
+// 댓글 추가 모달 닫기
+function closeAddCommentModal() {
+  document.getElementById('add-comment-modal').classList.add('hidden');
+  selectedPostForComment = null;
+}
+
+// 댓글 추가 폼 제출
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('add-comment-form');
+  if (form) {
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      await submitManualComment();
+    });
+  }
+});
+
+// 수동 댓글 추가 제출
+async function submitManualComment() {
+  if (!selectedPostForComment) {
+    alert('포스트가 선택되지 않았습니다.');
+    return;
+  }
+  
+  const author = document.getElementById('comment-author').value.trim();
+  const content = document.getElementById('comment-content').value.trim();
+  const dateInput = document.getElementById('comment-date').value;
+  
+  if (!author || !content) {
+    alert('작성자명과 댓글 내용을 모두 입력해주세요.');
+    return;
+  }
+  
+  const token = localStorage.getItem('auth_token');
+  const submitButton = document.querySelector('#add-comment-form button[type="submit"]');
+  const originalText = submitButton.innerHTML;
+  
+  submitButton.disabled = true;
+  submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>추가 중...';
+  
+  try {
+    // 날짜 처리
+    let createdAt = dateInput ? new Date(dateInput).toISOString() : new Date().toISOString();
+    
+    const response = await fetch('/api/blog-reviews/comments/manual', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        post_internal_id: selectedPostForComment.internalId,
+        author_name: author,
+        content: content,
+        created_at: createdAt
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '댓글 추가 실패');
+    }
+    
+    const data = await response.json();
+    
+    alert(
+      `댓글 추가 완료!\n\n` +
+      `- 작성자: ${author}\n` +
+      `- 감정: ${data.sentiment}\n` +
+      `- 사용자 타입: ${data.user_type || '미분류'}\n` +
+      `- 의도: ${data.intent}\n` +
+      (data.chatbot_created ? `- 챗봇 세션 자동 생성됨` : '')
+    );
+    
+    // 모달 닫기
+    closeAddCommentModal();
+    
+    // 블로그 포스트 목록 새로고침
+    loadBlogPosts();
+    
+    // B2B 댓글이면 리드 표시
+    if (data.user_type === 'B2B' && (data.intent === 'B2B문의' || data.intent === '구매의도')) {
+      await loadAndDisplayB2BLeads(selectedPostForComment.internalId, selectedPostForComment.url);
+    }
+    
+  } catch (error) {
+    console.error('댓글 추가 오류:', error);
+    alert(`댓글 추가 중 오류가 발생했습니다:\n${error.message}`);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.innerHTML = originalText;
   }
 }

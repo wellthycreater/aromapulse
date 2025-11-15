@@ -442,6 +442,127 @@ blogReviews.get('/posts/:post_id/comments', async (c) => {
   }
 })
 
+// 수동 댓글 추가 API (관리자 전용 - 블로그 실제 댓글 수동 입력)
+blogReviews.post('/comments/manual', async (c) => {
+  try {
+    const { post_internal_id, author_name, content, created_at } = await c.req.json()
+    
+    if (!post_internal_id || !author_name || !content) {
+      return c.json({ error: '포스트 ID, 작성자명, 내용이 필요합니다' }, 400)
+    }
+    
+    // 포스트 확인
+    const post = await c.env.DB.prepare(`
+      SELECT * FROM blog_posts WHERE id = ?
+    `).bind(post_internal_id).first()
+    
+    if (!post) {
+      return c.json({ error: '포스트를 찾을 수 없습니다' }, 404)
+    }
+    
+    // 고유 comment_id 생성
+    const commentId = `manual_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+    
+    // AI 분석 수행
+    const sentiment = analyzeSentiment(content)
+    const userType = predictUserType(content)
+    const intent = extractIntent(content)
+    const keywords = extractKeywords(content)
+    
+    // 댓글 저장
+    const commentResult = await c.env.DB.prepare(`
+      INSERT INTO blog_comments (
+        post_id, comment_id, author_name, author_id, content,
+        sentiment, user_type_prediction, intent, keywords, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      post_internal_id,
+      commentId,
+      author_name,
+      null, // author_id는 수동 입력이므로 null
+      content,
+      sentiment,
+      userType,
+      intent,
+      JSON.stringify(keywords),
+      created_at || new Date().toISOString()
+    ).run()
+    
+    // 포스트의 댓글 수 업데이트
+    await c.env.DB.prepare(`
+      UPDATE blog_posts SET comment_count = comment_count + 1 WHERE id = ?
+    `).bind(post_internal_id).run()
+    
+    // B2B 문의 또는 구매 의도가 감지되면 챗봇 세션 자동 생성
+    let chatbotSessionCreated = false
+    let chatbotSessionId = null
+    
+    if (intent === '구매의도' || intent === 'B2B문의' || intent === '가격문의') {
+      try {
+        const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+        const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+        
+        const sessionResult = await c.env.DB.prepare(`
+          INSERT INTO chatbot_sessions (session_id, visitor_id, detected_user_type, started_at)
+          VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        `).bind(sessionId, visitorId, userType || 'unknown').run()
+        
+        chatbotSessionId = sessionResult.meta.last_row_id
+        
+        // 시스템 메시지 (bot으로 전송)
+        await c.env.DB.prepare(`
+          INSERT INTO chatbot_messages (session_id, sender, content, created_at)
+          VALUES (?, 'bot', ?, CURRENT_TIMESTAMP)
+        `).bind(
+          chatbotSessionId,
+          `[시스템] 블로그 댓글에서 시작된 대화입니다. 사용자: ${author_name}, 의도: ${intent}, 감정: ${sentiment}, 키워드: ${keywords.join(', ')}`
+        ).run()
+        
+        // 사용자 메시지
+        await c.env.DB.prepare(`
+          INSERT INTO chatbot_messages (session_id, sender, content, intent, sentiment, created_at)
+          VALUES (?, 'user', ?, ?, ?, CURRENT_TIMESTAMP)
+        `).bind(chatbotSessionId, content, intent, sentiment).run()
+        
+        // AI 응답
+        const aiResponse = generateAIResponseFromComment(
+          content, 
+          intent, 
+          sentiment, 
+          keywords, 
+          userType
+        )
+        
+        await c.env.DB.prepare(`
+          INSERT INTO chatbot_messages (session_id, sender, content, created_at)
+          VALUES (?, 'bot', ?, CURRENT_TIMESTAMP)
+        `).bind(chatbotSessionId, aiResponse).run()
+        
+        chatbotSessionCreated = true
+      } catch (chatbotError) {
+        console.error('챗봇 세션 생성 실패:', chatbotError)
+      }
+    }
+    
+    return c.json({
+      message: '수동 댓글이 추가되고 AI 분석이 완료되었습니다',
+      comment_id: commentResult.meta.last_row_id,
+      post_title: post.title,
+      analysis: {
+        sentiment,
+        user_type: userType,
+        intent,
+        keywords
+      },
+      chatbot_session_created: chatbotSessionCreated,
+      chatbot_session_id: chatbotSessionId
+    })
+  } catch (error) {
+    console.error('수동 댓글 추가 실패:', error)
+    return c.json({ error: '수동 댓글 추가 실패: ' + error }, 500)
+  }
+})
+
 // 댓글 등록 (자동 수집 또는 수동 등록)
 blogReviews.post('/comments', async (c) => {
   const {

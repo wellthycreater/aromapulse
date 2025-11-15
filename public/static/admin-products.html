@@ -105,6 +105,78 @@
                 </p>
             </div>
 
+            <!-- 수동 댓글 추가 카드 -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-comment-medical text-purple-600 mr-2"></i>수동 댓글 추가
+                </h3>
+                <p class="text-sm text-gray-600 mb-4">
+                    중요한 댓글을 직접 입력하여 분석하고 관리할 수 있습니다.
+                </p>
+                
+                <div class="space-y-4">
+                    <!-- 블로그 포스트 선택 -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            블로그 게시물 <span class="text-red-500">*</span>
+                        </label>
+                        <select id="manual-comment-post-select" 
+                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                            <option value="">게시물을 선택하세요</option>
+                        </select>
+                    </div>
+
+                    <!-- 작성자명 -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            작성자명 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="manual-comment-author" 
+                            placeholder="예: 홍길동"
+                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <!-- 댓글 내용 -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            댓글 내용 <span class="text-red-500">*</span>
+                        </label>
+                        <textarea id="manual-comment-content" 
+                            rows="4"
+                            placeholder="댓글 내용을 입력하세요..."
+                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-magic mr-1"></i>
+                            입력된 댓글은 자동으로 AI 분석됩니다 (감정, 의도, 사용자 타입, 키워드)
+                        </p>
+                    </div>
+
+                    <!-- 작성 날짜 (선택) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            작성 날짜 (선택)
+                        </label>
+                        <input type="datetime-local" id="manual-comment-date" 
+                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">
+                            비워두면 현재 시간으로 설정됩니다
+                        </p>
+                    </div>
+
+                    <!-- 버튼 -->
+                    <div class="flex gap-3">
+                        <button onclick="addManualComment()" 
+                            class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 font-semibold">
+                            <i class="fas fa-plus mr-2"></i>댓글 추가 및 분석
+                        </button>
+                        <button onclick="clearManualCommentForm()" 
+                            class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold">
+                            <i class="fas fa-redo mr-2"></i>초기화
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- 등록된 블로그 게시물 목록 -->
             <div class="bg-white rounded-xl shadow-md p-6">
                 <h3 class="text-xl font-bold text-gray-800 mb-4">
@@ -383,6 +455,76 @@
                     <button type="button" id="cancel-btn" onclick="closeModal()"
                         class="px-8 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300">
                         취소
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 댓글 수동 추가 모달 -->
+    <div id="add-comment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-comment-medical text-green-600 mr-2"></i>
+                    댓글 추가
+                </h3>
+                <button onclick="closeAddCommentModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div id="add-comment-post-info" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <!-- 포스트 정보가 동적으로 채워집니다 -->
+            </div>
+
+            <form id="add-comment-form" class="space-y-4">
+                <!-- 작성자명 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        작성자명 <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="comment-author" required
+                        placeholder="예: 홍길동"
+                        class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <!-- 댓글 내용 -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        댓글 내용 <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="comment-content" rows="6" required
+                        placeholder="실제 블로그 댓글 내용을 입력하세요..."
+                        class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-magic mr-1"></i>
+                        입력된 댓글은 자동으로 AI 분석됩니다 (감정, 의도, 사용자 타입, 키워드)
+                    </p>
+                </div>
+
+                <!-- 작성 날짜 (선택) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        작성 날짜 (선택)
+                    </label>
+                    <input type="datetime-local" id="comment-date"
+                        class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500">
+                    <p class="text-xs text-gray-500 mt-1">
+                        비워두면 현재 시간으로 설정됩니다
+                    </p>
+                </div>
+
+                <!-- 버튼 -->
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" onclick="closeAddCommentModal()"
+                        class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        취소
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        <i class="fas fa-plus mr-2"></i>
+                        댓글 추가
                     </button>
                 </div>
             </form>
