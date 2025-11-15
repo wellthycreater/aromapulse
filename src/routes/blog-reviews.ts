@@ -460,15 +460,6 @@ blogReviews.post('/comments/manual', async (c) => {
       return c.json({ error: '포스트를 찾을 수 없습니다' }, 404)
     }
     
-    // ⭐ 이미 댓글이 있는지 확인 (게시물당 1개 제한)
-    const existingComment = await c.env.DB.prepare(`
-      SELECT id FROM blog_comments WHERE post_id = ? LIMIT 1
-    `).bind(post_internal_id).first()
-    
-    if (existingComment) {
-      return c.json({ error: '이미 댓글이 존재합니다. 게시물당 1개의 댓글만 등록할 수 있습니다.' }, 400)
-    }
-    
     // 고유 comment_id 생성
     const commentId = `manual_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
     

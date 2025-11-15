@@ -824,6 +824,9 @@ async function crawlBlogComments() {
 async function viewBlogComments(postId) {
   const token = localStorage.getItem('auth_token');
   
+  console.log('=== 댓글 보기 클릭 ===');
+  console.log('요청한 게시물 ID:', postId);
+  
   try {
     const response = await fetch(`/api/blog-reviews/posts/${postId}/comments`, {
       headers: {
@@ -837,6 +840,10 @@ async function viewBlogComments(postId) {
     
     const data = await response.json();
     const comments = data.comments || [];
+    
+    console.log('API 응답 데이터:', data);
+    console.log('받은 댓글 수:', comments.length);
+    console.log('댓글 목록:', comments);
     
     if (comments.length === 0) {
       alert('댓글이 없습니다.');
@@ -858,11 +865,16 @@ function displayCommentsModal(comments, postId) {
   const container = document.getElementById('comments-container');
   const postInfo = document.getElementById('comment-modal-post-info');
   
-  // 포스트 정보 표시
-  postInfo.textContent = `총 ${comments.length}개의 댓글`;
+  console.log('=== 모달 표시 시작 ===');
+  console.log('표시할 게시물 ID:', postId);
+  console.log('표시할 댓글 수:', comments.length);
   
-  // 컨테이너 초기화
+  // 포스트 정보 표시 (게시물 ID 포함)
+  postInfo.textContent = `게시물 ${postId} - 총 ${comments.length}개의 댓글`;
+  
+  // 컨테이너 초기화 (중요!)
   container.innerHTML = '';
+  console.log('컨테이너 초기화 완료');
   
   // 댓글이 없는 경우
   if (comments.length === 0) {
@@ -875,10 +887,13 @@ function displayCommentsModal(comments, postId) {
   } else {
     // 댓글 카드 생성
     comments.forEach((comment, index) => {
+      console.log(`댓글 ${index + 1} 추가 중:`, comment.id, comment.author_name);
       const card = createCommentCard(comment, index + 1);
       container.appendChild(card);
     });
   }
+  
+  console.log('모달 표시 완료 - 최종 댓글 수:', container.children.length);
   
   // 모달 표시
   modal.classList.remove('hidden');
