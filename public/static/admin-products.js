@@ -1144,6 +1144,8 @@ function openAddCommentModal(postInternalId, postId, postTitle, postUrl) {
 // 댓글 추가 모달 닫기
 function closeAddCommentModal() {
   document.getElementById('add-comment-modal').classList.add('hidden');
+  // 폼 리셋
+  document.getElementById('add-comment-form').reset();
   selectedPostForComment = null;
 }
 
@@ -1206,23 +1208,31 @@ async function submitManualComment() {
     
     const data = await response.json();
     
-    alert(
-      `댓글 추가 완료!\n\n` +
-      `- 작성자: ${author}\n` +
-      `- 감정: ${data.sentiment}\n` +
-      `- 사용자 타입: ${data.user_type || '미분류'}\n` +
-      `- 의도: ${data.intent}\n` +
-      (data.chatbot_created ? `- 챗봇 세션 자동 생성됨` : '')
-    );
+    // AI 분석 결과 표시
+    const analysis = data.analysis;
+    let alertMessage = `✅ 댓글 추가 완료!\n\n`;
+    alertMessage += `📝 작성자: ${author}\n`;
+    alertMessage += `📊 AI 분석 결과:\n`;
+    alertMessage += `  - 감정: ${analysis.sentiment === 'positive' ? '긍정😊' : analysis.sentiment === 'negative' ? '부정😔' : '중립😐'}\n`;
+    alertMessage += `  - 사용자 타입: ${analysis.user_type || '일반 고객'}\n`;
+    alertMessage += `  - 의도: ${analysis.intent}\n`;
+    if (analysis.keywords && analysis.keywords.length > 0) {
+      alertMessage += `  - 키워드: ${analysis.keywords.join(', ')}\n`;
+    }
+    if (data.chatbot_session_created) {
+      alertMessage += `\n🤖 챗봇 세션이 자동으로 생성되었습니다!`;
+    }
     
-    // 모달 닫기
+    alert(alertMessage);
+    
+    // 모달 닫기 (폼 리셋 포함)
     closeAddCommentModal();
     
     // 블로그 포스트 목록 새로고침
     loadBlogPosts();
     
     // B2B 댓글이면 리드 표시
-    if (data.user_type === 'B2B' && (data.intent === 'B2B문의' || data.intent === '구매의도')) {
+    if (analysis.user_type === 'B2B' && (analysis.intent === 'B2B문의' || analysis.intent === '구매의도')) {
       await loadAndDisplayB2BLeads(selectedPostForComment.internalId, selectedPostForComment.url);
     }
     
