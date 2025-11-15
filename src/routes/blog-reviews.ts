@@ -699,6 +699,43 @@ function analyzeSentiment(text: string): string {
 }
 
 function predictUserType(text: string): string | null {
+  const lowerText = text.toLowerCase()
+  
+  // 단순 안부/인사말 패턴 (일반으로 분류)
+  const greetingPatterns = [
+    /^(안녕|좋은|감사|고마|잘|힘내|화이팅|응원|파이팅)/,
+    /포스팅.*보고.*갑니다/,
+    /이웃님/,
+    /블로그.*구경/,
+    /놀러.*왔/,
+    /(좋은|행복한|편안한|건강한).*(하루|밤|주말|시간)/,
+    /잘.*보고.*갑니다/,
+    /소통.*해요/,
+    /공감.*누르고.*갑니다/
+  ]
+  
+  // 단순 인사말인지 확인
+  const isSimpleGreeting = greetingPatterns.some(pattern => pattern.test(lowerText))
+  
+  // 구매 관련 키워드 (구매 가능성이 있는 표현)
+  const purchaseSignals = [
+    '구매', '주문', '살', '사고', '결제', '구입', '장바구니',
+    '가격', '얼마', '비용', '견적',
+    '문의', '궁금', '알고싶', '질문',
+    '어디서', '어떻게',
+    '효과', '사용', '써봤', '써보', '쓰고',
+    '추천', '괜찮', '좋을까',
+    '제품', '상품', '향', '오일', '스프레이', '디퓨저'
+  ]
+  
+  const hasPurchaseIntent = purchaseSignals.some(signal => lowerText.includes(signal))
+  
+  // 단순 인사말이고 구매 의도가 없으면 일반으로 분류
+  if (isSimpleGreeting && !hasPurchaseIntent) {
+    return null
+  }
+  
+  // B2B 키워드 (비즈니스 관련)
   const b2bSignals = [
     '회사', '기업', '법인', '단체', '직원', '팀', '부서',
     '대량', '납품', '도매', '업체', '공급',
@@ -708,17 +745,26 @@ function predictUserType(text: string): string | null {
     '손님', '고객님', '고객', '서비스', '마사지', '스파', '에스테틱', '미용실', '뷰티', '살롱'
   ]
   
+  // B2C 키워드 (개인 사용 관련)
   const b2cSignals = [
     '개인', '혼자', '나', '저', '내가', '집', '방', '침실',
-    '거실', '개인용', '선물', '친구', '가족'
+    '거실', '개인용', '선물', '친구', '가족',
+    '불면', '우울', '불안', '스트레스', '피곤'
   ]
   
-  const lowerText = text.toLowerCase()
   const b2bCount = b2bSignals.filter(s => lowerText.includes(s)).length
   const b2cCount = b2cSignals.filter(s => lowerText.includes(s)).length
   
+  // B2B 신호가 강하면 B2B
   if (b2bCount > b2cCount && b2bCount > 0) return 'B2B'
-  if (b2cCount > b2bCount && b2cCount > 0) return 'B2C'
+  
+  // 구매 의도가 있고 B2C 신호가 있으면 B2C
+  if (hasPurchaseIntent && b2cCount > 0) return 'B2C'
+  
+  // 구매 의도가 있지만 B2B/B2C 신호가 없으면 B2C로 간주
+  if (hasPurchaseIntent && b2bCount === 0) return 'B2C'
+  
+  // 기타는 일반
   return null
 }
 
