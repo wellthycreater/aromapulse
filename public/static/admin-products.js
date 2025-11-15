@@ -743,10 +743,6 @@ function renderBlogPosts() {
             class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 text-sm whitespace-nowrap">
             <i class="fas fa-list mr-1"></i>댓글 보기
           </button>
-          <button onclick="openAddCommentModal(${post.id}, '${post.post_id}', '${post.title?.replace(/'/g, "\\'")}', '${post.url}')" 
-            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-sm whitespace-nowrap">
-            <i class="fas fa-plus mr-1"></i>댓글 추가
-          </button>
         </div>
       </div>
     `;
