@@ -187,8 +187,8 @@ async function checkAuth() {
       return false;
     }
     
-    // 사용자 정보 표시
-    document.getElementById('user-name').textContent = user.name;
+    // 사용자 정보 표시 (회사명으로 고정)
+    document.getElementById('user-name').textContent = '웰씨코리아';
     
     return true;
   } catch (error) {
