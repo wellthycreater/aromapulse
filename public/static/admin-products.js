@@ -931,15 +931,22 @@ async function addManualComment() {
     
     const data = await response.json();
     
-    alert(
-      `댓글 추가 및 분석 완료!\n\n` +
-      `작성자: ${author}\n` +
-      `감정: ${data.sentiment}\n` +
-      `사용자 타입: ${data.user_type || '미분류'}\n` +
-      `의도: ${data.intent}\n` +
-      `키워드: ${data.keywords.join(', ')}\n\n` +
-      (data.chatbot_created ? '✅ 챗봇 세션이 자동 생성되었습니다!' : '')
-    );
+    // AI 분석 결과 표시
+    const analysis = data.analysis;
+    let alertMessage = `✅ 댓글 추가 완료!\n\n`;
+    alertMessage += `📝 작성자: ${author}\n`;
+    alertMessage += `📊 AI 분석 결과:\n`;
+    alertMessage += `  - 감정: ${analysis.sentiment === 'positive' ? '긍정😊' : analysis.sentiment === 'negative' ? '부정😔' : '중립😐'}\n`;
+    alertMessage += `  - 사용자 타입: ${analysis.user_type || '일반 고객'}\n`;
+    alertMessage += `  - 의도: ${analysis.intent}\n`;
+    if (analysis.keywords && analysis.keywords.length > 0) {
+      alertMessage += `  - 키워드: ${analysis.keywords.join(', ')}\n`;
+    }
+    if (data.chatbot_session_created) {
+      alertMessage += `\n🤖 챗봇 세션이 자동으로 생성되었습니다!`;
+    }
+    
+    alert(alertMessage);
     
     // 폼 초기화
     clearManualCommentForm();
@@ -948,7 +955,7 @@ async function addManualComment() {
     loadBlogPosts();
     
     // B2B 리드가 생성되었으면 표시
-    if (data.user_type === 'B2B' && (data.intent === 'B2B문의' || data.intent === '구매의도')) {
+    if (analysis.user_type === 'B2B' && (analysis.intent === 'B2B문의' || analysis.intent === '구매의도')) {
       await loadAndDisplayB2BLeads(parseInt(postId), null);
     }
     
