@@ -1447,3 +1447,74 @@ async function submitManualComment() {
     submitButton.innerHTML = originalText;
   }
 }
+
+// 새 블로그 게시물 추가
+async function addNewBlogPost() {
+  const urlInput = document.getElementById('new-post-url-input');
+  const url = urlInput.value.trim();
+  
+  if (!url) {
+    alert('블로그 게시물 URL을 입력해주세요.');
+    return;
+  }
+  
+  // 네이버 블로그 URL 형식 검증
+  const naverBlogPattern = /^https?:\/\/blog\.naver\.com\/[^\/]+\/\d+$/;
+  if (!naverBlogPattern.test(url)) {
+    alert('올바른 네이버 블로그 URL 형식이 아닙니다.\n\n예시: https://blog.naver.com/aromapulse/223871244762');
+    return;
+  }
+  
+  // post_id 추출 (URL의 마지막 숫자 부분)
+  const postIdMatch = url.match(/\/(\d+)$/);
+  if (!postIdMatch) {
+    alert('게시물 ID를 추출할 수 없습니다.');
+    return;
+  }
+  
+  const postId = postIdMatch[1];
+  
+  // 제목 입력 받기
+  const title = prompt('게시물 제목을 입력하세요:\n\n(비워두면 "블로그 게시물"로 저장됩니다)', '');
+  if (title === null) {
+    return; // 취소
+  }
+  
+  const finalTitle = title.trim() || `블로그 게시물 ${postId}`;
+  
+  try {
+    const token = localStorage.getItem('auth_token');
+    
+    const response = await fetch('/api/blog-reviews/posts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        post_id: postId,
+        url: url,
+        title: finalTitle
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || '게시물 추가 실패');
+    }
+    
+    const result = await response.json();
+    
+    alert(`✅ 게시물이 추가되었습니다!\n\n제목: ${finalTitle}\n\n이제 아래 "수동 댓글 추가"에서 댓글을 입력하실 수 있습니다.`);
+    
+    // 입력란 초기화
+    urlInput.value = '';
+    
+    // 블로그 포스트 목록 새로고침
+    await loadBlogPosts();
+    
+  } catch (error) {
+    console.error('게시물 추가 오류:', error);
+    alert(`게시물 추가 중 오류가 발생했습니다:\n${error.message}`);
+  }
+}
