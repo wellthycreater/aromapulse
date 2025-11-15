@@ -12,14 +12,31 @@ blogReviews.post('/posts', async (c) => {
   }
   
   try {
+    // 중복 확인 (같은 post_id가 이미 존재하는지)
+    const existingPost = await c.env.DB.prepare(`
+      SELECT id FROM blog_posts WHERE post_id = ?
+    `).bind(post_id).first()
+    
+    if (existingPost) {
+      return c.json({ error: '이미 등록된 게시물입니다' }, 400)
+    }
+    
     const result = await c.env.DB.prepare(`
-      INSERT INTO blog_posts (post_id, title, content, category, url, published_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(post_id, title, content, category || null, url, published_at || new Date().toISOString()).run()
+      INSERT INTO blog_posts (post_id, title, content, category, url, published_at, comment_count)
+      VALUES (?, ?, ?, ?, ?, ?, 0)
+    `).bind(
+      post_id, 
+      title, 
+      content || null, 
+      category || null, 
+      url, 
+      published_at || new Date().toISOString()
+    ).run()
     
     return c.json({
       message: '블로그 포스트가 등록되었습니다',
-      id: result.meta.last_row_id
+      id: result.meta.last_row_id,
+      post_id: post_id
     })
   } catch (error) {
     console.error('포스트 등록 실패:', error)

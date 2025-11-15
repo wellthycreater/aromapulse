@@ -1451,10 +1451,17 @@ async function submitManualComment() {
 // 새 블로그 게시물 추가
 async function addNewBlogPost() {
   const urlInput = document.getElementById('new-post-url-input');
+  const dateInput = document.getElementById('new-post-date-input');
   const url = urlInput.value.trim();
+  const publishedDate = dateInput.value;
   
   if (!url) {
     alert('블로그 게시물 URL을 입력해주세요.');
+    return;
+  }
+  
+  if (!publishedDate) {
+    alert('작성 날짜를 입력해주세요.\n\n블로그에 실제 작성된 날짜와 시간을 입력하세요.');
     return;
   }
   
@@ -1482,6 +1489,9 @@ async function addNewBlogPost() {
   
   const finalTitle = title.trim() || `블로그 게시물 ${postId}`;
   
+  // datetime-local 형식을 ISO 형식으로 변환
+  const publishedAtISO = new Date(publishedDate).toISOString();
+  
   try {
     const token = localStorage.getItem('auth_token');
     
@@ -1494,7 +1504,8 @@ async function addNewBlogPost() {
       body: JSON.stringify({
         post_id: postId,
         url: url,
-        title: finalTitle
+        title: finalTitle,
+        published_at: publishedAtISO
       })
     });
     
@@ -1509,6 +1520,7 @@ async function addNewBlogPost() {
     
     // 입력란 초기화
     urlInput.value = '';
+    dateInput.value = '';
     
     // 블로그 포스트 목록 새로고침
     await loadBlogPosts();
