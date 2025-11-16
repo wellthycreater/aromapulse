@@ -162,151 +162,267 @@ app.get('/', (c) => {
         <link rel="icon" type="image/png" href="/static/favicon.png">
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <style>
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .fade-in-up {
+                animation: fadeInUp 0.8s ease-out forwards;
+            }
+            .hero-gradient {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            }
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+            }
+            .product-card {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .product-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            }
+        </style>
     </head>
-    <body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
+    <body class="bg-gray-50">
         <!-- Header -->
-        <header class="bg-white shadow-md">
-            <nav class="container mx-auto px-4 py-4">
+        <header class="glass-effect shadow-lg sticky top-0 z-50">
+            <nav class="container mx-auto px-6 py-4">
                 <div class="flex justify-between items-center">
-                    <a href="/" class="flex items-center space-x-2">
-                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-20">
+                    <a href="/" class="flex items-center space-x-3">
+                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-16">
                     </a>
-                    <div class="hidden md:flex space-x-6">
-                        <a href="/shop" class="text-gray-700 hover:text-purple-600">
-                            <i class="fas fa-shopping-bag mr-1"></i>쇼핑
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                            <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
-                        <a href="/dashboard" class="text-gray-700 hover:text-purple-600">대시보드</a>
-                        <a href="#features" class="text-gray-700 hover:text-purple-600">서비스</a>
-                        <a href="#business" class="text-gray-700 hover:text-purple-600">비즈니스</a>
-                        <a href="#user-type" class="text-gray-700 hover:text-purple-600">회원가입</a>
+                        <a href="/workshops" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                            <i class="fas fa-spa mr-2"></i>워크샵
+                        </a>
+                        <a href="/dashboard" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                            <i class="fas fa-chart-line mr-2"></i>대시보드
+                        </a>
                     </div>
-                    <div class="flex space-x-4">
-                        <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800">로그인</button>
-                        <button onclick="location.href='/signup'" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">회원가입</button>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800 font-semibold transition">
+                            로그인
+                        </button>
+                        <button onclick="location.href='/signup'" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition transform hover:scale-105">
+                            회원가입
+                        </button>
                     </div>
                 </div>
             </nav>
         </header>
 
         <!-- Hero Section -->
-        <section class="container mx-auto px-4 py-16">
-            <div class="text-center max-w-3xl mx-auto">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">
-                    향기로 시작하는<br/>스트레스 케어
-                </h2>
-                <p class="text-xl text-gray-600 mb-8">
-                    불면, 우울, 불안을 위한 전문 아로마 솔루션
-                </p>
-                <div class="flex justify-center space-x-4">
-                    <button onclick="location.href='/workshops'" 
-                            class="bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 text-lg">
-                        <i class="fas fa-spa mr-2"></i>
-                        워크샵 둘러보기
-                    </button>
-                    <button onclick="location.href='/signup'" 
-                            class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 text-lg">
-                        <i class="fas fa-user-plus mr-2"></i>
-                        회원가입
-                    </button>
+        <section class="hero-gradient text-white py-24 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+                <div class="absolute bottom-20 right-20 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>
+            </div>
+            <div class="container mx-auto px-6 relative z-10">
+                <div class="text-center max-w-4xl mx-auto fade-in-up">
+                    <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                        향기로 시작하는<br/>
+                        <span class="text-yellow-300">행복한 변화</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-10 text-purple-100">
+                        불면, 우울, 불안을 위한 전문 아로마 솔루션<br/>
+                        당신의 일상에 평온함을 더합니다
+                    </p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4">
+                        <button onclick="location.href='/shop'" 
+                                class="bg-white text-purple-600 px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
+                            <i class="fas fa-shopping-bag mr-2"></i>
+                            제품 둘러보기
+                        </button>
+                        <button onclick="location.href='/workshops'" 
+                                class="bg-purple-800 bg-opacity-50 backdrop-blur text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-opacity-70 transition">
+                            <i class="fas fa-spa mr-2"></i>
+                            워크샵 신청
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- Features -->
-        <section class="container mx-auto px-4 py-16">
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                    <i class="fas fa-user-md text-purple-600 text-4xl mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">전문성 기반</h3>
-                    <p class="text-gray-600">증상별 맞춤 아로마 솔루션</p>
+        <section class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">왜 아로마펄스인가요?</h2>
+                    <p class="text-xl text-gray-600">전문성과 신뢰를 바탕으로 한 향기 케어</p>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                    <i class="fas fa-map-marker-alt text-pink-600 text-4xl mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">로컬 공방 연결</h3>
-                    <p class="text-gray-600">지역 기반 향기 공방 매칭</p>
+                <div class="grid md:grid-cols-3 gap-10">
+                    <div class="product-card bg-gradient-to-br from-purple-50 to-white p-8 rounded-2xl shadow-lg text-center">
+                        <div class="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-user-md text-white text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">전문성 기반</h3>
+                        <p class="text-gray-600 leading-relaxed">증상별 맞춤 아로마 솔루션으로<br/>효과적인 케어를 제공합니다</p>
+                    </div>
+                    <div class="product-card bg-gradient-to-br from-pink-50 to-white p-8 rounded-2xl shadow-lg text-center">
+                        <div class="w-20 h-20 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-map-marker-alt text-white text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">로컬 공방 연결</h3>
+                        <p class="text-gray-600 leading-relaxed">지역 기반 향기 공방과<br/>직접 만나는 특별한 경험</p>
+                    </div>
+                    <div class="product-card bg-gradient-to-br from-indigo-50 to-white p-8 rounded-2xl shadow-lg text-center">
+                        <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-star text-white text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">실제 후기 기반</h3>
+                        <p class="text-gray-600 leading-relaxed">사용자 경험 데이터를 바탕으로<br/>신뢰할 수 있는 제품 추천</p>
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                    <i class="fas fa-comments text-purple-600 text-4xl mb-4"></i>
-                    <h3 class="text-xl font-bold mb-2">실제 후기 기반</h3>
-                    <p class="text-gray-600">사용자 경험 데이터 중심</p>
+            </div>
+        </section>
+
+        <!-- Popular Products Section -->
+        <section class="py-20 bg-gradient-to-br from-purple-50 to-pink-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">인기 제품</h2>
+                    <p class="text-xl text-gray-600">가장 사랑받는 아로마 제품을 만나보세요</p>
+                </div>
+                <div id="popular-products" class="grid md:grid-cols-3 gap-8">
+                    <!-- 제품들이 동적으로 로드됩니다 -->
+                </div>
+                <div class="text-center mt-12">
+                    <button onclick="location.href='/shop'" class="bg-purple-600 text-white px-10 py-4 rounded-full text-lg font-bold hover:shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        모든 제품 보기
+                    </button>
                 </div>
             </div>
         </section>
 
         <!-- User Type Selection -->
-        <section class="container mx-auto px-4 py-16" id="user-type">
-            <div class="text-center mb-12">
-                <h3 class="text-3xl font-bold text-gray-800 mb-4">어떤 목적으로 방문하셨나요?</h3>
-            </div>
-            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <!-- B2C -->
-                <div class="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition">
-                    <h4 class="text-2xl font-bold mb-4 text-purple-600">
-                        <i class="fas fa-user mr-2"></i>
-                        개인 고객
-                    </h4>
-                    <div class="space-y-3 mb-6">
-                        <button onclick="selectUserType('B2C', 'daily')" 
-                                class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-purple-400 hover:bg-purple-50">
-                            <i class="fas fa-home mr-2"></i>
-                            일상 스트레스 관리
-                        </button>
-                        <button onclick="selectUserType('B2C', 'work')" 
-                                class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-purple-400 hover:bg-purple-50">
-                            <i class="fas fa-briefcase mr-2"></i>
-                            직무 스트레스 관리
-                        </button>
-                    </div>
+        <section class="py-20 bg-white" id="user-type">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">어떤 목적으로 방문하셨나요?</h2>
+                    <p class="text-xl text-gray-600">고객님에게 맞는 서비스를 제공합니다</p>
                 </div>
+                <div class="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+                    <!-- B2C -->
+                    <div class="product-card bg-gradient-to-br from-purple-100 to-purple-50 p-10 rounded-3xl shadow-xl">
+                        <div class="text-center mb-8">
+                            <div class="w-24 h-24 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-user text-white text-4xl"></i>
+                            </div>
+                            <h3 class="text-3xl font-bold text-gray-800 mb-2">개인 고객</h3>
+                            <p class="text-gray-600">나만을 위한 특별한 향기 케어</p>
+                        </div>
+                        <div class="space-y-4">
+                            <button onclick="selectUserType('B2C', 'daily')" 
+                                    class="w-full text-left p-5 bg-white rounded-xl hover:shadow-lg transition transform hover:scale-105 border-2 border-transparent hover:border-purple-400">
+                                <i class="fas fa-home text-purple-600 mr-3"></i>
+                                <span class="font-semibold">일상 스트레스 관리</span>
+                            </button>
+                            <button onclick="selectUserType('B2C', 'work')" 
+                                    class="w-full text-left p-5 bg-white rounded-xl hover:shadow-lg transition transform hover:scale-105 border-2 border-transparent hover:border-purple-400">
+                                <i class="fas fa-briefcase text-purple-600 mr-3"></i>
+                                <span class="font-semibold">직무 스트레스 관리</span>
+                            </button>
+                        </div>
+                    </div>
 
-                <!-- B2B -->
-                <div class="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition">
-                    <h4 class="text-2xl font-bold mb-4 text-pink-600">
-                        <i class="fas fa-building mr-2"></i>
-                        비즈니스 고객
-                    </h4>
-                    <div class="space-y-3 mb-6">
-                        <button onclick="selectUserType('B2B', 'perfumer')" 
-                                class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-pink-400 hover:bg-pink-50">
-                            <i class="fas fa-flask mr-2"></i>
-                            조향사 (파트너 제휴)
-                        </button>
-                        <button onclick="selectUserType('B2B', 'company')" 
-                                class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-pink-400 hover:bg-pink-50">
-                            <i class="fas fa-building mr-2"></i>
-                            기업 (대량 납품/클래스)
-                        </button>
-                        <button onclick="selectUserType('B2B', 'shop')" 
-                                class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-pink-400 hover:bg-pink-50">
-                            <i class="fas fa-store mr-2"></i>
-                            매장 (제품 문의)
-                        </button>
+                    <!-- B2B -->
+                    <div class="product-card bg-gradient-to-br from-pink-100 to-pink-50 p-10 rounded-3xl shadow-xl">
+                        <div class="text-center mb-8">
+                            <div class="w-24 h-24 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-building text-white text-4xl"></i>
+                            </div>
+                            <h3 class="text-3xl font-bold text-gray-800 mb-2">비즈니스 고객</h3>
+                            <p class="text-gray-600">함께 성장하는 파트너십</p>
+                        </div>
+                        <div class="space-y-4">
+                            <button onclick="selectUserType('B2B', 'perfumer')" 
+                                    class="w-full text-left p-5 bg-white rounded-xl hover:shadow-lg transition transform hover:scale-105 border-2 border-transparent hover:border-pink-400">
+                                <i class="fas fa-flask text-pink-600 mr-3"></i>
+                                <span class="font-semibold">조향사 (파트너 제휴)</span>
+                            </button>
+                            <button onclick="selectUserType('B2B', 'company')" 
+                                    class="w-full text-left p-5 bg-white rounded-xl hover:shadow-lg transition transform hover:scale-105 border-2 border-transparent hover:border-pink-400">
+                                <i class="fas fa-building text-pink-600 mr-3"></i>
+                                <span class="font-semibold">기업 (대량 납품/클래스)</span>
+                            </button>
+                            <button onclick="selectUserType('B2B', 'shop')" 
+                                    class="w-full text-left p-5 bg-white rounded-xl hover:shadow-lg transition transform hover:scale-105 border-2 border-transparent hover:border-pink-400">
+                                <i class="fas fa-store text-pink-600 mr-3"></i>
+                                <span class="font-semibold">매장 (제품 문의)</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- CTA Section -->
-        <section class="bg-purple-600 text-white py-16">
-            <div class="container mx-auto px-4 text-center">
-                <h3 class="text-3xl font-bold mb-4">스트레스 패치 테스트 신청</h3>
-                <p class="text-xl mb-8">효과를 직접 체험해보세요</p>
+        <section class="hero-gradient text-white py-24 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-10 right-20 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+                <div class="absolute bottom-10 left-20 w-80 h-80 bg-pink-300 rounded-full blur-3xl"></div>
+            </div>
+            <div class="container mx-auto px-6 text-center relative z-10">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6">지금 바로 시작하세요</h2>
+                <p class="text-xl md:text-2xl mb-10 text-purple-100">
+                    스트레스 패치 무료 체험으로 효과를 직접 느껴보세요
+                </p>
                 <button onclick="location.href='/patch-apply'" 
-                        class="bg-white text-purple-600 px-8 py-3 rounded-lg hover:bg-gray-100 text-lg font-bold">
-                    <i class="fas fa-clipboard-check mr-2"></i>
-                    패치 신청하기
+                        class="bg-white text-purple-600 px-12 py-5 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
+                    <i class="fas fa-gift mr-2"></i>
+                    무료 체험 신청하기
                 </button>
             </div>
         </section>
 
         <!-- Footer -->
-        <footer class="bg-gray-800 text-white py-8">
-            <div class="container mx-auto px-4 text-center">
-                <p class="text-gray-400">© 2025 아로마펄스. All rights reserved.</p>
-                <div class="mt-4">
-                    <a href="https://blog.naver.com/aromapulse" target="_blank" class="text-gray-400 hover:text-white mx-2">
-                        <i class="fas fa-blog"></i> 블로그
-                    </a>
+        <footer class="bg-gray-900 text-white py-12">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">아로마펄스</h4>
+                        <p class="text-gray-400">향기로 시작하는 행복한 변화</p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold mb-4">제품</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="/shop" class="hover:text-white transition">전체 제품</a></li>
+                            <li><a href="/shop?category=symptom_care" class="hover:text-white transition">증상 케어</a></li>
+                            <li><a href="/shop?category=refresh" class="hover:text-white transition">리프레시</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold mb-4">서비스</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="/workshops" class="hover:text-white transition">워크샵</a></li>
+                            <li><a href="/dashboard" class="hover:text-white transition">대시보드</a></li>
+                            <li><a href="/patch-apply" class="hover:text-white transition">패치 체험</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold mb-4">소셜 미디어</h4>
+                        <div class="flex space-x-4">
+                            <a href="https://blog.naver.com/aromapulse" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition">
+                                <i class="fas fa-blog"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                    <p>© 2025 아로마펄스 (AromaPulse). All rights reserved.</p>
                 </div>
             </div>
         </footer>
@@ -321,8 +437,53 @@ app.get('/', (c) => {
                 location.href = '/signup?type=' + userType + '&sub=' + subType;
             }
             
-            // 페이지 로드 시 메뉴 가시성 제어
+            // Load popular products
+            async function loadPopularProducts() {
+                try {
+                    const response = await fetch('/api/products');
+                    const data = await response.json();
+                    const products = data.products || [];
+                    
+                    // Get first 3 products
+                    const popularProducts = products.filter(p => p.is_active).slice(0, 3);
+                    
+                    const container = document.getElementById('popular-products');
+                    if (popularProducts.length === 0) {
+                        container.innerHTML = '<div class="col-span-3 text-center text-gray-500"><p>곧 멋진 제품들이 준비됩니다!</p></div>';
+                        return;
+                    }
+                    
+                    container.innerHTML = popularProducts.map(product => \`
+                        <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer" onclick="location.href='/shop'">
+                            <div class="h-64 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                                \${product.thumbnail_image 
+                                    ? \`<img src="\${product.thumbnail_image}" alt="\${product.name}" class="w-full h-full object-cover">\`
+                                    : \`<i class="fas fa-spa text-6xl text-purple-300"></i>\`
+                                }
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">\${product.name}</h3>
+                                <p class="text-gray-600 mb-4 text-sm line-clamp-2">\${product.description || '향기로운 경험을 선사합니다'}</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-2xl font-bold text-purple-600">\${product.price.toLocaleString()}원</span>
+                                    <button class="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-purple-700 transition">
+                                        구매하기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    \`).join('');
+                } catch (error) {
+                    console.error('Failed to load products:', error);
+                }
+            }
+            
+            // 페이지 로드 시 실행
             document.addEventListener('DOMContentLoaded', function() {
+                // Load popular products
+                loadPopularProducts();
+                
+                // 메뉴 가시성 제어
                 const token = localStorage.getItem('token');
                 const workshopLink = document.querySelector('a[href="/workshops"]');
                 
@@ -332,16 +493,14 @@ app.get('/', (c) => {
                             const payload = JSON.parse(atob(token.split('.')[1]));
                             // B2B 사용자만 워크샵 메뉴 표시
                             if (payload.userType === 'B2B') {
-                                workshopLink.style.display = 'inline-block';
+                                workshopLink.style.display = 'flex';
                             } else {
                                 workshopLink.style.display = 'none';
                             }
                         } catch (e) {
-                            // 토큰 파싱 오류 시 워크샵 숨김
                             workshopLink.style.display = 'none';
                         }
                     } else {
-                        // 비로그인 사용자는 워크샵 숨김
                         workshopLink.style.display = 'none';
                     }
                 }
