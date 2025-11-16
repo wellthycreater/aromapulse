@@ -121,10 +121,20 @@ app.get('/checkout', (c) => c.redirect('/static/checkout.html'));
 app.get('/checkout.html', (c) => c.redirect('/static/checkout.html'));
 app.get('/order-complete.html', (c) => c.redirect('/static/order-complete.html'));
 
+// Admin login page
+app.get('/admin-login', (c) => c.redirect('/static/admin-login.html'));
+app.get('/admin/login', (c) => c.redirect('/static/admin-login.html'));
+app.get('/admin-login.html', (c) => c.redirect('/static/admin-login.html'));
+
 // Admin product management page
 app.get('/admin/products', (c) => c.redirect('/static/admin-products.html'));
 app.get('/admin-products', (c) => c.redirect('/static/admin-products.html'));
 app.get('/admin-products.html', (c) => c.redirect('/static/admin-products.html'));
+
+// Admin orders management page
+app.get('/admin-orders', (c) => c.redirect('/static/admin-orders.html'));
+app.get('/admin/orders', (c) => c.redirect('/static/admin-orders.html'));
+app.get('/admin-orders.html', (c) => c.redirect('/static/admin-orders.html'));
 
 // Chatbot page
 app.get('/chatbot', (c) => c.redirect('/static/chatbot.html'));
