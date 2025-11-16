@@ -444,7 +444,7 @@ app.get('/', (c) => {
                     const data = await response.json();
                     const products = data.products || [];
                     
-                    // Get first 3 products
+                    // Get first 3 active products
                     const popularProducts = products.filter(p => p.is_active).slice(0, 3);
                     
                     const container = document.getElementById('popular-products');
@@ -453,26 +453,65 @@ app.get('/', (c) => {
                         return;
                     }
                     
-                    container.innerHTML = popularProducts.map(product => \`
-                        <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer" onclick="location.href='/shop'">
-                            <div class="h-64 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                                \${product.thumbnail_image 
-                                    ? \`<img src="\${product.thumbnail_image}" alt="\${product.name}" class="w-full h-full object-cover">\`
-                                    : \`<i class="fas fa-spa text-6xl text-purple-300"></i>\`
-                                }
-                            </div>
-                            <div class="p-6">
-                                <h3 class="text-xl font-bold text-gray-800 mb-2">\${product.name}</h3>
-                                <p class="text-gray-600 mb-4 text-sm line-clamp-2">\${product.description || '향기로운 경험을 선사합니다'}</p>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-2xl font-bold text-purple-600">\${product.price.toLocaleString()}원</span>
-                                    <button class="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-purple-700 transition">
-                                        구매하기
+                    // 관리자 페이지와 동일한 제품 카드 생성
+                    container.innerHTML = popularProducts.map(product => {
+                        const thumbnailUrl = product.thumbnail_image || 'https://via.placeholder.com/300x200?text=No+Image';
+                        
+                        // 제품 컨셉 뱃지
+                        const conceptBadge = product.concept === 'refresh'
+                            ? '<span class="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">리프레시</span>'
+                            : '<span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">증상케어</span>';
+                        
+                        // 리프레시 제품 유형 표시
+                        const refreshTypeLabels = {
+                            fabric_perfume: '섬유 향수',
+                            room_spray: '룸 스프레이',
+                            fabric_deodorizer: '섬유 탈취제',
+                            diffuser: '디퓨저',
+                            candle: '캔들',
+                            perfume: '향수'
+                        };
+                        
+                        const refreshTypeInfo = product.concept === 'refresh' && product.refresh_type
+                            ? \`<div class="text-xs text-purple-600 mb-2 font-semibold">
+                                 <i class="fas fa-spray-can mr-1"></i>\${refreshTypeLabels[product.refresh_type] || product.refresh_type}
+                                 \${product.volume ? \` · \${product.volume}\` : ''}
+                                 \${product.items_per_box ? \` · <span class="text-purple-800">\${product.items_per_box}개입</span>\` : ''}
+                               </div>\`
+                            : '';
+                        
+                        // 공방 정보 (증상케어 제품일 때만)
+                        const workshopInfo = product.concept === 'symptom_care' && product.workshop_name 
+                            ? \`<div class="text-xs text-gray-500 mb-2">
+                                 <i class="fas fa-store mr-1"></i>\${product.workshop_name}
+                                 \${product.workshop_location ? \` · \${product.workshop_location}\` : ''}
+                               </div>\`
+                            : '';
+                        
+                        return \`
+                            <div class="product-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer" onclick="location.href='/shop'">
+                                <div class="relative">
+                                    <img src="\${thumbnailUrl}" alt="\${product.name}" class="w-full h-48 object-cover">
+                                    <div class="absolute top-2 right-2">
+                                        \${conceptBadge}
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="font-bold text-lg mb-2 text-gray-800">\${product.name}</h3>
+                                    \${refreshTypeInfo}
+                                    \${workshopInfo}
+                                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">\${product.description || '설명 없음'}</p>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-lg font-bold text-purple-600">\${product.price.toLocaleString()}원</span>
+                                        <span class="text-sm text-gray-500">재고: \${product.stock}\${product.concept === 'refresh' ? '박스' : '개'}</span>
+                                    </div>
+                                    <button onclick="event.stopPropagation(); location.href='/shop'" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                                        <i class="fas fa-shopping-cart mr-1"></i> 구매하기
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                    \`).join('');
+                        \`;
+                    }).join('');
                 } catch (error) {
                     console.error('Failed to load products:', error);
                 }
