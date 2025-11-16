@@ -226,12 +226,34 @@ adminProducts.delete('/:id', checkAdminAuth, async (c) => {
   try {
     const id = c.req.param('id');
     
-    // 완전 삭제
+    // 1단계: 제품 존재 여부 확인
+    const product = await c.env.DB.prepare(
+      'SELECT * FROM products WHERE id = ?'
+    ).bind(id).first();
+    
+    if (!product) {
+      return c.json({ error: '제품을 찾을 수 없습니다' }, 404);
+    }
+    
+    // 2단계: 관련된 order_items 삭제 (Foreign Key 제약 해결)
+    try {
+      await c.env.DB.prepare(
+        'DELETE FROM order_items WHERE product_id = ?'
+      ).bind(id).run();
+    } catch (e) {
+      // order_items 테이블이 없거나 관련 데이터가 없는 경우 무시
+      console.log('Order items 삭제 시도:', e);
+    }
+    
+    // 3단계: 제품 완전 삭제
     await c.env.DB.prepare(
       'DELETE FROM products WHERE id = ?'
     ).bind(id).run();
     
-    return c.json({ message: '제품이 삭제되었습니다' });
+    return c.json({ 
+      message: '제품이 삭제되었습니다',
+      product_name: product.name 
+    });
   } catch (error: any) {
     console.error('제품 삭제 오류:', error);
     return c.json({ error: '제품 삭제 실패', details: error.message }, 500);
