@@ -418,8 +418,52 @@ async function loadBlogPosts() {
   const container = document.getElementById('posts-list');
   container.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i></div>';
   
-  // TODO: 블로그 포스트 로드 구현
-  container.innerHTML = '<p class="text-center text-gray-500">블로그 포스트 기능은 추후 구현 예정입니다.</p>';
+  try {
+    const response = await fetch('/api/blog/posts');
+    
+    if (!response.ok) throw new Error('블로그 포스트 조회 실패');
+    
+    const data = await response.json();
+    const posts = data.posts || [];
+    
+    if (posts.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-12 text-gray-500">
+          <i class="fas fa-inbox text-6xl mb-4"></i>
+          <p class="text-lg">블로그 포스트가 없습니다.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = posts.map(post => `
+      <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex-1">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">${post.title}</h3>
+            <div class="flex items-center space-x-4 text-sm text-gray-500">
+              <span><i class="fas fa-calendar mr-1"></i>${new Date(post.published_at).toLocaleDateString('ko-KR')}</span>
+              <span><i class="fas fa-eye mr-1"></i>${post.view_count || 0} 조회</span>
+              <span><i class="fas fa-comment mr-1"></i>${post.comment_count || 0} 댓글</span>
+              <span><i class="fas fa-heart mr-1"></i>${post.like_count || 0} 좋아요</span>
+            </div>
+          </div>
+          <a href="${post.url}" target="_blank" class="ml-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center">
+            <i class="fas fa-external-link-alt mr-2"></i>
+            보기
+          </a>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('블로그 포스트 로드 오류:', error);
+    container.innerHTML = `
+      <div class="text-center py-12 text-red-500">
+        <i class="fas fa-exclamation-circle text-6xl mb-4"></i>
+        <p class="text-lg">블로그 포스트를 불러오는데 실패했습니다.</p>
+      </div>
+    `;
+  }
 }
 
 // 로그아웃
