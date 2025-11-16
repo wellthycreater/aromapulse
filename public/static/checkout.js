@@ -2,38 +2,84 @@
 let cart = [];
 const DELIVERY_FEE = 3000;
 
-// 토스페이먼츠 클라이언트 키 (실제 키)
-const TOSS_CLIENT_KEY = 'test_ck_eqRGgYO1r56JgBPB9nnW8QnN2Eya';
+// 토스페이먼츠 클라이언트 키 (라이브 키 - 실제 결제)
+const TOSS_CLIENT_KEY = 'live_ck_ZLKGPx4M3Mn5J0ye7mj2VBaWypv1';
 
 // 토스페이먼츠 객체 (페이지 로드 후 초기화)
 let tossPayments = null;
 
+// SDK 로드 대기 함수
+function waitForTossPayments(maxWaitTime = 5000) {
+  return new Promise((resolve, reject) => {
+    // 이미 로드되어 있으면 즉시 resolve
+    if (typeof TossPayments !== 'undefined') {
+      console.log('✅ TossPayments SDK 이미 로드됨');
+      resolve();
+      return;
+    }
+    
+    console.log('⏳ TossPayments SDK 로드 대기 중...');
+    const startTime = Date.now();
+    
+    const checkInterval = setInterval(() => {
+      if (typeof TossPayments !== 'undefined') {
+        clearInterval(checkInterval);
+        console.log('✅ TossPayments SDK 로드 완료');
+        resolve();
+      } else if (Date.now() - startTime > maxWaitTime) {
+        clearInterval(checkInterval);
+        console.error('❌ TossPayments SDK 로드 시간 초과');
+        reject(new Error('TossPayments SDK 로드 실패 - 시간 초과'));
+      }
+    }, 100);
+  });
+}
+
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   console.log('✅ 체크아웃 페이지 로드 완료');
   
-  // SDK 로드 대기
-  if (typeof TossPayments === 'undefined') {
-    console.error('❌ TossPayments SDK가 로드되지 않았습니다');
-    alert('결제 시스템을 로드하는 중 오류가 발생했습니다.\n페이지를 새로고침해주세요.');
-    return;
+  try {
+    // SDK 로드 대기
+    await waitForTossPayments();
+    console.log('✅ TossPayments SDK 로드 완료');
+    
+    // 토스페이먼츠 객체 생성
+    tossPayments = TossPayments(TOSS_CLIENT_KEY);
+    console.log('✅ 토스페이먼츠 객체 생성 완료');
+    
+    loadCartFromLocalStorage();
+    
+    if (cart.length === 0) {
+      alert('장바구니가 비어있습니다');
+      window.location.href = '/shop.html';
+      return;
+    }
+    
+    console.log('✅ 장바구니 데이터:', cart);
+    
+    renderOrderSummary();
+  } catch (error) {
+    console.error('❌ 결제 시스템 초기화 오류:', error);
+    
+    // 더 자세한 에러 메시지
+    let errorMessage = '결제 시스템을 로드하는 중 오류가 발생했습니다.\n\n';
+    errorMessage += '가능한 원인:\n';
+    errorMessage += '• 네트워크 연결 문제\n';
+    errorMessage += '• 광고 차단 프로그램\n';
+    errorMessage += '• 브라우저 보안 설정\n\n';
+    errorMessage += '해결 방법:\n';
+    errorMessage += '1. 페이지를 새로고침해주세요\n';
+    errorMessage += '2. 광고 차단 프로그램을 잠시 비활성화해주세요\n';
+    errorMessage += '3. 다른 브라우저를 사용해보세요';
+    
+    alert(errorMessage);
+    
+    // 장바구니 페이지로 돌아가기 옵션 제공
+    if (confirm('장바구니 페이지로 돌아가시겠습니까?')) {
+      window.location.href = '/shop.html';
+    }
   }
-  
-  // 토스페이먼츠 객체 생성
-  tossPayments = TossPayments(TOSS_CLIENT_KEY);
-  console.log('✅ 토스페이먼츠 객체 생성 완료');
-  
-  loadCartFromLocalStorage();
-  
-  if (cart.length === 0) {
-    alert('장바구니가 비어있습니다');
-    window.location.href = '/shop.html';
-    return;
-  }
-  
-  console.log('✅ 장바구니 데이터:', cart);
-  
-  renderOrderSummary();
 });
 
 // 로컬스토리지에서 장바구니 로드

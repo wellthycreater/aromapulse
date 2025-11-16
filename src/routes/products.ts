@@ -40,7 +40,7 @@ products.get('/', async (c) => {
       sql += ' AND is_active = 1';
     }
     
-    sql += ' ORDER BY created_at DESC';
+    sql += ' ORDER BY created_at ASC';
     
     const stmt = c.env.DB.prepare(sql);
     const { results } = await stmt.bind(...params).all();
