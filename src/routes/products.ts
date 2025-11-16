@@ -10,7 +10,7 @@ products.get('/', async (c) => {
     const category = c.req.query('category'); // 제품 타입
     const region = c.req.query('region'); // 지역
     const symptom = c.req.query('symptom'); // 증상
-    const status = c.req.query('status') || 'active'; // 상태
+    const isActive = c.req.query('is_active') !== '0'; // 활성 상태 (기본 true)
     
     let sql = 'SELECT * FROM products WHERE 1=1';
     const params: any[] = [];
@@ -21,23 +21,23 @@ products.get('/', async (c) => {
     }
     
     if (category) {
-      sql += ' AND type = ?';
+      sql += ' AND category = ?';
       params.push(category);
     }
     
     if (region) {
-      sql += ' AND (region = ? OR region = "전국")';
+      sql += ' AND (workshop_location = ? OR workshop_location IS NULL)';
       params.push(region);
     }
     
     if (symptom) {
-      sql += ' AND symptoms LIKE ?';
+      sql += ' AND description LIKE ?';
       params.push(`%${symptom}%`);
     }
     
-    if (status) {
-      sql += ' AND status = ?';
-      params.push(status);
+    // 기본적으로 활성화된 제품만 조회
+    if (isActive) {
+      sql += ' AND is_active = 1';
     }
     
     sql += ' ORDER BY created_at DESC';

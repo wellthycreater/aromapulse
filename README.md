@@ -1286,15 +1286,33 @@ curl -X POST https://your-domain/api/auth/create-admin \
 
 ---
 
-**마지막 업데이트**: 2025-11-15  
-**버전**: 1.8.2 (Toss Payments SDK v2 - Fully Integrated & Tested)  
-**상태**: ✅ 토스페이먼츠 SDK v2 완전 통합 완료  
+**마지막 업데이트**: 2025-11-16  
+**버전**: 1.8.3 (PayUp Integration + Bank Transfer Payment)  
+**상태**: ✅ 페이업 간편결제 + 무통장 입금 완료  
 **회사명**: 웰씨코리아 (Wellthy Korea)  
-**결제 방식**: 토스페이먼츠 결제 위젯 SDK v2 (자동 결제 승인)  
-**클라이언트 키**: `test_ck_eqRGgYO1r56JgBPB9nnW8QnN2Eya`  
-**시크릿 키**: `test_sk_ma60RZblrq7YNqnEzPKb3wzYWBn1` (서버 전용)  
-**배포 상태**: ✅ 실제 키 적용 및 관리자 로그인 정상 작동  
+**결제 방식**: 페이업 간편결제 (SMS/카카오톡 링크) + 무통장 입금  
+**배포 상태**: ✅ 실제 결제 테스트 완료  
 **테스트 URL**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai
+
+### 💳 결제 시스템 (v1.8.3)
+
+**페이업(PayUp) 간편결제** ⭐ 추천
+- SMS 또는 카카오톡으로 결제 링크 전송
+- 카드, 계좌이체, 카카오페이 등 다양한 결제 수단
+- 모바일 최적화
+- API 엔드포인트: `POST /api/orders/request-payup`
+
+**무통장 입금** (대체 수단)
+- 입금 계좌: 국민은행 123-456-789012
+- 예금주: (주)아로마펄스
+- 입금 기한: 주문 후 3일 이내
+
+**주문 프로세스**:
+1. 장바구니 → 주문서 작성
+2. 결제 방법 선택 (페이업 or 무통장)
+3. 주문 생성 (DB 저장)
+4. 결제 안내 페이지 표시
+5. 관리자가 입금 확인 후 배송 처리
 
 ### 🔧 최신 수정 사항 (v1.8.2)
 1. ✅ **JWT 인증 수정**: `.dev.vars`에 JWT_SECRET 및 ADMIN_SECRET_KEY 추가

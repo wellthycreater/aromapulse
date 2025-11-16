@@ -1,27 +1,10 @@
-// Checkout JavaScript - 간단한 토스페이먼츠 결제창 방식
+// 초간단 결제 - 서버에서 모든 처리
 let cart = [];
 const DELIVERY_FEE = 3000;
 
-// 토스페이먼츠 클라이언트 키 (실제 키)
-const TOSS_CLIENT_KEY = 'test_ck_eqRGgYO1r56JgBPB9nnW8QnN2Eya';
-
-// 토스페이먼츠 객체 (페이지 로드 후 초기화)
-let tossPayments = null;
-
-// 페이지 로드 시 초기화
+// 페이지 로드 시
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('✅ 체크아웃 페이지 로드 완료');
-  
-  // SDK 로드 대기
-  if (typeof TossPayments === 'undefined') {
-    console.error('❌ TossPayments SDK가 로드되지 않았습니다');
-    alert('결제 시스템을 로드하는 중 오류가 발생했습니다.\n페이지를 새로고침해주세요.');
-    return;
-  }
-  
-  // 토스페이먼츠 객체 생성
-  tossPayments = TossPayments(TOSS_CLIENT_KEY);
-  console.log('✅ 토스페이먼츠 객체 생성 완료');
+  console.log('✅ 간단 결제 페이지 로드');
   
   loadCartFromLocalStorage();
   
@@ -30,8 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/shop.html';
     return;
   }
-  
-  console.log('✅ 장바구니 데이터:', cart);
   
   renderOrderSummary();
 });
@@ -76,7 +57,7 @@ function renderOrderSummary() {
   totalAmountEl.textContent = `${totalAmount.toLocaleString()}원`;
 }
 
-// 주소 검색 (Daum 우편번호 API)
+// 주소 검색
 function searchAddress() {
   new daum.Postcode({
     oncomplete: function(data) {
@@ -87,7 +68,7 @@ function searchAddress() {
   }).open();
 }
 
-// 결제 처리 - 매우 간단해짐!
+// 결제 처리 - 서버에 결제 요청
 async function processPayment() {
   // 필수 정보 검증
   const customerName = document.getElementById('customer-name').value.trim();
@@ -100,19 +81,16 @@ async function processPayment() {
   
   if (!customerName) {
     alert('이름을 입력해주세요');
-    document.getElementById('customer-name').focus();
     return;
   }
   
   if (!customerEmail) {
     alert('이메일을 입력해주세요');
-    document.getElementById('customer-email').focus();
     return;
   }
   
   if (!customerPhone) {
     alert('연락처를 입력해주세요');
-    document.getElementById('customer-phone').focus();
     return;
   }
   
@@ -122,28 +100,12 @@ async function processPayment() {
     return;
   }
   
-  // 토스페이먼츠 객체 확인
-  if (!tossPayments) {
-    alert('결제 시스템이 초기화되지 않았습니다.\n페이지를 새로고침해주세요.');
-    console.error('❌ tossPayments 객체가 null입니다');
-    return;
-  }
-  
   try {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const totalAmount = subtotal + DELIVERY_FEE;
     
-    // 주문 ID 생성
-    const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    console.log('🚀 서버에 결제 준비 요청...');
     
-    console.log('🚀 결제 요청 시작:', {
-      orderId,
-      amount: totalAmount,
-      customerName,
-      customerEmail
-    });
-    
-    // 주문 정보를 sessionStorage에 임시 저장 (결제 성공 후 사용)
     const orderData = {
       customer_name: customerName,
       customer_email: customerEmail,
@@ -154,6 +116,7 @@ async function processPayment() {
       delivery_message: deliveryMessage,
       items: cart.map(item => ({
         product_id: item.id,
+        name: item.name,
         quantity: item.quantity,
         unit_price: item.price
       })),
@@ -162,38 +125,34 @@ async function processPayment() {
       final_amount: totalAmount
     };
     
+    // sessionStorage에 저장
     sessionStorage.setItem('orderData', JSON.stringify(orderData));
     
-    // 토스페이먼츠 결제창 호출 (단 한 줄!)
-    await tossPayments.requestPayment('카드', {
-      amount: totalAmount,
-      orderId: orderId,
-      orderName: getOrderName(),
-      customerName: customerName,
-      customerEmail: customerEmail,
-      customerMobilePhone: customerPhone,
-      successUrl: `${window.location.origin}/static/payment-success.html`,
-      failUrl: `${window.location.origin}/static/payment-fail.html`,
+    // 서버에 결제 준비 API 호출
+    const response = await fetch('/api/orders/prepare-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData)
     });
     
-    console.log('✅ 결제창 호출 성공');
+    if (!response.ok) {
+      throw new Error('결제 준비 요청 실패');
+    }
+    
+    const result = await response.json();
+    console.log('✅ 결제 준비 완료:', result);
+    
+    // 토스페이먼츠 결제창 URL로 리디렉트
+    if (result.checkoutUrl) {
+      window.location.href = result.checkoutUrl;
+    } else {
+      throw new Error('결제 URL을 받지 못했습니다');
+    }
     
   } catch (error) {
     console.error('❌ 결제 요청 오류:', error);
-    if (error.message) {
-      alert(`결제 요청 중 오류가 발생했습니다: ${error.message}`);
-    }
-  }
-}
-
-// 주문명 생성 (첫 번째 상품명 + 외 N건)
-function getOrderName() {
-  if (cart.length === 0) return '아로마펄스 주문';
-  
-  const firstName = cart[0].name;
-  if (cart.length === 1) {
-    return firstName;
-  } else {
-    return `${firstName} 외 ${cart.length - 1}건`;
+    alert(`결제 요청 중 오류가 발생했습니다: ${error.message}`);
   }
 }

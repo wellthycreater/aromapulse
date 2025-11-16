@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 테스트 - 아로마펄스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">결제 시스템 테스트</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-bold mb-4">1단계: 테스트 장바구니 생성</h2>
+            <p class="text-gray-600 mb-4">아래 버튼을 클릭하면 테스트 제품이 장바구니에 추가됩니다.</p>
+            <button onclick="createTestCart()" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
+                테스트 장바구니 생성
+            </button>
+            <div id="cart-status" class="mt-4"></div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4">2단계: 결제 페이지로 이동</h2>
+            <p class="text-gray-600 mb-4">장바구니 생성 후 아래 버튼을 클릭하세요.</p>
+            <a href="/static/checkout.html" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
+                결제 페이지로 이동
+            </a>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mt-6">
+            <h3 class="font-bold mb-2">🔍 현재 장바구니 상태</h3>
+            <pre id="current-cart" class="text-sm bg-white p-3 rounded overflow-auto"></pre>
+        </div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 현재 장바구니 표시
+        function displayCurrentCart() {
+            const cart = localStorage.getItem('cart');
+            const cartObj = cart ? JSON.parse(cart) : null;
+            document.getElementById('current-cart').textContent = 
+                cart ? JSON.stringify(cartObj, null, 2) : '장바구니가 비어있습니다';
+        }
+
+        // 테스트 장바구니 생성
+        function createTestCart() {
+            const testCart = [
+                {
+                    id: 1,
+                    name: 'ELENA Fabric Perfume',
+                    price: 35000,
+                    quantity: 1,
+                    thumbnail_image: '/static/product-placeholder.jpg'
+                }
+            ];
+
+            localStorage.setItem('cart', JSON.stringify(testCart));
+            
+            document.getElementById('cart-status').innerHTML = `
+                <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                    <p class="text-green-800">✅ 테스트 장바구니가 생성되었습니다!</p>
+                    <p class="text-sm text-green-600 mt-2">제품: ELENA Fabric Perfume (35,000원 x 1개)</p>
+                </div>
+            `;
+
+            displayCurrentCart();
+        }
+
+        // 페이지 로드 시 장바구니 표시
+        displayCurrentCart();
+    </script>
+</body>
+</html>

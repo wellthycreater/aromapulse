@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 안내 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="text-2xl font-bold text-purple-600">
+                    <i class="fas fa-spa mr-2"></i>아로마펄스
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-2xl mx-auto">
+            <!-- 주문 완료 안내 -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+                        <i class="fas fa-check text-4xl text-green-600"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">주문이 접수되었습니다</h1>
+                    <p class="text-gray-600">결제를 진행해주세요</p>
+                </div>
+
+                <!-- 주문 정보 -->
+                <div class="border-t border-b py-6 mb-6">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-600 mb-1">주문번호</p>
+                            <p class="font-bold text-lg" id="order-number">-</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 mb-1">결제금액</p>
+                            <p class="font-bold text-lg text-purple-600" id="payment-amount">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 결제 방법 선택 -->
+                <div class="space-y-4">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-credit-card mr-2"></i>결제 방법 선택
+                    </h2>
+
+                    <!-- 페이업 간편결제 -->
+                    <div class="border-2 border-purple-200 rounded-lg p-6 bg-purple-50">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg text-gray-800">
+                                <i class="fas fa-mobile-alt mr-2 text-purple-600"></i>
+                                페이업 간편결제
+                            </h3>
+                            <span class="text-sm bg-purple-600 text-white px-3 py-1 rounded-full">추천</span>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-sm text-gray-700">
+                                문자/카카오톡으로 결제 링크를 받아 간편하게 결제하세요
+                            </p>
+                            <button onclick="requestPayupLink()" 
+                                class="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700">
+                                <i class="fas fa-link mr-2"></i>결제 링크 요청
+                            </button>
+                            <p class="text-xs text-gray-600">
+                                ※ 카드, 계좌이체, 카카오페이 등 다양한 방법으로 결제 가능<br>
+                                ※ 결제 링크는 휴대폰 번호로 전송됩니다
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 무통장 입금 -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg text-gray-700">
+                                <i class="fas fa-university mr-2"></i>
+                                무통장 입금
+                            </h3>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <p><strong>입금 계좌:</strong> 국민은행 123-456-789012</p>
+                            <p><strong>예금주:</strong> (주)아로마펄스</strong></p>
+                            <p><strong>입금 기한:</strong> 주문 후 3일 이내</p>
+                            <p class="text-xs text-gray-500 mt-3">
+                                ※ 입금 확인 후 상품이 발송됩니다<br>
+                                ※ 입금자명과 주문자명이 다를 경우 고객센터로 연락주세요
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 카드 결제 (준비중) -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 bg-gray-50 opacity-60">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-lg text-gray-600">
+                                <i class="fas fa-credit-card mr-2"></i>
+                                신용카드 / 체크카드
+                            </h3>
+                            <span class="text-sm bg-gray-400 text-white px-3 py-1 rounded-full">준비중</span>
+                        </div>
+                        <p class="text-sm text-gray-500">곧 서비스 예정입니다</p>
+                    </div>
+
+                    <!-- 카카오페이 (준비중) -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 bg-gray-50 opacity-60">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-lg text-gray-600">
+                                <i class="fas fa-comment mr-2"></i>
+                                카카오페이
+                            </h3>
+                            <span class="text-sm bg-gray-400 text-white px-3 py-1 rounded-full">준비중</span>
+                        </div>
+                        <p class="text-sm text-gray-500">곧 서비스 예정입니다</p>
+                    </div>
+                </div>
+
+                <!-- 버튼 -->
+                <div class="mt-8 space-y-3">
+                    <button onclick="window.location.href='/'" 
+                        class="w-full bg-purple-600 text-white py-4 rounded-lg font-bold hover:bg-purple-700">
+                        <i class="fas fa-home mr-2"></i>홈으로 이동
+                    </button>
+                    <button onclick="window.location.href='/shop.html'" 
+                        class="w-full bg-gray-200 text-gray-700 py-4 rounded-lg font-bold hover:bg-gray-300">
+                        <i class="fas fa-shopping-bag mr-2"></i>계속 쇼핑하기
+                    </button>
+                </div>
+
+                <!-- 고객센터 안내 -->
+                <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>문의사항이 있으신가요?</strong><br>
+                        고객센터: 1234-5678 (평일 09:00-18:00)<br>
+                        이메일: support@aromapulse.com
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL 파라미터에서 주문 정보 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderNumber = urlParams.get('orderNumber');
+        const amount = urlParams.get('amount');
+
+        if (orderNumber) {
+            document.getElementById('order-number').textContent = orderNumber;
+        }
+
+        if (amount) {
+            document.getElementById('payment-amount').textContent = parseInt(amount).toLocaleString() + '원';
+        }
+
+        // 장바구니 비우기
+        localStorage.removeItem('cart');
+        
+        console.log('주문 완료:', { orderNumber, amount });
+
+        // 페이업 결제 링크 요청
+        async function requestPayupLink() {
+            try {
+                const response = await fetch('/api/orders/request-payup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderNumber: orderNumber,
+                        amount: amount
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('결제 링크 요청이 완료되었습니다!\n\n' + 
+                          '휴대폰으로 결제 링크가 전송됩니다.\n' +
+                          '문자 또는 카카오톡을 확인해주세요.');
+                } else {
+                    alert('결제 링크 요청에 실패했습니다.\n고객센터로 문의해주세요.');
+                }
+            } catch (error) {
+                console.error('페이업 요청 오류:', error);
+                alert('오류가 발생했습니다.\n잠시 후 다시 시도하거나 고객센터로 문의해주세요.');
+            }
+        }
+    </script>
+</body>
+</html>

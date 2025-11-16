@@ -468,6 +468,208 @@ orders.put('/admin/:id/memo', async (c) => {
   }
 });
 
+// 결제 준비 - 주문 생성 (결제 대기 상태)
+orders.post('/prepare-payment', async (c) => {
+  try {
+    const orderData = await c.req.json();
+    
+    // 필수 필드 검증
+    if (!orderData.customer_name || !orderData.customer_email || !orderData.customer_phone || !orderData.items || orderData.items.length === 0) {
+      return c.json({ error: '필수 정보가 누락되었습니다' }, 400);
+    }
+    
+    // 주문 번호 생성
+    const orderNumber = generateOrderNumber();
+    
+    // 주문 생성 (결제 대기 상태)
+    const orderResult = await c.env.DB.prepare(`
+      INSERT INTO orders (
+        order_number,
+        customer_name,
+        customer_email,
+        customer_phone,
+        customer_zipcode,
+        customer_address,
+        customer_detail_address,
+        delivery_message,
+        total_amount,
+        delivery_fee,
+        final_amount,
+        payment_method,
+        payment_status,
+        order_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'card', 'pending', 'pending')
+    `).bind(
+      orderNumber,
+      orderData.customer_name,
+      orderData.customer_email,
+      orderData.customer_phone,
+      orderData.customer_zipcode || null,
+      orderData.customer_address || null,
+      orderData.customer_detail_address || null,
+      orderData.delivery_message || null,
+      orderData.total_amount,
+      orderData.delivery_fee,
+      orderData.final_amount
+    ).run();
+    
+    const orderId = orderResult.meta.last_row_id;
+    
+    // 주문 상품 등록
+    for (const item of orderData.items) {
+      // 제품 정보 조회
+      const product = await c.env.DB.prepare(
+        'SELECT * FROM products WHERE id = ?'
+      ).bind(item.product_id).first();
+      
+      if (!product) {
+        continue;
+      }
+      
+      await c.env.DB.prepare(`
+        INSERT INTO order_items (
+          order_id,
+          product_id,
+          product_name,
+          product_concept,
+          product_category,
+          product_refresh_type,
+          product_volume,
+          quantity,
+          unit_price,
+          total_price
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        orderId,
+        product.id,
+        product.name,
+        product.concept,
+        product.category || null,
+        product.refresh_type || null,
+        product.volume || null,
+        item.quantity,
+        item.unit_price,
+        item.unit_price * item.quantity
+      ).run();
+    }
+    
+    console.log('주문 생성 완료:', {
+      orderId,
+      orderNumber,
+      amount: orderData.final_amount
+    });
+    
+    // 결제 안내 페이지로 리디렉트 (주문번호 포함)
+    const origin = c.req.header('origin') || 'http://localhost:3000';
+    const paymentInfoUrl = `${origin}/static/payment-info.html?orderNumber=${orderNumber}&amount=${orderData.final_amount}`;
+    
+    return c.json({
+      success: true,
+      orderId: orderId,
+      orderNumber: orderNumber,
+      checkoutUrl: paymentInfoUrl,
+      message: '주문이 생성되었습니다'
+    });
+    
+  } catch (error: any) {
+    console.error('주문 생성 오류:', error);
+    return c.json({ error: '주문 생성 실패', details: error.message }, 500);
+  }
+});
+
+// 페이업 결제 링크 요청 (SMS/카카오톡)
+orders.post('/request-payup', async (c) => {
+  try {
+    const { orderNumber, amount } = await c.req.json();
+    
+    if (!orderNumber || !amount) {
+      return c.json({ error: '주문번호와 금액이 필요합니다' }, 400);
+    }
+    
+    // 주문 정보 조회
+    const order = await c.env.DB.prepare(
+      'SELECT * FROM orders WHERE order_number = ?'
+    ).bind(orderNumber).first();
+    
+    if (!order) {
+      return c.json({ error: '주문을 찾을 수 없습니다' }, 404);
+    }
+    
+    console.log('페이업 결제 링크 요청:', {
+      orderNumber,
+      amount,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone
+    });
+    
+    // TODO: 실제 페이업 API 연동
+    // 현재는 로그만 남기고 성공 응답
+    // 페이업 API 키를 받으면 실제 API 호출 코드로 교체
+    
+    /*
+    // 페이업 API 연동 예시 (API 키 받으면 활성화)
+    const payupResponse = await fetch('https://api.payup.co.kr/v1/payments/link', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${c.env.PAYUP_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        merchant_id: c.env.PAYUP_MERCHANT_ID,
+        order_id: orderNumber,
+        amount: amount,
+        customer_name: order.customer_name,
+        customer_phone: order.customer_phone,
+        customer_email: order.customer_email,
+        product_name: '아로마펄스 제품',
+        callback_url: `${c.req.header('origin')}/api/orders/payup-callback`,
+        method: 'sms' // 또는 'kakao'
+      })
+    });
+    
+    const payupResult = await payupResponse.json();
+    */
+    
+    // 주문 상태 업데이트 (결제 대기 → 결제 링크 전송)
+    await c.env.DB.prepare(`
+      UPDATE orders 
+      SET payment_method = 'payup', 
+          updated_at = CURRENT_TIMESTAMP
+      WHERE order_number = ?
+    `).bind(orderNumber).run();
+    
+    return c.json({
+      success: true,
+      message: '페이업 결제 링크가 요청되었습니다',
+      orderNumber: orderNumber,
+      // payupLinkId: payupResult.link_id, // 실제 API 연동 시
+      note: 'API 연동 대기 중 - 관리자가 수동으로 링크를 전송합니다'
+    });
+    
+  } catch (error: any) {
+    console.error('페이업 요청 오류:', error);
+    return c.json({ error: '페이업 요청 실패', details: error.message }, 500);
+  }
+});
+
+// 페이업 결제 완료 콜백
+orders.post('/payup-callback', async (c) => {
+  try {
+    const callbackData = await c.req.json();
+    
+    console.log('페이업 콜백 수신:', callbackData);
+    
+    // TODO: 페이업 콜백 데이터 검증 및 주문 상태 업데이트
+    // 실제 페이업 API 연동 시 구현
+    
+    return c.json({ success: true, message: '콜백 처리 완료' });
+    
+  } catch (error: any) {
+    console.error('페이업 콜백 오류:', error);
+    return c.json({ error: '콜백 처리 실패', details: error.message }, 500);
+  }
+});
+
 // 토스페이먼츠 결제 승인
 orders.post('/confirm-payment', async (c) => {
   try {
