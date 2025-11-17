@@ -489,7 +489,7 @@ app.get('/', (c) => {
                             : '';
                         
                         return \`
-                            <div class="product-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer" onclick="location.href='/static/product-detail.html?id=\${product.id}'">
+                            <div class="product-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer" onclick="location.href='/static/product-detail?id=\${product.id}'">
                                 <div class="relative">
                                     <img src="\${thumbnailUrl}" alt="\${product.name}" class="w-full h-48 object-cover">
                                     <div class="absolute top-2 right-2">
