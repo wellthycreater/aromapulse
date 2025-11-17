@@ -206,7 +206,7 @@ app.get('/', (c) => {
             <nav class="container mx-auto px-6 py-4">
                 <div class="flex justify-between items-center">
                     <a href="/" class="flex items-center space-x-3">
-                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-16 logo-image">
+                        <img src="/static/logo-new.png" alt="아로마펄스" class="h-16 logo-image">
                     </a>
                     <div class="hidden md:flex items-center space-x-8">
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
