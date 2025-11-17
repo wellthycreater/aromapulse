@@ -355,11 +355,11 @@ async function viewOrderDetail(orderId) {
           <div class="space-y-2">
             <div class="flex justify-between text-sm">
               <span>상품 금액:</span>
-              <span>${order.total_amount.toLocaleString()}원</span>
+              <span>${(order.product_amount || 0).toLocaleString()}원</span>
             </div>
             <div class="flex justify-between text-sm">
               <span>배송비:</span>
-              <span>${order.delivery_fee.toLocaleString()}원</span>
+              <span>${(order.delivery_fee || 0).toLocaleString()}원</span>
             </div>
             ${order.discount_amount > 0 ? `
             <div class="flex justify-between text-sm text-red-600">
@@ -369,7 +369,7 @@ async function viewOrderDetail(orderId) {
             ` : ''}
             <div class="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
               <span>최종 결제 금액:</span>
-              <span class="text-purple-600">${(order.total_amount || order.final_amount).toLocaleString()}원</span>
+              <span class="text-purple-600">${(order.total_amount || order.final_amount || 0).toLocaleString()}원</span>
             </div>
           </div>
         </div>
