@@ -124,7 +124,7 @@ function createProductCard(product) {
 
 // 제품 상세보기
 function viewProductDetail(productId) {
-  window.location.href = `/product.html?id=${productId}`;
+  window.location.href = `/static/product-detail?id=${productId}`;
 }
 
 // 장바구니에 추가
