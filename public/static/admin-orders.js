@@ -355,7 +355,7 @@ async function viewOrderDetail(orderId) {
           <div class="space-y-2">
             <div class="flex justify-between text-sm">
               <span>상품 금액:</span>
-              <span>${(order.product_amount || 0).toLocaleString()}원</span>
+              <span>${(order.product_amount != null ? order.product_amount : ((order.total_amount || order.final_amount || 0) - (order.delivery_fee || 0))).toLocaleString()}원</span>
             </div>
             <div class="flex justify-between text-sm">
               <span>배송비:</span>
