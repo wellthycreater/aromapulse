@@ -207,6 +207,13 @@ async function processPayment() {
       customerEmail
     });
     
+    console.log('💰 금액 계산:', {
+      cart: cart,
+      subtotal: subtotal,
+      deliveryFee: DELIVERY_FEE,
+      totalAmount: totalAmount
+    });
+    
     // 주문 정보를 sessionStorage에 임시 저장 (결제 성공 후 사용)
     const orderData = {
       customer_name: customerName,
@@ -226,6 +233,8 @@ async function processPayment() {
       delivery_fee: DELIVERY_FEE,
       final_amount: totalAmount
     };
+    
+    console.log('📦 주문 데이터:', orderData);
     
     sessionStorage.setItem('orderData', JSON.stringify(orderData));
     
