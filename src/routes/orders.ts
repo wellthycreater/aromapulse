@@ -798,9 +798,22 @@ orders.post('/confirm-payment', async (c) => {
     }
 
     // 주문 생성 (production DB의 실제 스키마에 맞춤)
-    const productAmount = orderData.product_amount || orderData.total_amount || 0;
+    console.log('주문 데이터 확인:', {
+      product_amount: orderData.product_amount,
+      total_amount: orderData.total_amount,
+      delivery_fee: orderData.delivery_fee,
+      final_amount: orderData.final_amount
+    });
+    
+    const productAmount = orderData.product_amount || 0;
     const deliveryFee = orderData.delivery_fee || 0;
     const totalAmount = orderData.final_amount || (productAmount + deliveryFee);
+    
+    console.log('계산된 금액:', {
+      productAmount,
+      deliveryFee,
+      totalAmount
+    });
     
     const orderResult = await c.env.DB.prepare(`
       INSERT INTO orders (
