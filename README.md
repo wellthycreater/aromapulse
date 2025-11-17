@@ -1287,15 +1287,183 @@ curl -X POST https://your-domain/api/auth/create-admin \
 ---
 
 **마지막 업데이트**: 2025-11-17  
-**버전**: 1.9.0 (User Profile & Signup Renewal)  
-**상태**: ✅ 회원가입 및 프로필 페이지 리뉴얼 완료  
+**버전**: 1.10.0 (Chatbot-First Signup Integration)  
+**상태**: ✅ 챗봇 우선 회원가입 플로우 구현 완료  
 **회사명**: 웰씨코리아 (Wellthy Korea)  
 **결제 방식**: 토스페이먼츠 라이브 키 (실제 결제 가능)  
 **배포 상태**: ✅ 프로덕션 배포 완료  
 **프로덕션 URL**: https://www.aromapulse.kr  
 **최신 배포**: https://6df0ab17.aromapulse.pages.dev
 
-## 🆕 최신 업데이트 (v1.9.0) - 회원가입 & 프로필 페이지 리뉴얼 (2025-11-17)
+## 🆕 최신 업데이트 (v1.10.0) - 챗봇 우선 회원가입 통합 (2025-11-17)
+
+### ✅ 완료된 작업
+
+**1. 챗봇-회원가입 통합 플로우** ✅
+- **새로운 회원가입 페이지**: `/static/signup-from-chatbot`
+- **챗봇 세션 데이터 활용**:
+  - URL 파라미터로 `session_id` 전달
+  - 챗봇 대화 내역 자동 분석
+  - 사용자 정보 자동 추출 및 폼 자동 완성
+- **3단계 프로세스 시각화**:
+  1. 챗봇 상담 완료 ✅
+  2. 회원가입 진행중 ⏳
+  3. 서비스 시작 대기 ⏳
+- **상담 내용 요약 카드**:
+  - 감지된 사용자 유형 (B2C/B2B)
+  - 주요 증상 및 니즈
+  - 선호 제품 정보
+  - 지역 정보
+
+**2. NLP 기반 자동 정보 추출** ✅
+- **사용자 유형 감지**:
+  - B2B 키워드: 회사, 기업, 법인, 대량, 납품, 마사지, 스파
+  - B2C 키워드: 개인, 혼자, 나, 저
+- **증상 감지**:
+  - 불면: 불면, 잠, 수면
+  - 우울: 우울, 기분
+  - 불안: 불안, 초조
+  - 스트레스: 스트레스, 피로
+- **지역 추출**:
+  - 17개 광역시도 자동 감지
+  - 예: "서울에 살아요" → 지역 자동 선택
+- **연락처 추출**:
+  - 이름: "제 이름은 홍길동" → 이름 자동 입력
+  - 전화번호: 010-1234-5678 패턴 자동 감지
+
+**3. 챗봇 버튼 수정** ✅
+- 기존 회원가입 버튼 동작 변경:
+  - **이전**: 타입별 회원가입 페이지로 이동
+  - **현재**: 세션 ID를 포함한 새 회원가입 페이지로 이동
+- 회원가입 버튼 클릭 시:
+  - `window.location.href = /static/signup-from-chatbot?session_id=${sessionId}`
+  - 챗봇 세션 데이터 자동 전달
+  - 세션 없는 경우 에러 처리
+
+### 📋 사용 방법
+
+**고객 여정 (Chatbot-First)**:
+1. **챗봇 상담 시작**:
+   - 블로그 또는 웹사이트에서 챗봇 아이콘 클릭
+   - AI와 대화하며 니즈 파악
+   
+2. **자동 정보 수집**:
+   - AI가 대화 중 자동으로 감지:
+     - 사용자 유형 (B2C/B2B)
+     - 증상 및 제품 선호도
+     - 지역 정보
+     - 연락처 (선택적)
+
+3. **회원가입 버튼 클릭**:
+   - 챗봇에서 "서비스 이용하기" 버튼 클릭
+   - 자동으로 세션 ID 포함된 회원가입 페이지 이동
+
+4. **자동 완성된 폼 확인**:
+   - 상담 내용 요약 카드 표시
+   - 감지된 정보가 이미 폼에 입력됨
+   - 추가 정보만 입력하면 완료
+
+5. **회원가입 완료**:
+   - 나머지 필수 정보 입력
+   - 가입 완료 → 로그인
+
+### 🎯 기술적 특징
+
+**프론트엔드 (signup-from-chatbot.js)**:
+```javascript
+// URL에서 세션 ID 추출
+const sessionId = new URLSearchParams(window.location.search).get('session_id');
+
+// 챗봇 세션 데이터 로드
+async function loadChatbotSession(sessionId) {
+  const response = await fetch(`/api/chatbot/session/${sessionId}/messages`);
+  const data = await response.json();
+  await analyzeChatbotData(data);
+}
+
+// NLP 분석으로 정보 추출
+async function analyzeChatbotData(data) {
+  // 사용자 유형 감지
+  if (content.match(/회사|기업|법인|대량|납품/)) {
+    detectedInfo.userType = 'B2B';
+  }
+  
+  // 증상 감지
+  if (content.match(/불면|잠/)) detectedInfo.symptoms.push('insomnia');
+  
+  // 지역 추출
+  const regionMatch = content.match(/(서울|경기|부산|...)/);
+  if (regionMatch) detectedInfo.region = regionMatch[1];
+  
+  // 이름 추출
+  const nameMatch = content.match(/제 이름은 ([가-힣]{2,4})/);
+  if (nameMatch) detectedInfo.name = nameMatch[1];
+}
+
+// 폼 자동 완성
+function updateFormWithDetectedInfo(info) {
+  document.getElementById('user_type').value = info.userType;
+  if (info.name) document.getElementById('name').value = info.name;
+  if (info.region) document.getElementById('region').value = info.region;
+  
+  // 감지된 니즈를 JSON으로 저장
+  const detectedNeeds = {
+    symptoms: info.symptoms,
+    products: info.products,
+    userType: info.userType
+  };
+  document.getElementById('detected_needs').value = JSON.stringify(detectedNeeds);
+}
+```
+
+**백엔드 (chatbot.ts - 기존 API 활용)**:
+- `GET /api/chatbot/session/:session_id/messages` - 세션 메시지 조회
+- 챗봇 대화 내역을 JSON으로 반환
+- 기존 감지 로직 재사용 (B2B/B2C 분류, 엔티티 추출)
+
+### 💡 비즈니스 가치
+
+**사용자 경험 개선**:
+- ✅ 중복 질문 제거 (챗봇에서 이미 물어본 내용 다시 안 물음)
+- ✅ 자동 완성으로 가입 시간 단축
+- ✅ 자연스러운 대화 → 회원가입 전환
+- ✅ 고객의 니즈를 정확하게 파악한 상태에서 가입
+
+**전환율 향상**:
+- ✅ 챗봇 상담 후 회원가입 유도 (warm lead)
+- ✅ 가입 폼 작성 부담 감소
+- ✅ 맥락을 이해한 온보딩 경험
+
+**데이터 품질 향상**:
+- ✅ AI 분석을 통한 정확한 고객 분류
+- ✅ 고객 니즈 사전 파악
+- ✅ 구조화된 데이터 수집 (`detected_needs` JSON)
+
+### 🔮 향후 개선 계획
+
+1. **감지 정확도 향상**:
+   - 더 정교한 NLP 패턴 추가
+   - 머신러닝 모델 적용 (향후)
+   - 다국어 지원
+
+2. **추가 정보 추출**:
+   - 예산 범위 감지
+   - 구매 시기 파악
+   - 특정 제품 선호도
+
+3. **A/B 테스트**:
+   - 챗봇 우선 vs 일반 회원가입 전환율 비교
+   - 사용자 만족도 측정
+   - 이탈률 분석
+
+4. **관리자 대시보드**:
+   - 챗봇 → 회원가입 전환율 추적
+   - 자동 완성 정확도 모니터링
+   - 감지 실패 케이스 분석
+
+---
+
+## 🆕 이전 업데이트 (v1.9.0) - 회원가입 & 프로필 페이지 리뉴얼 (2025-11-17)
 
 ### ✅ 완료된 작업
 
