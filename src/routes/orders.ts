@@ -733,8 +733,12 @@ orders.post('/confirm-payment', async (c) => {
     // 테스트용 임시 하드코딩 (프로덕션에서는 환경 변수 사용)
     const tossSecretKey = c.env.TOSS_SECRET_KEY || 'test_sk_ma60RZblrqO0RK92yKeYr3ygLWvY';
     
-    console.log('✅ TOSS_SECRET_KEY 사용:', tossSecretKey.substring(0, 15) + '...');
+    console.log('✅ TOSS_SECRET_KEY 전체 길이:', tossSecretKey.length);
+    console.log('✅ TOSS_SECRET_KEY 앞 20자:', tossSecretKey.substring(0, 20));
+    console.log('✅ TOSS_SECRET_KEY 뒤 10자:', tossSecretKey.substring(tossSecretKey.length - 10));
+    
     const encodedKey = btoa(tossSecretKey + ':');
+    console.log('✅ Base64 인코딩 키 (앞 30자):', encodedKey.substring(0, 30));
 
     const tossResponse = await fetch('https://api.tosspayments.com/v1/payments/confirm', {
       method: 'POST',
@@ -750,13 +754,26 @@ orders.post('/confirm-payment', async (c) => {
     });
 
     const tossData = await tossResponse.json();
-    console.log('토스페이먼츠 응답:', { ok: tossResponse.ok, status: tossResponse.status, data: tossData });
+    console.log('토스페이먼츠 응답:', { 
+      ok: tossResponse.ok, 
+      status: tossResponse.status, 
+      data: tossData,
+      usedKey: tossSecretKey.substring(0, 15) + '...'
+    });
 
     if (!tossResponse.ok) {
-      console.error('토스페이먼츠 결제 승인 실패:', tossData);
+      console.error('토스페이먼츠 결제 승인 실패:', {
+        status: tossResponse.status,
+        code: tossData.code,
+        message: tossData.message,
+        orderId: orderId,
+        amount: amount
+      });
       return c.json({ 
         error: '결제 승인 실패', 
-        details: tossData.message || '알 수 없는 오류' 
+        details: tossData.message || '알 수 없는 오류',
+        code: tossData.code,
+        tossStatus: tossResponse.status
       }, 400);
     }
 

@@ -63,7 +63,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   } catch (error) {
     console.error('❌ 결제 승인 오류:', error);
-    showError(error.message);
+    
+    // 에러 상세 정보 수집
+    const errorDetails = {
+      message: error.message,
+      paymentKey: paymentKey ? paymentKey.substring(0, 20) + '...' : 'N/A',
+      orderId: orderId || 'N/A',
+      amount: amount || 'N/A'
+    };
+    
+    showError(error.message, errorDetails);
   }
 });
 
@@ -82,10 +91,18 @@ function showSuccess(data, orderData) {
     getPaymentMethodName(data.payment_method || 'CARD');
 }
 
-function showError(message) {
+function showError(message, details = null) {
   document.getElementById('loading-state').classList.add('hidden');
   document.getElementById('error-state').classList.remove('hidden');
-  document.getElementById('error-message').textContent = message;
+  
+  let errorHtml = message;
+  if (details) {
+    errorHtml += '<br><br><small style="color: #999; font-size: 12px;">상세 정보:<br>' + 
+                 JSON.stringify(details, null, 2).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;') + 
+                 '</small>';
+  }
+  
+  document.getElementById('error-message').innerHTML = errorHtml;
 }
 
 function getPaymentMethodName(method) {
