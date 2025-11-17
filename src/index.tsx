@@ -212,12 +212,46 @@ app.get('/', (c) => {
                         </a>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800 font-semibold transition">
-                            로그인
-                        </button>
-                        <button onclick="location.href='/signup'" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition transform hover:scale-105">
-                            회원가입
-                        </button>
+                        <!-- 비로그인 상태 -->
+                        <div id="auth-buttons" class="flex items-center space-x-4">
+                            <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800 font-semibold transition">
+                                로그인
+                            </button>
+                            <button onclick="location.href='/signup'" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition transform hover:scale-105">
+                                회원가입
+                            </button>
+                        </div>
+                        
+                        <!-- 로그인 상태 (처음엔 숨김) -->
+                        <div id="user-menu" class="hidden flex items-center space-x-4">
+                            <a href="/shop" class="relative text-gray-700 hover:text-purple-600 transition">
+                                <i class="fas fa-shopping-cart text-2xl"></i>
+                                <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                            </a>
+                            <div class="relative">
+                                <button id="profile-btn" class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition">
+                                    <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-bold">
+                                        <span id="user-initial">U</span>
+                                    </div>
+                                    <span id="user-name" class="font-semibold hidden md:block">사용자</span>
+                                    <i class="fas fa-chevron-down text-sm"></i>
+                                </button>
+                                
+                                <!-- 드롭다운 메뉴 -->
+                                <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
+                                    <a href="/static/profile" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
+                                        <i class="fas fa-user mr-2"></i>프로필
+                                    </a>
+                                    <a href="/dashboard" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
+                                        <i class="fas fa-chart-line mr-2"></i>대시보드
+                                    </a>
+                                    <hr class="my-2">
+                                    <button onclick="logout()" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -517,8 +551,86 @@ app.get('/', (c) => {
                 }
             }
             
+            // 로그아웃 함수
+            function logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                alert('로그아웃되었습니다.');
+                location.reload();
+            }
+            
+            // 프로필 드롭다운 토글
+            function toggleProfileDropdown() {
+                const dropdown = document.getElementById('profile-dropdown');
+                dropdown.classList.toggle('hidden');
+            }
+            
+            // 로그인 상태 확인 및 UI 업데이트
+            function updateAuthUI() {
+                const token = localStorage.getItem('token');
+                const authButtons = document.getElementById('auth-buttons');
+                const userMenu = document.getElementById('user-menu');
+                
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        
+                        // 토큰 만료 체크
+                        if (payload.exp && payload.exp * 1000 < Date.now()) {
+                            // 토큰 만료됨
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('user');
+                            return;
+                        }
+                        
+                        // 로그인 상태 UI 표시
+                        authButtons.classList.add('hidden');
+                        userMenu.classList.remove('hidden');
+                        userMenu.classList.add('flex');
+                        
+                        // 사용자 정보 표시
+                        const userName = payload.name || '사용자';
+                        const userInitial = userName.charAt(0).toUpperCase();
+                        
+                        document.getElementById('user-name').textContent = userName;
+                        document.getElementById('user-initial').textContent = userInitial;
+                        
+                        // 장바구니 개수 표시
+                        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                        if (cart.length > 0) {
+                            const cartBadge = document.getElementById('cart-badge');
+                            cartBadge.textContent = cart.length;
+                            cartBadge.classList.remove('hidden');
+                        }
+                        
+                    } catch (e) {
+                        console.error('Token parse error:', e);
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                    }
+                }
+            }
+            
             // 페이지 로드 시 실행
             document.addEventListener('DOMContentLoaded', function() {
+                // 로그인 상태 체크 및 UI 업데이트
+                updateAuthUI();
+                
+                // 프로필 버튼 클릭 이벤트
+                const profileBtn = document.getElementById('profile-btn');
+                if (profileBtn) {
+                    profileBtn.addEventListener('click', toggleProfileDropdown);
+                }
+                
+                // 드롭다운 외부 클릭 시 닫기
+                document.addEventListener('click', function(e) {
+                    const profileBtn = document.getElementById('profile-btn');
+                    const dropdown = document.getElementById('profile-dropdown');
+                    if (profileBtn && dropdown && !profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.classList.add('hidden');
+                    }
+                });
+                
                 // Load popular products
                 loadPopularProducts();
                 
