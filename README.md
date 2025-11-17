@@ -1287,16 +1287,69 @@ curl -X POST https://your-domain/api/auth/create-admin \
 ---
 
 **마지막 업데이트**: 2025-11-17  
-**버전**: 1.11.0 (Sidetalk AI Integration)  
-**상태**: ✅ 사이드톡 AI 챗봇 연동 완료  
+**버전**: 1.12.1 - Gender Selection Simplification  
+**상태**: ✅ 회원가입 성별 옵션 간소화 완료  
 **회사명**: 웰씨코리아 (Wellthy Korea)  
 **결제 방식**: 토스페이먼츠 라이브 키 (실제 결제 가능)  
 **챗봇 서비스**: 사이드톡 AI (Sidetalk AI)  
 **배포 상태**: ✅ 프로덕션 배포 완료  
 **프로덕션 URL**: https://www.aromapulse.kr  
-**최신 배포**: https://6df0ab17.aromapulse.pages.dev
+**최신 배포**: https://dfae79f4.aromapulse.pages.dev
 
-## 🆕 최신 업데이트 (v1.11.0) - 사이드톡 AI 챗봇 연동 (2025-11-17)
+## 🆕 최신 업데이트 (v1.12.1) - 회원가입 성별 선택 간소화 (2025-11-17)
+
+### ✅ 완료된 작업
+
+**1. 성별 선택 옵션 간소화** ✅
+- **변경 사항**: 회원가입 폼의 성별 선택에서 "기타(Other)" 옵션 제거
+- **현재 옵션**: 남성(Male), 여성(Female) 두 가지만 제공
+- **적용 파일**:
+  - `/static/signup.html` - 메인 회원가입 페이지
+  - `/static/signup-new.html` - 리뉴얼 회원가입 페이지
+  - `/static/signup-from-chatbot.html` - 챗봇 연동 회원가입 페이지
+  - `/static/profile.html` - 프로필 수정 페이지
+- **UI 변경**:
+  - signup.html: 라디오 버튼에서 "기타" 제거
+  - signup-new.html: 셀렉트 박스에서 "기타" 옵션 제거
+  - signup-from-chatbot.html: 셀렉트 박스에서 "기타" 옵션 제거
+  - profile.html: 프로필 수정 셀렉트 박스에서 "기타" 옵션 제거
+
+**2. 배포 완료** ✅
+- Cloudflare Pages 배포: https://dfae79f4.aromapulse.pages.dev
+- 프로덕션 URL: https://www.aromapulse.kr
+- Git 커밋: "fix: Remove 기타(Other) gender option from signup forms"
+
+### 🎯 변경 이유
+
+**비즈니스 목적**:
+- 데이터 수집 및 분석의 단순화
+- 고객 세그멘테이션의 명확화
+- 통계 분석의 정확성 향상
+
+**사용자 경험**:
+- 선택 옵션 단순화로 회원가입 속도 향상
+- 명확한 선택지로 고민 시간 감소
+
+### 📊 영향받는 페이지
+
+1. **회원가입 페이지**:
+   - `/signup` - 3단계 회원가입 폼
+   - `/signup-new` - 리뉴얼 회원가입 폼
+   - `/signup-from-chatbot` - 챗봇 통합 회원가입 폼
+
+2. **프로필 페이지**:
+   - `/profile` - 기존 회원의 프로필 수정 시 "기타" 옵션 제거
+
+### 🔄 이전 버전 호환성
+
+**기존 "기타" 데이터**:
+- 데이터베이스에 이미 저장된 `gender='other'` 값은 유지됩니다
+- 프로필 페이지에서 "기타"로 저장된 사용자는 계속 표시됩니다
+- 새로운 가입 및 수정 시에만 "남성" 또는 "여성" 선택 가능
+
+---
+
+## 🆕 이전 업데이트 (v1.11.0) - 사이드톡 AI 챗봇 연동 (2025-11-17)
 
 ### ✅ 완료된 작업
 
