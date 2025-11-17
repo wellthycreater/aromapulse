@@ -190,6 +190,14 @@ app.get('/', (c) => {
                 transform: translateY(-10px);
                 box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             }
+            .logo-image {
+                filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
+                transition: all 0.3s ease;
+            }
+            .logo-image:hover {
+                filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.5));
+                transform: scale(1.05);
+            }
         </style>
     </head>
     <body class="bg-gray-50">
@@ -198,7 +206,7 @@ app.get('/', (c) => {
             <nav class="container mx-auto px-6 py-4">
                 <div class="flex justify-between items-center">
                     <a href="/" class="flex items-center space-x-3">
-                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-16">
+                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-16 logo-image">
                     </a>
                     <div class="hidden md:flex items-center space-x-8">
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
