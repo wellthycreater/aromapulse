@@ -180,8 +180,7 @@ app.get('/', (c) => {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             }
             .glass-effect {
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
+                background: #ffffff;
             }
             .product-card {
                 transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -191,15 +190,11 @@ app.get('/', (c) => {
                 box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             }
             .logo-image {
-                background: transparent;
-                border-radius: 12px;
-                padding: 8px;
-                object-fit: contain;
                 transition: all 0.3s ease;
             }
             .logo-image:hover {
                 transform: scale(1.05);
-                filter: brightness(1.1);
+                opacity: 0.85;
             }
         </style>
     </head>
@@ -209,7 +204,7 @@ app.get('/', (c) => {
             <nav class="container mx-auto px-6 py-4">
                 <div class="flex justify-between items-center">
                     <a href="/" class="flex items-center space-x-3">
-                        <img src="/static/logo-transparent-clean.png" alt="아로마펄스" class="h-16 logo-image">
+                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-16 logo-image">
                     </a>
                     <div class="hidden md:flex items-center space-x-8">
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
