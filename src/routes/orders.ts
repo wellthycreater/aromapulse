@@ -798,7 +798,6 @@ orders.post('/confirm-payment', async (c) => {
     }
 
     // 주문 생성 (production DB의 실제 스키마에 맞춤)
-    // Production DB는 minimal schema를 사용 (basic columns only)
     const totalAmount = orderData.final_amount || (orderData.total_amount + orderData.delivery_fee);
     
     const orderResult = await c.env.DB.prepare(`
@@ -807,20 +806,26 @@ orders.post('/confirm-payment', async (c) => {
         customer_name,
         customer_email,
         customer_phone,
+        customer_zipcode,
         customer_address,
+        customer_address_detail,
+        delivery_message,
         total_amount,
         payment_method,
         payment_status,
         order_status,
         payment_key,
         paid_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'paid', 'confirmed', ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'paid', 'confirmed', ?, ?)
     `).bind(
       orderNumber,
       orderData.customer_name,
       orderData.customer_email,
       orderData.customer_phone,
+      orderData.customer_zipcode || '00000',
       orderData.customer_address || '',
+      orderData.customer_detail_address || '',
+      orderData.delivery_message || '',
       totalAmount,
       tossData.method || '간편결제',
       paymentKey,
