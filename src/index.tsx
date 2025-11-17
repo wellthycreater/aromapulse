@@ -257,37 +257,211 @@ app.get('/', (c) => {
             </nav>
         </header>
 
-        <!-- Hero Section -->
-        <section class="hero-gradient text-white py-24 relative overflow-hidden">
-            <div class="absolute inset-0 opacity-10">
-                <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-                <div class="absolute bottom-20 right-20 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>
-            </div>
-            <div class="container mx-auto px-6 relative z-10">
-                <div class="text-center max-w-4xl mx-auto fade-in-up">
-                    <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                        향기로 시작하는<br/>
-                        <span class="text-yellow-300">행복한 변화</span>
-                    </h1>
-                    <p class="text-xl md:text-2xl mb-10 text-purple-100">
-                        불면, 우울, 불안을 위한 전문 아로마 솔루션<br/>
-                        당신의 일상에 평온함을 더합니다
-                    </p>
-                    <div class="flex flex-col sm:flex-row justify-center gap-4">
-                        <button onclick="location.href='/shop'" 
-                                class="bg-white text-purple-600 px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
-                            <i class="fas fa-shopping-bag mr-2"></i>
-                            제품 둘러보기
-                        </button>
-                        <button onclick="location.href='/workshops'" 
-                                class="bg-purple-800 bg-opacity-50 backdrop-blur text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-opacity-70 transition">
-                            <i class="fas fa-spa mr-2"></i>
-                            워크샵 신청
-                        </button>
+        <!-- Hero Section with 4 Season Carousel -->
+        <section class="relative overflow-hidden">
+            <!-- Carousel Container -->
+            <div id="hero-carousel" class="relative">
+                <!-- Spring Slide -->
+                <div class="hero-slide active" data-season="spring" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);">
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+                        <div class="absolute bottom-20 right-20 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>
+                    </div>
+                    <div class="container mx-auto px-6 relative z-10 py-24">
+                        <div class="text-center max-w-4xl mx-auto text-white fade-in-up">
+                            <div class="text-6xl mb-4">🌸</div>
+                            <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                                봄, 새로운 시작<br/>
+                                <span class="text-pink-200">활기찬 에너지</span>
+                            </h1>
+                            <p class="text-xl md:text-2xl mb-10 text-purple-100">
+                                싱그러운 봄의 향기로 시작하는 생기 넘치는 하루
+                            </p>
+                            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                                <button onclick="location.href='/shop'" 
+                                        class="bg-white text-purple-600 px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
+                                    <i class="fas fa-shopping-bag mr-2"></i>
+                                    제품 둘러보기
+                                </button>
+                                <button onclick="location.href='/workshops'" 
+                                        class="bg-purple-800 bg-opacity-50 backdrop-blur text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-opacity-70 transition">
+                                    <i class="fas fa-spa mr-2"></i>
+                                    워크샵 신청
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summer Slide -->
+                <div class="hero-slide" data-season="summer" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #ffd700 100%);">
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-20 left-20 w-72 h-72 bg-yellow-200 rounded-full blur-3xl"></div>
+                        <div class="absolute bottom-20 right-20 w-96 h-96 bg-blue-300 rounded-full blur-3xl"></div>
+                    </div>
+                    <div class="container mx-auto px-6 relative z-10 py-24">
+                        <div class="text-center max-w-4xl mx-auto text-white fade-in-up">
+                            <div class="text-6xl mb-4">☀️</div>
+                            <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                                여름, 열정의 계절<br/>
+                                <span class="text-yellow-200">상쾌한 활력</span>
+                            </h1>
+                            <p class="text-xl md:text-2xl mb-10 text-blue-100">
+                                시원한 여름 향기로 에너지를 충전하세요
+                            </p>
+                            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                                <button onclick="location.href='/shop'" 
+                                        class="bg-white text-blue-600 px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
+                                    <i class="fas fa-shopping-bag mr-2"></i>
+                                    제품 둘러보기
+                                </button>
+                                <button onclick="location.href='/workshops'" 
+                                        class="bg-blue-800 bg-opacity-50 backdrop-blur text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-opacity-70 transition">
+                                    <i class="fas fa-spa mr-2"></i>
+                                    워크샵 신청
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fall Slide -->
+                <div class="hero-slide" data-season="fall" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #ff8c42 100%);">
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-20 left-20 w-72 h-72 bg-orange-300 rounded-full blur-3xl"></div>
+                        <div class="absolute bottom-20 right-20 w-96 h-96 bg-red-300 rounded-full blur-3xl"></div>
+                    </div>
+                    <div class="container mx-auto px-6 relative z-10 py-24">
+                        <div class="text-center max-w-4xl mx-auto text-white fade-in-up">
+                            <div class="text-6xl mb-4">🍂</div>
+                            <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                                가을, 깊어가는 감성<br/>
+                                <span class="text-orange-200">따뜻한 위로</span>
+                            </h1>
+                            <p class="text-xl md:text-2xl mb-10 text-orange-100">
+                                은은한 가을 향기로 마음에 평온함을 선물하세요
+                            </p>
+                            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                                <button onclick="location.href='/shop'" 
+                                        class="bg-white text-orange-600 px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
+                                    <i class="fas fa-shopping-bag mr-2"></i>
+                                    제품 둘러보기
+                                </button>
+                                <button onclick="location.href='/workshops'" 
+                                        class="bg-orange-800 bg-opacity-50 backdrop-blur text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-opacity-70 transition">
+                                    <i class="fas fa-spa mr-2"></i>
+                                    워크샵 신청
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Winter Slide -->
+                <div class="hero-slide" data-season="winter" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 50%, #e0c3fc 100%);">
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-20 left-20 w-72 h-72 bg-blue-200 rounded-full blur-3xl"></div>
+                        <div class="absolute bottom-20 right-20 w-96 h-96 bg-purple-200 rounded-full blur-3xl"></div>
+                    </div>
+                    <div class="container mx-auto px-6 relative z-10 py-24">
+                        <div class="text-center max-w-4xl mx-auto text-gray-800 fade-in-up">
+                            <div class="text-6xl mb-4">❄️</div>
+                            <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                                겨울, 고요한 아름다움<br/>
+                                <span class="text-purple-600">평화로운 휴식</span>
+                            </h1>
+                            <p class="text-xl md:text-2xl mb-10 text-gray-700">
+                                차분한 겨울 향기로 깊은 안정감을 느껴보세요
+                            </p>
+                            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                                <button onclick="location.href='/shop'" 
+                                        class="bg-purple-600 text-white px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
+                                    <i class="fas fa-shopping-bag mr-2"></i>
+                                    제품 둘러보기
+                                </button>
+                                <button onclick="location.href='/workshops'" 
+                                        class="bg-white text-purple-600 px-10 py-4 rounded-full text-lg font-bold border-2 border-purple-600 hover:bg-purple-50 transition">
+                                    <i class="fas fa-spa mr-2"></i>
+                                    워크샵 신청
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Navigation Dots (Right Side) -->
+            <div class="carousel-dots">
+                <button class="dot active" onclick="goToSlide(0)" aria-label="봄"></button>
+                <button class="dot" onclick="goToSlide(1)" aria-label="여름"></button>
+                <button class="dot" onclick="goToSlide(2)" aria-label="가을"></button>
+                <button class="dot" onclick="goToSlide(3)" aria-label="겨울"></button>
+            </div>
         </section>
+
+        <style>
+            /* Carousel Styles */
+            #hero-carousel {
+                position: relative;
+                width: 100%;
+            }
+
+            .hero-slide {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                opacity: 0;
+                transition: opacity 1s ease-in-out;
+                pointer-events: none;
+            }
+
+            .hero-slide.active {
+                position: relative;
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            /* Navigation Dots */
+            .carousel-dots {
+                position: absolute;
+                right: 2rem;
+                top: 50%;
+                transform: translateY(-50%);
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                z-index: 20;
+            }
+
+            .dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.4);
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .dot:hover {
+                background: rgba(255, 255, 255, 0.7);
+                transform: scale(1.2);
+            }
+
+            .dot.active {
+                background: white;
+                width: 16px;
+                height: 16px;
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            }
+
+            @media (max-width: 768px) {
+                .carousel-dots {
+                    right: 1rem;
+                }
+            }
+        </style>
 
         <!-- Features -->
         <section class="py-20 bg-white">
@@ -462,6 +636,48 @@ app.get('/', (c) => {
         </footer>
 
         <script>
+            // Hero Carousel Functionality
+            let currentSlide = 0;
+            let autoSlideInterval;
+
+            function goToSlide(index) {
+                const slides = document.querySelectorAll('.hero-slide');
+                const dots = document.querySelectorAll('.dot');
+                
+                // Remove active class from all slides and dots
+                slides.forEach(slide => slide.classList.remove('active'));
+                dots.forEach(dot => dot.classList.remove('active'));
+                
+                // Add active class to target slide and dot
+                slides[index].classList.add('active');
+                dots[index].classList.add('active');
+                
+                currentSlide = index;
+                
+                // Reset auto-slide timer
+                resetAutoSlide();
+            }
+
+            function nextSlide() {
+                const slides = document.querySelectorAll('.hero-slide');
+                currentSlide = (currentSlide + 1) % slides.length;
+                goToSlide(currentSlide);
+            }
+
+            function startAutoSlide() {
+                autoSlideInterval = setInterval(nextSlide, 5000); // 5초마다 자동 전환
+            }
+
+            function resetAutoSlide() {
+                clearInterval(autoSlideInterval);
+                startAutoSlide();
+            }
+
+            // Initialize carousel on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                startAutoSlide();
+            });
+
             function selectUserType(userType, subType) {
                 // Store user type selection in localStorage
                 localStorage.setItem('userType', userType);
