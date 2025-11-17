@@ -3,7 +3,8 @@ import type { Bindings } from '../types';
 
 const orders = new Hono<{ Bindings: Bindings }>();
 
-// 주문 번호 생성 (날짜 + 순번)
+// 주문 번호 생성 (날짜 + 타임스탬프 + 랜덤)
+// 고유성 보장: 타임스탬프(밀리초) + 랜덤 3자리
 async function generateOrderNumber(db: any): Promise<string> {
   const now = new Date();
   const year = now.getFullYear();
@@ -11,24 +12,13 @@ async function generateOrderNumber(db: any): Promise<string> {
   const day = String(now.getDate()).padStart(2, '0');
   const datePrefix = `${year}${month}${day}`;
   
-  // 오늘 날짜의 마지막 주문 번호 조회
-  const lastOrder = await db.prepare(`
-    SELECT order_number FROM orders 
-    WHERE order_number LIKE ? 
-    ORDER BY created_at DESC 
-    LIMIT 1
-  `).bind(`ORD${datePrefix}%`).first();
+  // 타임스탬프 기반 고유 번호 (밀리초의 마지막 6자리)
+  const timestamp = Date.now().toString().slice(-6);
   
-  let sequence = 1;
-  if (lastOrder && lastOrder.order_number) {
-    // 마지막 3자리 추출
-    const lastSeq = parseInt(lastOrder.order_number.slice(-3));
-    if (!isNaN(lastSeq)) {
-      sequence = lastSeq + 1;
-    }
-  }
+  // 추가 랜덤성 (충돌 방지)
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   
-  return `ORD${datePrefix}${String(sequence).padStart(3, '0')}`;
+  return `ORD${datePrefix}${timestamp}${random}`;
 }
 
 // 주문번호 미리 발급 API (결제 전 호출)
