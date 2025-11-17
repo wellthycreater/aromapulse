@@ -3,7 +3,8 @@ let cart = [];
 const DELIVERY_FEE = 3000;
 
 // 토스페이먼츠 클라이언트 키 (테스트 키 - 테스트 결제)
-const TOSS_CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
+// Toss Payments 공식 문서의 테스트 키 사용
+const TOSS_CLIENT_KEY = 'test_ck_DnyRpQWGrNxJK14M5o4R8wYxAdXy';
 
 // 토스페이먼츠 객체 (페이지 로드 후 초기화)
 let tossPayments = null;

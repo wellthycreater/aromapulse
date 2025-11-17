@@ -731,7 +731,8 @@ orders.post('/confirm-payment', async (c) => {
     });
     
     // 테스트용 임시 하드코딩 (프로덕션에서는 환경 변수 사용)
-    const tossSecretKey = c.env.TOSS_SECRET_KEY || 'test_sk_ma60RZblrqO0RK92yKeYr3ygLWvY';
+    // Toss Payments 공식 문서의 테스트 키 사용
+    const tossSecretKey = c.env.TOSS_SECRET_KEY || 'test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R';
     
     console.log('✅ TOSS_SECRET_KEY 전체 길이:', tossSecretKey.length);
     console.log('✅ TOSS_SECRET_KEY 앞 20자:', tossSecretKey.substring(0, 20));
