@@ -248,7 +248,7 @@ async function checkAuth() {
   const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   if (!token) {
     alert('로그인이 필요합니다.');
-    window.location.href = '/login';
+    window.location.href = '/static/admin-login.html';
     return false;
   }
   
@@ -275,7 +275,7 @@ async function checkAuth() {
     if (user.role !== 'admin' && user.role !== 'super_admin') {
       alert('관리자 권한이 필요합니다.\n\n관리자 계정으로 로그인해주세요.');
       localStorage.removeItem('adminToken'); localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+      window.location.href = '/static/admin-login.html';
       return false;
     }
     
@@ -287,7 +287,7 @@ async function checkAuth() {
     console.error('인증 오류:', error);
     alert('인증에 실패했습니다. 다시 로그인해주세요.');
     localStorage.removeItem('adminToken'); localStorage.removeItem('auth_token');
-    window.location.href = '/login';
+    window.location.href = '/static/admin-login.html';
     return false;
   }
 }
@@ -846,10 +846,9 @@ async function deleteProduct(productId, productName) {
 
 // 로그아웃
 function logout() {
-  if (confirm('로그아웃 하시겠습니까?')) {
-    localStorage.removeItem('adminToken'); localStorage.removeItem('auth_token');
-    window.location.href = '/login';
-  }
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('auth_token');
+  window.location.href = '/static/admin-login.html';
 }
 
 // ============================================

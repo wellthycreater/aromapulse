@@ -2,8 +2,8 @@
 let cart = [];
 const DELIVERY_FEE = 3000;
 
-// 토스페이먼츠 클라이언트 키 (라이브 키 - 실제 결제)
-const TOSS_CLIENT_KEY = 'live_ck_ZLKGPx4M3Mn5J0ye7mj2VBaWypv1';
+// 토스페이먼츠 클라이언트 키 (테스트 키 - 테스트 결제)
+const TOSS_CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
 
 // 토스페이먼츠 객체 (페이지 로드 후 초기화)
 let tossPayments = null;
@@ -179,8 +179,17 @@ async function processPayment() {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const totalAmount = subtotal + DELIVERY_FEE;
     
-    // 주문 ID 생성
-    const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    // 주문번호를 백엔드에서 미리 발급받기
+    console.log('📋 주문번호 발급 요청 중...');
+    const orderNumberResponse = await fetch('/api/orders/generate-order-number');
+    const orderNumberData = await orderNumberResponse.json();
+    
+    if (!orderNumberData.success || !orderNumberData.order_number) {
+      throw new Error('주문번호 발급에 실패했습니다.');
+    }
+    
+    const orderId = orderNumberData.order_number;
+    console.log('✅ 주문번호 발급 완료:', orderId);
     
     console.log('🚀 결제 요청 시작:', {
       orderId,
@@ -203,6 +212,7 @@ async function processPayment() {
         quantity: item.quantity,
         unit_price: item.price
       })),
+      product_amount: subtotal,
       total_amount: subtotal,
       delivery_fee: DELIVERY_FEE,
       final_amount: totalAmount

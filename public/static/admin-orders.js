@@ -84,6 +84,8 @@ function renderOrdersTable() {
       <tr class="border-b hover:bg-gray-50">
         <td class="px-4 py-3">
           <div class="font-semibold text-blue-600">${order.order_number}</div>
+          ${getFulfillmentTypeBadge(order.fulfillment_type)}
+          ${order.fulfillment_type === 'workshop' && order.workshop_order_status ? `<div class="mt-1">${getWorkshopStatusBadge(order.workshop_order_status)}</div>` : ''}
         </td>
         <td class="px-4 py-3">
           <div class="font-medium">${order.customer_name}</div>
@@ -91,7 +93,7 @@ function renderOrdersTable() {
           <div class="text-xs text-gray-500">${order.customer_phone}</div>
         </td>
         <td class="px-4 py-3">
-          <div class="font-semibold">${order.final_amount?.toLocaleString()}원</div>
+          <div class="font-semibold">${(order.total_amount || order.final_amount)?.toLocaleString()}원</div>
           <div class="text-xs text-gray-500">상품: ${order.total_amount?.toLocaleString()}원</div>
           <div class="text-xs text-gray-500">배송비: ${order.delivery_fee?.toLocaleString()}원</div>
         </td>
@@ -137,6 +139,27 @@ function getOrderStatusBadge(status) {
     'shipped': '<span class="px-2 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs font-semibold"><i class="fas fa-truck mr-1"></i>배송중</span>',
     'delivered': '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold"><i class="fas fa-check-double mr-1"></i>배송 완료</span>',
     'cancelled': '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold"><i class="fas fa-ban mr-1"></i>주문 취소</span>'
+  };
+  return badges[status] || status;
+}
+
+// 이행 타입 뱃지 (자사 직접 배송 vs 공방 위탁)
+function getFulfillmentTypeBadge(type) {
+  const badges = {
+    'direct': '<span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium"><i class="fas fa-home mr-1"></i>자사 배송</span>',
+    'workshop': '<span class="px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-medium"><i class="fas fa-industry mr-1"></i>공방 위탁</span>'
+  };
+  return badges[type] || badges['direct'];
+}
+
+// 공방 발주 상태 뱃지
+function getWorkshopStatusBadge(status) {
+  const badges = {
+    'pending': '<span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs"><i class="fas fa-hourglass mr-1"></i>발주 대기</span>',
+    'sent': '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"><i class="fas fa-paper-plane mr-1"></i>발주 전송</span>',
+    'processing': '<span class="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs"><i class="fas fa-cog mr-1"></i>공방 처리중</span>',
+    'shipped': '<span class="px-2 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs"><i class="fas fa-truck mr-1"></i>공방 발송</span>',
+    'completed': '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs"><i class="fas fa-check-circle mr-1"></i>완료</span>'
   };
   return badges[status] || status;
 }
@@ -256,6 +279,10 @@ async function viewOrderDetail(orderId) {
             </h3>
             <div class="space-y-2 text-sm">
               <div><strong>주문번호:</strong> <span class="text-blue-600 font-mono">${order.order_number}</span></div>
+              <div><strong>이행 타입:</strong> ${getFulfillmentTypeBadge(order.fulfillment_type || 'direct')}</div>
+              ${order.fulfillment_type === 'workshop' && order.workshop_order_status ? `
+                <div><strong>발주 상태:</strong> ${getWorkshopStatusBadge(order.workshop_order_status)}</div>
+              ` : ''}
               <div><strong>주문일시:</strong> ${new Date(order.created_at).toLocaleString('ko-KR')}</div>
               <div><strong>결제 상태:</strong> ${getPaymentStatusBadge(order.payment_status)}</div>
               <div><strong>주문 상태:</strong> ${getOrderStatusBadge(order.order_status)}</div>
@@ -338,7 +365,7 @@ async function viewOrderDetail(orderId) {
             ` : ''}
             <div class="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
               <span>최종 결제 금액:</span>
-              <span class="text-purple-600">${order.final_amount.toLocaleString()}원</span>
+              <span class="text-purple-600">${(order.total_amount || order.final_amount).toLocaleString()}원</span>
             </div>
           </div>
         </div>
@@ -352,6 +379,49 @@ async function viewOrderDetail(orderId) {
           <div class="space-y-2 text-sm">
             ${order.delivery_company ? `<div><strong>택배사:</strong> ${order.delivery_company}</div>` : ''}
             ${order.tracking_number ? `<div><strong>운송장 번호:</strong> ${order.tracking_number}</div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- 공방 발주 관리 (공방 위탁 주문인 경우만 표시) -->
+        ${order.fulfillment_type === 'workshop' ? `
+        <div class="bg-purple-50 p-4 rounded-lg mb-6 border-2 border-purple-200">
+          <h3 class="font-bold text-gray-700 mb-3 flex items-center">
+            <i class="fas fa-industry text-purple-600 mr-2"></i>공방 발주 관리
+          </h3>
+          <div class="space-y-3">
+            <!-- 발주 상태 표시 -->
+            <div class="bg-white p-3 rounded-lg">
+              <div class="text-sm space-y-2">
+                <div><strong>발주 상태:</strong> ${getWorkshopStatusBadge(order.workshop_order_status || 'pending')}</div>
+                ${order.workshop_order_sent_at ? `
+                  <div><strong>발주 전송 일시:</strong> ${new Date(order.workshop_order_sent_at).toLocaleString('ko-KR')}</div>
+                ` : ''}
+                ${order.workshop_notes ? `
+                  <div><strong>발주 메모:</strong> <span class="text-gray-600">${order.workshop_notes}</span></div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- 발주 관리 버튼들 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              ${!order.workshop_order_status || order.workshop_order_status === 'pending' ? `
+                <button onclick="sendWorkshopOrder(${order.id})" 
+                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center justify-center">
+                  <i class="fas fa-paper-plane mr-2"></i>공방에 발주 전송
+                </button>
+              ` : ''}
+              
+              <button onclick="printWorkshopOrderSheet(${order.id})" 
+                  class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center">
+                <i class="fas fa-print mr-2"></i>발주서 출력
+              </button>
+              
+              <button onclick="showWorkshopStatusModal(${order.id}, '${order.workshop_order_status || 'pending'}')" 
+                  class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center justify-center">
+                <i class="fas fa-edit mr-2"></i>발주 상태 변경
+              </button>
+            </div>
           </div>
         </div>
         ` : ''}
@@ -625,6 +695,251 @@ async function saveAdminMemo(orderId) {
   } catch (error) {
     console.error('메모 저장 오류:', error);
     showNotification('메모 저장에 실패했습니다.', 'error');
+  }
+}
+
+// ===== 공방 발주 관리 함수들 =====
+
+// 공방에 발주 전송
+async function sendWorkshopOrder(orderId) {
+  if (!confirm('공방에 발주를 전송하시겠습니까?')) {
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch(`/api/orders/admin/${orderId}/send-workshop-order`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('발주 전송 실패');
+    }
+
+    showNotification('공방에 발주가 전송되었습니다.', 'success');
+    closeOrderDetailModal();
+    loadOrders();
+
+  } catch (error) {
+    console.error('발주 전송 오류:', error);
+    showNotification('발주 전송에 실패했습니다.', 'error');
+  }
+}
+
+// 발주서 출력
+async function printWorkshopOrderSheet(orderId) {
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch(`/api/orders/admin/${orderId}/workshop-order-sheet`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('발주서 조회 실패');
+    }
+
+    const data = await response.json();
+    const order = data.order;
+    const items = data.items;
+
+    // 새 창에서 발주서 출력
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>발주서 - ${order.order_number}</title>
+        <style>
+          body { font-family: 'Malgun Gothic', sans-serif; padding: 40px; }
+          h1 { text-align: center; border-bottom: 3px solid #000; padding-bottom: 10px; }
+          .info-section { margin: 20px 0; }
+          .info-section h2 { background: #f0f0f0; padding: 8px; margin: 10px 0; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+          th { background: #e0e0e0; font-weight: bold; }
+          .total { font-size: 18px; font-weight: bold; text-align: right; margin: 20px 0; }
+          .footer { margin-top: 40px; text-align: center; color: #666; }
+          @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>🏭 공방 발주서</h1>
+        
+        <div class="info-section">
+          <h2>📋 주문 정보</h2>
+          <p><strong>주문번호:</strong> ${order.order_number}</p>
+          <p><strong>주문일시:</strong> ${new Date(order.created_at).toLocaleString('ko-KR')}</p>
+          <p><strong>발주서 출력일:</strong> ${new Date(data.print_date).toLocaleString('ko-KR')}</p>
+        </div>
+
+        <div class="info-section">
+          <h2>📦 배송 정보</h2>
+          <p><strong>받는 사람:</strong> ${order.customer_name}</p>
+          <p><strong>전화번호:</strong> ${order.customer_phone}</p>
+          <p><strong>이메일:</strong> ${order.customer_email}</p>
+          <p><strong>우편번호:</strong> ${order.customer_zipcode || '-'}</p>
+          <p><strong>주소:</strong> ${order.customer_address || '-'}</p>
+          <p><strong>상세주소:</strong> ${order.customer_address_detail || order.customer_detail_address || '-'}</p>
+          ${order.delivery_message ? `<p><strong>���송 메시지:</strong> ${order.delivery_message}</p>` : ''}
+        </div>
+
+        <div class="info-section">
+          <h2>🛍️ 주문 상품</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>상품명</th>
+                <th>컨셉</th>
+                <th style="text-align: center;">수량</th>
+                <th style="text-align: right;">비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => `
+                <tr>
+                  <td>${item.product_name}</td>
+                  <td>${item.product_concept === 'symptom_care' ? '증상 케어' : '리프레시'}</td>
+                  <td style="text-align: center;">${item.quantity}개</td>
+                  <td></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="total">
+          총 상품 수량: ${items.reduce((sum, item) => sum + item.quantity, 0)}개
+        </div>
+
+        ${order.workshop_notes ? `
+        <div class="info-section">
+          <h2>📝 특이사항</h2>
+          <p>${order.workshop_notes}</p>
+        </div>
+        ` : ''}
+
+        <div class="footer">
+          <p>아로마펄스(AromaPulse)</p>
+          <p>본 발주서는 공방 제작용입니다.</p>
+        </div>
+
+        <div class="no-print" style="text-align: center; margin-top: 30px;">
+          <button onclick="window.print()" style="padding: 10px 30px; font-size: 16px; cursor: pointer;">
+            🖨️ 인쇄하기
+          </button>
+          <button onclick="window.close()" style="padding: 10px 30px; font-size: 16px; cursor: pointer; margin-left: 10px;">
+            ❌ 닫기
+          </button>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+  } catch (error) {
+    console.error('발주서 출력 오류:', error);
+    showNotification('발주서 출력에 실패했습니다.', 'error');
+  }
+}
+
+// 발주 상태 변경 모달 표시
+function showWorkshopStatusModal(orderId, currentStatus) {
+  const modal = document.createElement('div');
+  modal.id = 'workshop-status-modal';
+  modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+  modal.innerHTML = `
+    <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+      <h3 class="text-xl font-bold mb-4 flex items-center">
+        <i class="fas fa-edit text-purple-600 mr-2"></i>
+        발주 상태 변경
+      </h3>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">발주 상태</label>
+        <select id="workshop-status-select" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+          <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>발주 대기</option>
+          <option value="sent" ${currentStatus === 'sent' ? 'selected' : ''}>발주 전송</option>
+          <option value="processing" ${currentStatus === 'processing' ? 'selected' : ''}>공방 처리중</option>
+          <option value="shipped" ${currentStatus === 'shipped' ? 'selected' : ''}>공방 발송</option>
+          <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>완료</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">발주 메모 (선택사항)</label>
+        <textarea id="workshop-notes-input" 
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" 
+            rows="3"
+            placeholder="공방 관련 메모를 작성하세요..."></textarea>
+      </div>
+
+      <div class="flex space-x-2">
+        <button onclick="updateWorkshopStatus(${orderId})" 
+            class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+          <i class="fas fa-check mr-1"></i>저장
+        </button>
+        <button onclick="closeWorkshopStatusModal()" 
+            class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+          <i class="fas fa-times mr-1"></i>취소
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// 발주 상태 변경 모달 닫기
+function closeWorkshopStatusModal() {
+  const modal = document.getElementById('workshop-status-modal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+// 발주 상태 업데이트
+async function updateWorkshopStatus(orderId) {
+  const status = document.getElementById('workshop-status-select').value;
+  const notes = document.getElementById('workshop-notes-input').value;
+
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch(`/api/orders/admin/${orderId}/workshop-status`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        workshop_order_status: status,
+        workshop_notes: notes
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('발주 상태 업데이트 실패');
+    }
+
+    showNotification('발주 상태가 변경되었습니다.', 'success');
+    closeWorkshopStatusModal();
+    closeOrderDetailModal();
+    loadOrders();
+
+  } catch (error) {
+    console.error('발주 상태 업데이트 오류:', error);
+    showNotification('발주 상태 변경에 실패했습니다.', 'error');
   }
 }
 

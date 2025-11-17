@@ -3,15 +3,53 @@ import type { Bindings } from '../types';
 
 const orders = new Hono<{ Bindings: Bindings }>();
 
-// 주문 번호 생성
-function generateOrderNumber(): string {
+// 주문 번호 생성 (날짜 + 순번)
+async function generateOrderNumber(db: any): Promise<string> {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `ORD${year}${month}${day}${random}`;
+  const datePrefix = `${year}${month}${day}`;
+  
+  // 오늘 날짜의 마지막 주문 번호 조회
+  const lastOrder = await db.prepare(`
+    SELECT order_number FROM orders 
+    WHERE order_number LIKE ? 
+    ORDER BY created_at DESC 
+    LIMIT 1
+  `).bind(`ORD${datePrefix}%`).first();
+  
+  let sequence = 1;
+  if (lastOrder && lastOrder.order_number) {
+    // 마지막 3자리 추출
+    const lastSeq = parseInt(lastOrder.order_number.slice(-3));
+    if (!isNaN(lastSeq)) {
+      sequence = lastSeq + 1;
+    }
+  }
+  
+  return `ORD${datePrefix}${String(sequence).padStart(3, '0')}`;
 }
+
+// 주문번호 미리 발급 API (결제 전 호출)
+orders.get('/generate-order-number', async (c) => {
+  try {
+    const orderNumber = await generateOrderNumber(c.env.DB);
+    
+    console.log('✅ 주문번호 발급:', orderNumber);
+    
+    return c.json({ 
+      success: true, 
+      order_number: orderNumber 
+    });
+  } catch (error: any) {
+    console.error('❌ 주문번호 발급 실패:', error);
+    return c.json({ 
+      success: false, 
+      error: error.message 
+    }, 500);
+  }
+});
 
 // 주문 생성
 orders.post('/create', async (c) => {
@@ -35,9 +73,10 @@ orders.post('/create', async (c) => {
       return c.json({ error: '필수 정보가 누락되었습니다' }, 400);
     }
     
-    const orderNumber = generateOrderNumber();
+    const orderNumber = await generateOrderNumber(c.env.DB);
     
-    // 주문 생성
+    // 주문 생성 (production DB schema에 정확히 맞춤)
+    const product_amount = total_amount - delivery_fee;
     const orderResult = await c.env.DB.prepare(`
       INSERT INTO orders (
         order_number,
@@ -46,11 +85,11 @@ orders.post('/create', async (c) => {
         customer_phone,
         customer_zipcode,
         customer_address,
-        customer_detail_address,
+        customer_address_detail,
         delivery_message,
-        total_amount,
+        product_amount,
         delivery_fee,
-        final_amount,
+        total_amount,
         payment_method,
         payment_status,
         order_status
@@ -64,7 +103,7 @@ orders.post('/create', async (c) => {
       customer_address || null,
       customer_detail_address || null,
       delivery_message || null,
-      total_amount,
+      product_amount,
       delivery_fee,
       final_amount
     ).run();
@@ -479,9 +518,10 @@ orders.post('/prepare-payment', async (c) => {
     }
     
     // 주문 번호 생성
-    const orderNumber = generateOrderNumber();
+    const orderNumber = await generateOrderNumber(c.env.DB);
     
-    // 주문 생성 (결제 대기 상태)
+    // 주문 생성 (결제 대기 상태, production DB schema에 정확히 맞춤)
+    const product_amount = orderData.total_amount - orderData.delivery_fee;
     const orderResult = await c.env.DB.prepare(`
       INSERT INTO orders (
         order_number,
@@ -490,11 +530,11 @@ orders.post('/prepare-payment', async (c) => {
         customer_phone,
         customer_zipcode,
         customer_address,
-        customer_detail_address,
+        customer_address_detail,
         delivery_message,
-        total_amount,
+        product_amount,
         delivery_fee,
-        final_amount,
+        total_amount,
         payment_method,
         payment_status,
         order_status
@@ -508,7 +548,7 @@ orders.post('/prepare-payment', async (c) => {
       orderData.customer_address || null,
       orderData.customer_detail_address || null,
       orderData.delivery_message || null,
-      orderData.total_amount,
+      product_amount,
       orderData.delivery_fee,
       orderData.final_amount
     ).run();
@@ -673,13 +713,17 @@ orders.post('/payup-callback', async (c) => {
 // 토스페이먼츠 결제 승인
 orders.post('/confirm-payment', async (c) => {
   try {
+    console.log('=== 결제 승인 시작 ===');
     const { paymentKey, orderId, amount, orderData } = await c.req.json();
+    console.log('Received data:', { paymentKey, orderId, amount, orderData });
 
     if (!paymentKey || !orderId || !amount || !orderData) {
+      console.error('필수 정보 누락');
       return c.json({ error: '필수 정보가 누락되었습니다' }, 400);
     }
 
     // 토스페이먼츠 API로 결제 승인 요청
+    console.log('토스페이먼츠 API 호출 시작');
     const tossSecretKey = c.env.TOSS_SECRET_KEY || 'test_sk_ma60RZblrq7YNqnEzPKb3wzYWBn1';
     const encodedKey = btoa(tossSecretKey + ':');
 
@@ -697,6 +741,7 @@ orders.post('/confirm-payment', async (c) => {
     });
 
     const tossData = await tossResponse.json();
+    console.log('토스페이먼츠 응답:', { ok: tossResponse.ok, status: tossResponse.status, data: tossData });
 
     if (!tossResponse.ok) {
       console.error('토스페이먼츠 결제 승인 실패:', tossData);
@@ -706,10 +751,36 @@ orders.post('/confirm-payment', async (c) => {
       }, 400);
     }
 
-    // 주문 번호 생성
-    const orderNumber = generateOrderNumber();
+    console.log('토스페이먼츠 승인 성공, 주문 생성 시작');
 
-    // 주문 생성
+    // 주문 번호 생성
+    const orderNumber = await generateOrderNumber(c.env.DB);
+
+    // 주문 상품들의 컨셉을 확인하여 fulfillment_type 결정
+    let fulfillmentType = 'direct'; // 기본값: 자사 직접 배송
+    let hasSymptomCare = false;
+    let hasRefresh = false;
+
+    for (const item of orderData.items) {
+      const product = await c.env.DB.prepare(
+        'SELECT concept FROM products WHERE id = ?'
+      ).bind(item.product_id).first();
+      
+      if (product) {
+        if (product.concept === 'symptom_care') {
+          hasSymptomCare = true;
+        } else if (product.concept === 'refresh') {
+          hasRefresh = true;
+        }
+      }
+    }
+
+    // 증상 케어 제품이 하나라도 있으면 공방 위탁
+    if (hasSymptomCare) {
+      fulfillmentType = 'workshop';
+    }
+
+    // 주문 생성 (production DB schema에 정확히 맞춤)
     const orderResult = await c.env.DB.prepare(`
       INSERT INTO orders (
         order_number,
@@ -718,18 +789,19 @@ orders.post('/confirm-payment', async (c) => {
         customer_phone,
         customer_zipcode,
         customer_address,
-        customer_detail_address,
+        customer_address_detail,
         delivery_message,
-        total_amount,
+        product_amount,
         delivery_fee,
-        final_amount,
+        total_amount,
         payment_method,
         payment_status,
         order_status,
-        payment_id,
-        payment_data,
-        paid_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'paid', 'confirmed', ?, ?, ?)
+        payment_key,
+        paid_at,
+        fulfillment_type,
+        workshop_order_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'paid', 'confirmed', ?, ?, ?, ?)
     `).bind(
       orderNumber,
       orderData.customer_name,
@@ -739,16 +811,18 @@ orders.post('/confirm-payment', async (c) => {
       orderData.customer_address || null,
       orderData.customer_detail_address || null,
       orderData.delivery_message || null,
-      orderData.total_amount,
+      orderData.product_amount || orderData.total_amount,
       orderData.delivery_fee,
-      orderData.final_amount,
-      tossData.method || 'CARD',
+      orderData.final_amount || orderData.total_amount,
+      tossData.method || '간편결제',
       paymentKey,
-      JSON.stringify(tossData),
-      new Date().toISOString()
+      new Date().toISOString(),
+      fulfillmentType,
+      fulfillmentType === 'workshop' ? 'pending' : null
     ).run();
 
     const dbOrderId = orderResult.meta.last_row_id;
+    console.log(`주문 생성 완료: ${orderNumber}, 이행 타입: ${fulfillmentType}`);
 
     // 주문 상품 등록
     for (const item of orderData.items) {
@@ -807,6 +881,102 @@ orders.post('/confirm-payment', async (c) => {
       error: '결제 처리 실패', 
       details: error.message 
     }, 500);
+  }
+});
+
+// 공방 발주 전송
+orders.post('/admin/:id/send-workshop-order', async (c) => {
+  try {
+    const orderId = parseInt(c.req.param('id'));
+    
+    const order = await c.env.DB.prepare(
+      'SELECT * FROM orders WHERE id = ?'
+    ).bind(orderId).first();
+    
+    if (!order) {
+      return c.json({ error: '주문을 찾을 수 없습니다' }, 404);
+    }
+    
+    if (order.fulfillment_type !== 'workshop') {
+      return c.json({ error: '공방 위탁 주문이 아닙니다' }, 400);
+    }
+    
+    // 발주 상태 업데이트
+    await c.env.DB.prepare(`
+      UPDATE orders SET
+        workshop_order_status = 'sent',
+        workshop_order_sent_at = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(new Date().toISOString(), orderId).run();
+    
+    return c.json({
+      message: '공방 발주가 전송되었습니다',
+      order_id: orderId
+    });
+    
+  } catch (error: any) {
+    console.error('공방 발주 전송 오류:', error);
+    return c.json({ error: '발주 전송 실패', details: error.message }, 500);
+  }
+});
+
+// 공방 발주 상태 업데이트
+orders.put('/admin/:id/workshop-status', async (c) => {
+  try {
+    const orderId = parseInt(c.req.param('id'));
+    const { workshop_order_status, workshop_notes } = await c.req.json();
+    
+    const validStatuses = ['pending', 'sent', 'processing', 'shipped', 'completed'];
+    if (!validStatuses.includes(workshop_order_status)) {
+      return c.json({ error: '유효하지 않은 발주 상태입니다' }, 400);
+    }
+    
+    await c.env.DB.prepare(`
+      UPDATE orders SET
+        workshop_order_status = ?,
+        workshop_notes = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(workshop_order_status, workshop_notes || null, orderId).run();
+    
+    return c.json({
+      message: '발주 상태가 업데이트되었습니다',
+      workshop_order_status
+    });
+    
+  } catch (error: any) {
+    console.error('발주 상태 업데이트 오류:', error);
+    return c.json({ error: '상태 업데이트 실패', details: error.message }, 500);
+  }
+});
+
+// 발주서 출력용 데이터 조회
+orders.get('/admin/:id/workshop-order-sheet', async (c) => {
+  try {
+    const orderId = parseInt(c.req.param('id'));
+    
+    const order = await c.env.DB.prepare(
+      'SELECT * FROM orders WHERE id = ?'
+    ).bind(orderId).first();
+    
+    if (!order) {
+      return c.json({ error: '주문을 찾을 수 없습니다' }, 404);
+    }
+    
+    const items = await c.env.DB.prepare(
+      'SELECT * FROM order_items WHERE order_id = ?'
+    ).bind(orderId).all();
+    
+    return c.json({
+      order,
+      items: items.results,
+      print_date: new Date().toISOString()
+    });
+    
+  } catch (error: any) {
+    console.error('발주서 조회 오류:', error);
+    return c.json({ error: '발주서 조회 실패', details: error.message }, 500);
   }
 });
 
