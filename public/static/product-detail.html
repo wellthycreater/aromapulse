@@ -125,9 +125,11 @@
                             <th class="text-left py-3 px-4 w-32">카테고리</th>
                             <td id="product-category" class="py-3 px-4 text-gray-700"></td>
                         </tr>
-                        <tr>
+                        <tr id="volume-row">
                             <th class="text-left py-3 px-4">용량</th>
-                            <td id="product-volume" class="py-3 px-4 text-gray-700"></td>
+                            <td id="product-volume-cell" class="py-3 px-4 text-gray-700">
+                                <div id="product-volume-display"></div>
+                            </td>
                         </tr>
                         <tr>
                             <th class="text-left py-3 px-4">배송비</th>
@@ -141,8 +143,21 @@
                         </tr>
                     </table>
 
-                    <!-- 수량 선택 -->
+                    <!-- 옵션 선택 (용량, 수량) -->
                     <div class="bg-gray-50 rounded-lg p-6 space-y-4">
+                        <!-- 용량 선택 (조건부 표시) -->
+                        <div id="volume-selector-container" class="hidden">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="font-semibold text-gray-900">용량 선택</span>
+                                <select id="volume-selector" 
+                                    class="border-2 border-gray-300 rounded px-4 py-2 font-semibold focus:border-purple-500 focus:outline-none"
+                                    onchange="onVolumeChange()">
+                                    <option value="">용량을 선택하세요</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- 수량 선택 -->
                         <div class="flex items-center justify-between">
                             <span class="font-semibold text-gray-900">수량</span>
                             <div class="flex items-center border-2 border-gray-300 rounded">

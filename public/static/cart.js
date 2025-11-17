@@ -82,9 +82,10 @@ function createCartItemElement(item, index) {
                     </button>
                 </div>
                 
-                <p class="text-sm text-gray-500 mb-3">
-                    ${item.concept === 'refresh' ? '리프레시' : '증상 케어'}
-                </p>
+                <div class="text-sm text-gray-500 mb-3 space-y-1">
+                    <p>${item.concept === 'refresh' ? '리프레시' : '증상 케어'}</p>
+                    ${item.volume ? `<p class="text-purple-600 font-semibold"><i class="fas fa-flask mr-1"></i>용량: ${item.volume}</p>` : ''}
+                </div>
                 
                 <div class="flex items-center justify-between">
                     <!-- 수량 조절 -->
