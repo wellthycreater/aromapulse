@@ -895,7 +895,17 @@ orders.post('/confirm-payment', async (c) => {
       order_number: orderNumber,
       order_id: dbOrderId,
       final_amount: orderData.final_amount,
-      payment_method: tossData.method || 'CARD'
+      payment_method: tossData.method || 'CARD',
+      // 디버깅 정보
+      debug: {
+        received_product_amount: orderData.product_amount,
+        received_total_amount: orderData.total_amount,
+        received_delivery_fee: orderData.delivery_fee,
+        received_final_amount: orderData.final_amount,
+        calculated_product_amount: productAmount,
+        calculated_delivery_fee: deliveryFee,
+        calculated_total_amount: totalAmount
+      }
     });
 
   } catch (error: any) {

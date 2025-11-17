@@ -94,7 +94,7 @@ function renderOrdersTable() {
         </td>
         <td class="px-4 py-3">
           <div class="font-semibold">${(order.total_amount || order.final_amount)?.toLocaleString()}원</div>
-          <div class="text-xs text-gray-500">상품: ${order.total_amount?.toLocaleString()}원</div>
+          <div class="text-xs text-gray-500">상품: ${order.product_amount?.toLocaleString()}원</div>
           <div class="text-xs text-gray-500">배송비: ${order.delivery_fee?.toLocaleString()}원</div>
         </td>
         <td class="px-4 py-3">
