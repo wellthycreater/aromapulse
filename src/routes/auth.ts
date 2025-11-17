@@ -775,7 +775,10 @@ auth.put('/profile', async (c) => {
     const token = authHeader.substring(7);
     const decoded = JSON.parse(atob(token.split('.')[1]));
     
+    console.log('[Profile Update] User ID:', decoded.userId);
+    
     const data = await c.req.json();
+    console.log('[Profile Update] Request data:', JSON.stringify(data, null, 2));
     const {
       name,
       phone,
@@ -888,9 +891,11 @@ auth.put('/profile', async (c) => {
     
     // 업데이트 실행
     updateValues.push(decoded.userId);
-    await c.env.DB.prepare(
-      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`
-    ).bind(...updateValues).run();
+    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+    console.log('[Profile Update] Query:', updateQuery);
+    console.log('[Profile Update] Values:', updateValues);
+    
+    await c.env.DB.prepare(updateQuery).bind(...updateValues).run();
     
     // 업데이트된 사용자 정보 조회
     const user = await c.env.DB.prepare(
@@ -905,8 +910,13 @@ auth.put('/profile', async (c) => {
     });
     
   } catch (error: any) {
-    console.error('Profile update error:', error);
-    return c.json({ error: '프로필 업데이트 실패', details: error.message }, 500);
+    console.error('[Profile Update] Error:', error);
+    console.error('[Profile Update] Error stack:', error.stack);
+    return c.json({ 
+      error: '프로필 업데이트 실패', 
+      details: error.message,
+      stack: error.stack 
+    }, 500);
   }
 });
 
