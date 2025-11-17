@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장바구니 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="text-2xl font-bold text-purple-600">
+                    <i class="fas fa-spa mr-2"></i>아로마펄스
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="/shop" class="text-gray-700 hover:text-purple-600">
+                        <i class="fas fa-arrow-left mr-2"></i>쇼핑 계속하기
+                    </a>
+                    <a href="/" class="text-gray-700 hover:text-purple-600">
+                        <i class="fas fa-home mr-2"></i>홈
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mx-auto px-4 py-12">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">
+            <i class="fas fa-shopping-cart mr-3"></i>장바구니
+        </h1>
+
+        <!-- 장바구니 비어있음 -->
+        <div id="empty-cart" class="hidden bg-white rounded-xl shadow-md p-12 text-center">
+            <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+            <p class="text-xl text-gray-600 mb-6">장바구니가 비어있습니다</p>
+            <a href="/shop" class="inline-block bg-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-700">
+                <i class="fas fa-shopping-bag mr-2"></i>쇼핑 계속하기
+            </a>
+        </div>
+
+        <!-- 장바구니 내용 -->
+        <div id="cart-content" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 장바구니 아이템 목록 -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">
+                            상품 목록 (<span id="total-items">0</span>개)
+                        </h2>
+                        <button onclick="clearCart()" class="text-red-500 hover:text-red-700 text-sm">
+                            <i class="fas fa-trash-alt mr-1"></i>전체 삭제
+                        </button>
+                    </div>
+                    
+                    <div id="cart-items" class="space-y-4">
+                        <!-- 장바구니 아이템들이 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 주문 요약 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-md p-6 sticky top-24">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">
+                        <i class="fas fa-receipt mr-2"></i>주문 요약
+                    </h2>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-gray-600">
+                            <span>상품 금액</span>
+                            <span id="subtotal">0원</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>배송비</span>
+                            <span id="delivery-fee">3,000원</span>
+                        </div>
+                        <div class="border-t pt-3 flex justify-between text-xl font-bold text-purple-600">
+                            <span>총 결제 금액</span>
+                            <span id="total-amount">0원</span>
+                        </div>
+                    </div>
+
+                    <button onclick="proceedToCheckout()" 
+                        class="w-full bg-purple-600 text-white py-4 rounded-lg font-bold hover:bg-purple-700 text-lg mb-3">
+                        <i class="fas fa-credit-card mr-2"></i>결제하기
+                    </button>
+
+                    <button onclick="location.href='/shop'" 
+                        class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300">
+                        <i class="fas fa-shopping-bag mr-2"></i>쇼핑 계속하기
+                    </button>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                        <p class="text-xs text-blue-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            30,000원 이상 구매 시 무료배송
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 토스트 -->
+    <div id="toast" class="hidden fixed top-20 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <script src="/static/cart.js"></script>
+</body>
+</html>
