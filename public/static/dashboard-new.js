@@ -219,11 +219,13 @@ document.getElementById('edit-profile-form').addEventListener('submit', async (e
             body: JSON.stringify(updateData)
         });
 
+        const result = await response.json();
+
         if (!response.ok) {
-            throw new Error('Failed to update profile');
+            console.error('Profile update failed:', result);
+            throw new Error(result.error || result.details || 'Failed to update profile');
         }
 
-        const result = await response.json();
         alert('프로필이 성공적으로 업데이트되었습니다!');
         closeEditProfileModal();
         
@@ -231,7 +233,7 @@ document.getElementById('edit-profile-form').addEventListener('submit', async (e
         location.reload();
     } catch (error) {
         console.error('Error updating profile:', error);
-        alert('프로필 업데이트에 실패했습니다.');
+        alert('프로필 업데이트에 실패했습니다.\n오류: ' + error.message);
     }
 });
 
