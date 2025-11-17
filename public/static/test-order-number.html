@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문번호 생성 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-2xl font-bold mb-6">주문번호 생성 API 테스트</h1>
+        
+        <button id="test-btn" onclick="testOrderNumber()" 
+                class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 mb-6">
+            주문번호 생성 테스트
+        </button>
+        
+        <div id="result" class="bg-gray-50 p-4 rounded-lg">
+            <p class="text-gray-600">버튼을 클릭하여 테스트하세요</p>
+        </div>
+        
+        <div id="console-log" class="mt-6 bg-black text-green-400 p-4 rounded-lg font-mono text-sm max-h-96 overflow-y-auto">
+            <p>> Console Log:</p>
+        </div>
+    </div>
+
+    <script>
+        const consoleLog = document.getElementById('console-log');
+        
+        function log(message, data = null) {
+            const p = document.createElement('p');
+            p.textContent = `> ${message}`;
+            if (data) {
+                p.textContent += ' ' + JSON.stringify(data, null, 2);
+            }
+            consoleLog.appendChild(p);
+            console.log(message, data);
+        }
+        
+        async function testOrderNumber() {
+            try {
+                consoleLog.innerHTML = '<p>> Console Log:</p>';
+                
+                log('📋 주문번호 생성 API 호출 시작...');
+                
+                const response = await fetch('/api/orders/generate-order-number');
+                log('📋 응답 상태:', response.status);
+                
+                if (!response.ok) {
+                    log('❌ HTTP 에러:', response.status);
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                log('✅ 응답 데이터:', data);
+                
+                if (data.success && data.order_number) {
+                    document.getElementById('result').innerHTML = `
+                        <p class="text-green-600 font-bold text-xl">✅ 성공!</p>
+                        <p class="mt-2"><strong>주문번호:</strong> ${data.order_number}</p>
+                    `;
+                    log('✅ 주문번호 생성 완료:', data.order_number);
+                } else {
+                    throw new Error('주문번호가 응답에 없습니다');
+                }
+                
+            } catch (error) {
+                log('❌ 에러 발생:', error.message);
+                document.getElementById('result').innerHTML = `
+                    <p class="text-red-600 font-bold">❌ 실패</p>
+                    <p class="mt-2 text-red-500">${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
