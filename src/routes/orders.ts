@@ -862,27 +862,20 @@ orders.post('/confirm-payment', async (c) => {
         continue;
       }
 
+      // 기본 필드만 사용 (호환성을 위해)
       await c.env.DB.prepare(`
         INSERT INTO order_items (
           order_id,
           product_id,
           product_name,
-          product_concept,
-          product_category,
-          product_refresh_type,
-          product_volume,
           quantity,
           unit_price,
           total_price
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?)
       `).bind(
         dbOrderId,
         product.id,
         product.name,
-        product.concept,
-        product.category || null,
-        product.refresh_type || null,
-        product.volume || null,
         item.quantity,
         item.unit_price,
         item.unit_price * item.quantity
