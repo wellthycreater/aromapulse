@@ -807,11 +807,9 @@ orders.post('/confirm-payment', async (c) => {
       fulfillmentType = 'workshop';
     }
 
-    // 주문 생성 (production DB schema에 정확히 맞춤)
-    // total_amount는 상품 금액, final_amount는 총 결제 금액 (상품 + 배송비)
-    const productAmount = orderData.product_amount || orderData.total_amount || 0;
-    const deliveryFee = orderData.delivery_fee || 0;
-    const finalAmount = orderData.final_amount || (productAmount + deliveryFee);
+    // 주문 생성 (production DB의 실제 스키마에 맞춤)
+    // Production DB는 minimal schema를 사용 (basic columns only)
+    const totalAmount = orderData.final_amount || (orderData.total_amount + orderData.delivery_fee);
     
     const orderResult = await c.env.DB.prepare(`
       INSERT INTO orders (
@@ -819,38 +817,24 @@ orders.post('/confirm-payment', async (c) => {
         customer_name,
         customer_email,
         customer_phone,
-        customer_zipcode,
         customer_address,
-        customer_address_detail,
-        delivery_message,
-        delivery_fee,
         total_amount,
-        final_amount,
         payment_method,
         payment_status,
         order_status,
         payment_key,
-        paid_at,
-        fulfillment_type,
-        workshop_order_status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'paid', 'confirmed', ?, ?, ?, ?)
+        paid_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'paid', 'confirmed', ?, ?)
     `).bind(
       orderNumber,
       orderData.customer_name,
       orderData.customer_email,
       orderData.customer_phone,
-      orderData.customer_zipcode || null,
-      orderData.customer_address || null,
-      orderData.customer_address_detail || null,
-      orderData.delivery_message || null,
-      deliveryFee,
-      productAmount,
-      finalAmount,
+      orderData.customer_address || '',
+      totalAmount,
       tossData.method || '간편결제',
       paymentKey,
-      new Date().toISOString(),
-      fulfillmentType,
-      fulfillmentType === 'workshop' ? 'pending' : null
+      new Date().toISOString()
     ).run();
 
     const dbOrderId = orderResult.meta.last_row_id;
