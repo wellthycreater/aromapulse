@@ -182,10 +182,18 @@ async function processPayment() {
     // 주문번호를 백엔드에서 미리 발급받기
     console.log('📋 주문번호 발급 요청 중...');
     const orderNumberResponse = await fetch('/api/orders/generate-order-number');
+    
+    if (!orderNumberResponse.ok) {
+      console.error('❌ 주문번호 발급 응답 실패:', orderNumberResponse.status);
+      throw new Error(`주문번호 발급 실패 (HTTP ${orderNumberResponse.status})`);
+    }
+    
     const orderNumberData = await orderNumberResponse.json();
+    console.log('📋 주문번호 발급 응답:', orderNumberData);
     
     if (!orderNumberData.success || !orderNumberData.order_number) {
-      throw new Error('주문번호 발급에 실패했습니다.');
+      console.error('❌ 주문번호 발급 실패:', orderNumberData);
+      throw new Error(orderNumberData.error || '주문번호 발급에 실패했습니다.');
     }
     
     const orderId = orderNumberData.order_number;
@@ -236,9 +244,20 @@ async function processPayment() {
     
   } catch (error) {
     console.error('❌ 결제 요청 오류:', error);
-    if (error.message) {
-      alert(`결제 요청 중 오류가 발생했습니다: ${error.message}`);
+    
+    // 더 자세한 에러 메시지 표시
+    let errorMessage = '결제 요청 중 오류가 발생했습니다.\n\n';
+    
+    if (error.code === 'USER_CANCEL') {
+      // 사용자가 결제창을 닫은 경우
+      console.log('ℹ️ 사용자가 결제를 취소했습니다.');
+      return; // alert 없이 그냥 종료
+    } else if (error.message) {
+      errorMessage += `오류: ${error.message}\n\n`;
     }
+    
+    errorMessage += '문제가 계속되면 고객센터로 문의해주세요.';
+    alert(errorMessage);
   }
 }
 
