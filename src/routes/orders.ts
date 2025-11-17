@@ -1013,4 +1013,71 @@ orders.get('/admin/:id/workshop-order-sheet', async (c) => {
   }
 });
 
+// 주문 삭제 (관리자 전용)
+orders.delete('/admin/:id', async (c) => {
+  try {
+    const orderId = parseInt(c.req.param('id'));
+    
+    console.log('주문 삭제 요청:', orderId);
+    
+    // 주문 존재 확인
+    const order = await c.env.DB.prepare(
+      'SELECT * FROM orders WHERE id = ?'
+    ).bind(orderId).first();
+    
+    if (!order) {
+      return c.json({ error: '주문을 찾을 수 없습니다' }, 404);
+    }
+    
+    // 결제 완료 상태 확인 (완료된 주문은 취소로 처리하는 것이 좋음)
+    if (order.payment_status === 'paid') {
+      console.log('⚠️ 결제 완료된 주문 삭제 시도:', {
+        orderId,
+        orderNumber: order.order_number,
+        paymentStatus: order.payment_status
+      });
+      
+      // 경고: 결제 완료 주문은 삭제 대신 취소 권장
+      // 하지만 테스트 데이터 정리 목적으로는 허용
+    }
+    
+    // 1. 주문 상품 삭제 (order_items)
+    const deleteItemsResult = await c.env.DB.prepare(
+      'DELETE FROM order_items WHERE order_id = ?'
+    ).bind(orderId).run();
+    
+    console.log('주문 상품 삭제 완료:', {
+      orderId,
+      deletedItems: deleteItemsResult.meta.changes
+    });
+    
+    // 2. 주문 삭제 (orders)
+    const deleteOrderResult = await c.env.DB.prepare(
+      'DELETE FROM orders WHERE id = ?'
+    ).bind(orderId).run();
+    
+    console.log('주문 삭제 완료:', {
+      orderId,
+      orderNumber: order.order_number,
+      deletedOrders: deleteOrderResult.meta.changes
+    });
+    
+    return c.json({
+      success: true,
+      message: '주문이 삭제되었습니다',
+      order_id: orderId,
+      order_number: order.order_number,
+      deleted_items: deleteItemsResult.meta.changes,
+      deleted_orders: deleteOrderResult.meta.changes
+    });
+    
+  } catch (error: any) {
+    console.error('주문 삭제 오류:', error);
+    return c.json({ 
+      error: '주문 삭제 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 export default orders;

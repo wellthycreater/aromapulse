@@ -112,6 +112,10 @@ function renderOrdersTable() {
               class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 mr-1">
             <i class="fas fa-eye"></i> 상세
           </button>
+          <button onclick="deleteOrder(${order.id}, '${order.order_number}')" 
+              class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+            <i class="fas fa-trash"></i> 삭제
+          </button>
         </td>
       </tr>
     `;
@@ -986,6 +990,118 @@ function showNotification(message, type = 'info') {
   setTimeout(() => {
     notification.remove();
   }, 3000);
+}
+
+// 주문 삭제
+async function deleteOrder(orderId, orderNumber) {
+  // 삭제 확인 모달 표시
+  const confirmed = await showDeleteConfirmModal(orderId, orderNumber);
+  
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch(`/api/orders/admin/${orderId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.details || error.error || '주문 삭제 실패');
+    }
+
+    const result = await response.json();
+    
+    console.log('주문 삭제 완료:', result);
+    showNotification(`주문 ${orderNumber}이(가) 삭제되었습니다.`, 'success');
+    
+    // 목록 새로고침
+    loadOrders();
+
+  } catch (error) {
+    console.error('주문 삭제 오류:', error);
+    showNotification(`주문 삭제 실패: ${error.message}`, 'error');
+  }
+}
+
+// 삭제 확인 모달 표시
+function showDeleteConfirmModal(orderId, orderNumber) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.id = 'delete-confirm-modal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+      <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <div class="text-center mb-6">
+          <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-exclamation-triangle text-red-600 text-3xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">주문을 삭제하시겠습니까?</h3>
+          <p class="text-gray-600 text-sm">
+            주문번호: <span class="font-mono font-bold text-red-600">${orderNumber}</span>
+          </p>
+          <p class="text-red-600 text-sm mt-2">
+            ⚠️ 이 작업은 되돌릴 수 없습니다!
+          </p>
+        </div>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <i class="fas fa-info-circle text-yellow-400"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-yellow-700">
+                <strong>주의:</strong> 결제 완료된 주문은 삭제 대신 <strong>취소</strong> 상태로 변경하는 것을 권장합니다.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex space-x-3">
+          <button id="delete-confirm-btn" 
+              class="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 font-semibold">
+            <i class="fas fa-trash mr-2"></i>삭제
+          </button>
+          <button id="delete-cancel-btn" 
+              class="flex-1 bg-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-400 font-semibold">
+            <i class="fas fa-times mr-2"></i>취소
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 확인 버튼 클릭
+    document.getElementById('delete-confirm-btn').addEventListener('click', () => {
+      modal.remove();
+      resolve(true);
+    });
+    
+    // 취소 버튼 클릭
+    document.getElementById('delete-cancel-btn').addEventListener('click', () => {
+      modal.remove();
+      resolve(false);
+    });
+    
+    // ESC 키로 닫기
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        modal.remove();
+        document.removeEventListener('keydown', escHandler);
+        resolve(false);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+  });
 }
 
 // 로그아웃
