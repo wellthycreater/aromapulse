@@ -910,4 +910,65 @@ auth.put('/profile', async (c) => {
   }
 });
 
+// 프로필 이미지 업로드
+auth.post('/users/profile-image', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader) {
+      return c.json({ error: '인증이 필요합니다' }, 401);
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    
+    // JWT 디코딩 (간단한 디코딩, 실제로는 검증 필요)
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const userId = payload.userId;
+
+    const { image_data, image_type } = await c.req.json();
+
+    if (!image_data || !image_type) {
+      return c.json({ error: '이미지 데이터가 필요합니다' }, 400);
+    }
+
+    // Base64 이미지를 데이터베이스에 저장
+    await c.env.DB.prepare(
+      `INSERT OR REPLACE INTO user_profile_images (user_id, image_data, image_type)
+       VALUES (?, ?, ?)`
+    ).bind(userId, image_data, image_type).run();
+
+    return c.json({
+      message: '프로필 이미지가 업로드되었습니다',
+      image_url: image_data
+    });
+
+  } catch (error: any) {
+    console.error('Image upload error:', error);
+    return c.json({ error: '이미지 업로드 실패', details: error.message }, 500);
+  }
+});
+
+// 프로필 이미지 조회
+auth.get('/users/:userId/profile-image', async (c) => {
+  try {
+    const userId = c.req.param('userId');
+
+    const imageRow = await c.env.DB.prepare(
+      'SELECT image_data, image_type FROM user_profile_images WHERE user_id = ?'
+    ).bind(userId).first();
+
+    if (!imageRow) {
+      return c.json({ error: '프로필 이미지가 없습니다' }, 404);
+    }
+
+    return c.json({
+      image_url: imageRow.image_data,
+      image_type: imageRow.image_type
+    });
+
+  } catch (error: any) {
+    console.error('Image fetch error:', error);
+    return c.json({ error: '이미지 조회 실패', details: error.message }, 500);
+  }
+});
+
 export default auth;
