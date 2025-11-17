@@ -289,9 +289,21 @@
 
         // 바로 구매
         function buyNow() {
+            if (!currentProduct) return;
+
+            const quantity = parseInt(document.getElementById('quantity').value);
+            
+            if (quantity > currentProduct.stock) {
+                showToast('재고가 부족합니다.', 'error');
+                return;
+            }
+
+            // 장바구니에 추가
             addToCart();
+            
+            // 결제 페이지로 이동
             setTimeout(() => {
-                window.location.href = '/static/cart.html';
+                window.location.href = '/checkout';
             }, 500);
         }
 
