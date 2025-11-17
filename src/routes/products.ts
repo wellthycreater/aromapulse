@@ -3,6 +3,31 @@ import type { Bindings } from '../types';
 
 const products = new Hono<{ Bindings: Bindings }>();
 
+// 제품 상세 조회 (단일 제품)
+products.get('/:id', async (c) => {
+  try {
+    const productId = parseInt(c.req.param('id'));
+    
+    if (isNaN(productId)) {
+      return c.json({ error: '유효하지 않은 제품 ID입니다' }, 400);
+    }
+    
+    const product = await c.env.DB.prepare(
+      'SELECT * FROM products WHERE id = ? AND is_active = 1'
+    ).bind(productId).first();
+    
+    if (!product) {
+      return c.json({ error: '제품을 찾을 수 없습니다' }, 404);
+    }
+    
+    return c.json(product);
+    
+  } catch (error: any) {
+    console.error('제품 상세 조회 오류:', error);
+    return c.json({ error: '제품 조회 실패', details: error.message }, 500);
+  }
+});
+
 // 제품 목록 조회 (필터링)
 products.get('/', async (c) => {
   try {
