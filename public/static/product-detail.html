@@ -163,13 +163,32 @@
                 const product = await response.json();
                 currentProduct = product;
 
+                // 카테고리 한글 변환
+                const categoryMap = {
+                    'insomnia': '불면증',
+                    'depression': '우울증',
+                    'anxiety': '불안',
+                    'stress': '스트레스',
+                    'refresh': '리프레시',
+                    'symptom_care': '증상 케어'
+                };
+
                 // UI 업데이트
                 document.getElementById('product-name').textContent = product.name;
                 document.getElementById('product-description').textContent = product.description || '향기로운 아로마 제품입니다.';
                 document.getElementById('product-price').textContent = product.price.toLocaleString();
-                document.getElementById('product-category').textContent = product.category || '-';
+                document.getElementById('product-category').textContent = categoryMap[product.category] || product.category || '-';
                 document.getElementById('product-volume').textContent = product.volume || '-';
-                document.getElementById('product-stock').textContent = product.stock > 0 ? `${product.stock}개` : '품절';
+                
+                // 재고 표시 개선
+                const stockElement = document.getElementById('product-stock');
+                if (product.stock > 0) {
+                    stockElement.textContent = `${product.stock}개`;
+                    stockElement.className = 'font-medium text-green-600';
+                } else {
+                    stockElement.textContent = '품절';
+                    stockElement.className = 'font-medium text-red-600';
+                }
 
                 // 컨셉 뱃지
                 const conceptBadge = document.getElementById('product-concept');
