@@ -729,4 +729,185 @@ auth.post('/admin-register', async (c) => {
   }
 });
 
+// 프로필 조회 (토큰 기반)
+auth.get('/profile', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ error: '인증이 필요합니다' }, 401);
+    }
+    
+    const token = authHeader.substring(7);
+    
+    // JWT 토큰 검증
+    const encoder = new TextEncoder();
+    const data = encoder.encode(token.split('.')[1]);
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    
+    // 사용자 정보 조회
+    const user = await c.env.DB.prepare(
+      `SELECT * FROM users WHERE id = ?`
+    ).bind(decoded.userId).first();
+    
+    if (!user) {
+      return c.json({ error: '사용자를 찾을 수 없습니다' }, 404);
+    }
+    
+    // 비밀번호 제외하고 반환
+    const { password_hash, ...userWithoutPassword } = user as any;
+    
+    return c.json({ user: userWithoutPassword });
+    
+  } catch (error: any) {
+    console.error('Profile fetch error:', error);
+    return c.json({ error: '프로필 조회 실패' }, 500);
+  }
+});
+
+// 프로필 업데이트
+auth.put('/profile', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ error: '인증이 필요합니다' }, 401);
+    }
+    
+    const token = authHeader.substring(7);
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    
+    const data = await c.req.json();
+    const {
+      name,
+      phone,
+      region,
+      age_group,
+      gender,
+      symptoms,
+      // B2C 추가 정보
+      daily_stress_category,
+      work_industry,
+      work_role,
+      company_size,
+      // B2B 추가 정보
+      business_name,
+      business_registration,
+      shop_type,
+      shop_address,
+      occupation,
+      experience_years,
+      website,
+      partnership_interests,
+      inquiry_details,
+      additional_info
+    } = data;
+    
+    // 업데이트할 필드 구성
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    
+    if (name !== undefined) {
+      updateFields.push('name = ?');
+      updateValues.push(name);
+    }
+    if (phone !== undefined) {
+      updateFields.push('phone = ?');
+      updateValues.push(phone);
+    }
+    if (region !== undefined) {
+      updateFields.push('region = ?');
+      updateValues.push(region);
+    }
+    if (age_group !== undefined) {
+      updateFields.push('age_group = ?');
+      updateValues.push(age_group);
+    }
+    if (gender !== undefined) {
+      updateFields.push('gender = ?');
+      updateValues.push(gender);
+    }
+    if (symptoms !== undefined) {
+      updateFields.push('symptoms = ?');
+      updateValues.push(JSON.stringify(symptoms));
+    }
+    
+    // B2C 필드
+    if (daily_stress_category !== undefined) {
+      updateFields.push('b2c_subcategory = ?');
+      updateValues.push(daily_stress_category);
+    }
+    if (work_industry !== undefined) {
+      updateFields.push('b2c_subcategory = ?');
+      updateValues.push(work_industry);
+    }
+    if (work_role !== undefined) {
+      updateFields.push('work_role = ?');
+      updateValues.push(work_role);
+    }
+    if (company_size !== undefined) {
+      updateFields.push('company_size = ?');
+      updateValues.push(company_size);
+    }
+    
+    // B2B 필드
+    if (business_name !== undefined) {
+      updateFields.push('b2b_business_name = ?');
+      updateValues.push(business_name);
+    }
+    if (business_registration !== undefined) {
+      updateFields.push('b2b_business_number = ?');
+      updateValues.push(business_registration);
+    }
+    if (shop_type !== undefined) {
+      updateFields.push('shop_type = ?');
+      updateValues.push(shop_type);
+    }
+    if (shop_address !== undefined) {
+      updateFields.push('b2b_address = ?');
+      updateValues.push(shop_address);
+    }
+    if (occupation !== undefined) {
+      updateFields.push('occupation = ?');
+      updateValues.push(occupation);
+    }
+    if (experience_years !== undefined) {
+      updateFields.push('experience_years = ?');
+      updateValues.push(experience_years);
+    }
+    if (website !== undefined) {
+      updateFields.push('website = ?');
+      updateValues.push(website);
+    }
+    if (additional_info !== undefined) {
+      updateFields.push('additional_info = ?');
+      updateValues.push(additional_info);
+    }
+    
+    if (updateFields.length === 0) {
+      return c.json({ error: '업데이트할 정보가 없습니다' }, 400);
+    }
+    
+    // 업데이트 실행
+    updateValues.push(decoded.userId);
+    await c.env.DB.prepare(
+      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`
+    ).bind(...updateValues).run();
+    
+    // 업데이트된 사용자 정보 조회
+    const user = await c.env.DB.prepare(
+      `SELECT * FROM users WHERE id = ?`
+    ).bind(decoded.userId).first();
+    
+    const { password_hash, ...userWithoutPassword } = user as any;
+    
+    return c.json({
+      message: '프로필이 업데이트되었습니다',
+      user: userWithoutPassword
+    });
+    
+  } catch (error: any) {
+    console.error('Profile update error:', error);
+    return c.json({ error: '프로필 업데이트 실패', details: error.message }, 500);
+  }
+});
+
 export default auth;

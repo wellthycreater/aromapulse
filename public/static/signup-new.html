@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .step { display: none; }
+        .step.active { display: block; }
+        
+        .user-type-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .user-type-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .user-type-card.selected {
+            border-color: #7c3aed;
+            background: linear-gradient(135deg, #f3e8ff 0%, #ffffff 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .animated-bg {
+            background: linear-gradient(-45deg, #7c3aed, #ec4899, #f59e0b, #10b981);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .checkbox-custom:checked {
+            background-color: #7c3aed;
+            border-color: #7c3aed;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="animated-bg min-h-screen">
+    <!-- Header -->
+    <header class="bg-white/95 backdrop-blur-sm shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center space-x-3">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-16">
+                    <div>
+                        <h1 class="text-xl font-bold gradient-text">아로마펄스</h1>
+                        <p class="text-xs text-gray-500">향기로운 힐링 여정</p>
+                    </div>
+                </a>
+                <div class="text-right">
+                    <p class="text-sm font-semibold text-gray-800">AromaPulse</p>
+                    <p class="text-xs text-gray-500">by 웰씨코리아</p>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Progress Bar -->
+            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-6">
+                <div class="flex justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div id="step-indicator-1" class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">1</div>
+                        <span class="text-sm font-semibold text-gray-700 hidden sm:block">사용자 유형</span>
+                    </div>
+                    <div class="flex-1 flex items-center mx-4">
+                        <div class="w-full h-1 bg-gray-200 rounded-full">
+                            <div id="progress-line-1" class="h-full bg-purple-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div id="step-indicator-2" class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold">2</div>
+                        <span class="text-sm font-semibold text-gray-400 hidden sm:block">기본 정보</span>
+                    </div>
+                    <div class="flex-1 flex items-center mx-4">
+                        <div class="w-full h-1 bg-gray-200 rounded-full">
+                            <div id="progress-line-2" class="h-full bg-purple-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div id="step-indicator-3" class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold">3</div>
+                        <span class="text-sm font-semibold text-gray-400 hidden sm:block">추가 정보</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: 사용자 유형 선택 -->
+            <div class="step active fade-in" id="step-1">
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold gradient-text mb-2">어떤 목적으로 가입하시나요?</h2>
+                        <p class="text-gray-600">맞춤형 서비스를 제공하기 위해 필요한 정보입니다</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-8">
+                        <!-- B2C 카드 -->
+                        <div class="user-type-card border-3 border-gray-200 rounded-2xl p-6 bg-white" onclick="selectUserType('B2C')">
+                            <div class="text-center mb-4">
+                                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-user text-white text-2xl"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-purple-600 mb-2">개인 고객</h3>
+                                <p class="text-sm text-gray-600">일상의 스트레스 관리와 힐링을 위한 개인 고객</p>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="flex items-center p-3 rounded-lg hover:bg-purple-50 transition cursor-pointer">
+                                    <input type="radio" name="user_type" value="B2C_daily" class="mr-3 w-5 h-5 text-purple-600">
+                                    <div>
+                                        <div class="font-semibold text-gray-800">일상 스트레스 관리</div>
+                                        <div class="text-xs text-gray-500">불면, 우울, 불안 증상 개선</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg hover:bg-purple-50 transition cursor-pointer">
+                                    <input type="radio" name="user_type" value="B2C_work" class="mr-3 w-5 h-5 text-purple-600">
+                                    <div>
+                                        <div class="font-semibold text-gray-800">직무 스트레스 관리</div>
+                                        <div class="text-xs text-gray-500">업무 스트레스 완화 및 집중력 향상</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- B2B 카드 -->
+                        <div class="user-type-card border-3 border-gray-200 rounded-2xl p-6 bg-white" onclick="selectUserType('B2B')">
+                            <div class="text-center mb-4">
+                                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-building text-white text-2xl"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-blue-600 mb-2">비즈니스 고객</h3>
+                                <p class="text-sm text-gray-600">파트너 제휴, 대량 납품, 제품 문의</p>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="flex items-center p-3 rounded-lg hover:bg-blue-50 transition cursor-pointer">
+                                    <input type="radio" name="user_type" value="B2B_perfumer" class="mr-3 w-5 h-5 text-blue-600">
+                                    <div>
+                                        <div class="font-semibold text-gray-800">조향사</div>
+                                        <div class="text-xs text-gray-500">파트너 제휴 및 협업</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg hover:bg-blue-50 transition cursor-pointer">
+                                    <input type="radio" name="user_type" value="B2B_company" class="mr-3 w-5 h-5 text-blue-600">
+                                    <div>
+                                        <div class="font-semibold text-gray-800">기업</div>
+                                        <div class="text-xs text-gray-500">대량 납품 및 기업 클래스</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg hover:bg-blue-50 transition cursor-pointer">
+                                    <input type="radio" name="user_type" value="B2B_shop" class="mr-3 w-5 h-5 text-blue-600">
+                                    <div>
+                                        <div class="font-semibold text-gray-800">매장</div>
+                                        <div class="text-xs text-gray-500">제품 입점 및 공급 문의</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg hover:bg-blue-50 transition cursor-pointer">
+                                    <input type="radio" name="user_type" value="B2B_independent" class="mr-3 w-5 h-5 text-blue-600">
+                                    <div>
+                                        <div class="font-semibold text-gray-800">독립 직군</div>
+                                        <div class="text-xs text-gray-500">프리랜서 및 개인 사업자</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button onclick="location.href='/'" class="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl hover:bg-gray-300 font-bold transition shadow-md">
+                            <i class="fas fa-arrow-left mr-2"></i>취소
+                        </button>
+                        <button onclick="nextStep()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 font-bold transition shadow-lg">
+                            다음 단계<i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: 기본 정보 -->
+            <div class="step fade-in" id="step-2">
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold gradient-text mb-2">기본 정보를 입력해주세요</h2>
+                        <p class="text-gray-600">회원가입에 필요한 기본 정보입니다</p>
+                    </div>
+                    
+                    <form id="basic-info-form" class="space-y-5">
+                        <div class="grid md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-bold mb-2 text-gray-700">
+                                    <i class="fas fa-user text-purple-600 mr-2"></i>이름 *
+                                </label>
+                                <input type="text" name="name" required 
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition"
+                                    placeholder="홍길동">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-bold mb-2 text-gray-700">
+                                    <i class="fas fa-phone text-purple-600 mr-2"></i>휴대폰 번호
+                                </label>
+                                <input type="tel" name="phone" 
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition"
+                                    placeholder="010-1234-5678">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-gray-700">
+                                <i class="fas fa-envelope text-purple-600 mr-2"></i>이메일 *
+                            </label>
+                            <input type="email" name="email" required 
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition"
+                                placeholder="your@email.com">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-gray-700">
+                                <i class="fas fa-lock text-purple-600 mr-2"></i>비밀번호 *
+                            </label>
+                            <input type="password" name="password" required minlength="8" 
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition"
+                                placeholder="8자 이상 입력">
+                            <p class="text-xs text-gray-500 mt-1 ml-1">영문, 숫자 조합 8자 이상</p>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-3 gap-5">
+                            <div>
+                                <label class="block text-sm font-bold mb-2 text-gray-700">
+                                    <i class="fas fa-map-marker-alt text-purple-600 mr-2"></i>지역 *
+                                </label>
+                                <select name="region" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition">
+                                    <option value="">선택하세요</option>
+                                    <option value="서울">서울</option>
+                                    <option value="경기">경기</option>
+                                    <option value="인천">인천</option>
+                                    <option value="부산">부산</option>
+                                    <option value="대구">대구</option>
+                                    <option value="대전">대전</option>
+                                    <option value="광주">광주</option>
+                                    <option value="울산">울산</option>
+                                    <option value="세종">세종</option>
+                                    <option value="강원">강원</option>
+                                    <option value="충북">충북</option>
+                                    <option value="충남">충남</option>
+                                    <option value="전북">전북</option>
+                                    <option value="전남">전남</option>
+                                    <option value="경북">경북</option>
+                                    <option value="경남">경남</option>
+                                    <option value="제주">제주</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold mb-2 text-gray-700">
+                                    <i class="fas fa-birthday-cake text-purple-600 mr-2"></i>연령대 *
+                                </label>
+                                <select name="age_group" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition">
+                                    <option value="">선택하세요</option>
+                                    <option value="10s">10대</option>
+                                    <option value="20s">20대</option>
+                                    <option value="30s">30대</option>
+                                    <option value="40s">40대</option>
+                                    <option value="50s">50대</option>
+                                    <option value="60s_plus">60대 이상</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold mb-2 text-gray-700">
+                                    <i class="fas fa-venus-mars text-purple-600 mr-2"></i>성별
+                                </label>
+                                <select name="gender" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition">
+                                    <option value="">선택하세요</option>
+                                    <option value="male">남성</option>
+                                    <option value="female">여성</option>
+                                    <option value="other">기타</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold mb-3 text-gray-700">
+                                <i class="fas fa-heart-pulse text-purple-600 mr-2"></i>관심 증상 (복수 선택 가능)
+                            </label>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-400 transition cursor-pointer">
+                                    <input type="checkbox" name="symptoms" value="insomnia" class="checkbox-custom mr-3 w-5 h-5 rounded">
+                                    <span class="font-medium">😴 불면증</span>
+                                </label>
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-400 transition cursor-pointer">
+                                    <input type="checkbox" name="symptoms" value="depression" class="checkbox-custom mr-3 w-5 h-5 rounded">
+                                    <span class="font-medium">😔 우울감</span>
+                                </label>
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-400 transition cursor-pointer">
+                                    <input type="checkbox" name="symptoms" value="anxiety" class="checkbox-custom mr-3 w-5 h-5 rounded">
+                                    <span class="font-medium">😰 불안감</span>
+                                </label>
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-400 transition cursor-pointer">
+                                    <input type="checkbox" name="symptoms" value="stress" class="checkbox-custom mr-3 w-5 h-5 rounded">
+                                    <span class="font-medium">😤 스트레스</span>
+                                </label>
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-400 transition cursor-pointer">
+                                    <input type="checkbox" name="symptoms" value="focus" class="checkbox-custom mr-3 w-5 h-5 rounded">
+                                    <span class="font-medium">🎯 집중력 저하</span>
+                                </label>
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-400 transition cursor-pointer">
+                                    <input type="checkbox" name="symptoms" value="refresh" class="checkbox-custom mr-3 w-5 h-5 rounded">
+                                    <span class="font-medium">✨ 리프레시</span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="flex gap-4 mt-8">
+                        <button onclick="prevStep()" class="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl hover:bg-gray-300 font-bold transition shadow-md">
+                            <i class="fas fa-arrow-left mr-2"></i>이전
+                        </button>
+                        <button onclick="nextStep()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 font-bold transition shadow-lg">
+                            다음 단계<i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: 추가 정보 -->
+            <div class="step fade-in" id="step-3">
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold gradient-text mb-2">추가 정보를 입력해주세요</h2>
+                        <p class="text-gray-600">더 나은 서비스 제공을 위한 선택 정보입니다</p>
+                    </div>
+                    
+                    <div id="detail-form-container" class="space-y-6">
+                        <!-- JavaScript로 동적 생성 -->
+                    </div>
+
+                    <div class="flex gap-4 mt-8">
+                        <button onclick="prevStep()" class="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl hover:bg-gray-300 font-bold transition shadow-md">
+                            <i class="fas fa-arrow-left mr-2"></i>이전
+                        </button>
+                        <button onclick="submitSignup()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 font-bold transition shadow-lg transform hover:scale-105">
+                            <i class="fas fa-check mr-2"></i>가입 완료
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 웰씨코리아 푸터 -->
+        <div class="mt-8 text-center pb-8">
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 max-w-2xl mx-auto">
+                <img src="/static/wellthy-korea-footer.png" alt="웰씨코리아" class="mx-auto" style="max-width: 500px; width: 100%;">
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/signup-new.js"></script>
+</body>
+</html>
