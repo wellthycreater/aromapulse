@@ -32,13 +32,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
   
-  // 회원가입 버튼
+  // 회원가입 버튼 - 챗봇 상담 결과를 회원가입으로 전달
   document.getElementById('signup-btn').addEventListener('click', () => {
     trackConversion(); // 전환 추적
-    if (detectedUserType === 'B2B') {
-      window.location.href = 'https://www.aromapulse.kr/signup?type=B2B';
+    
+    // 세션 ID를 회원가입 페이지로 전달
+    if (sessionId) {
+      window.location.href = `/static/signup-from-chatbot.html?session_id=${sessionId}`;
     } else {
-      window.location.href = 'https://www.aromapulse.kr/signup?type=B2C';
+      // 세션 ID가 없는 경우 (예외 처리)
+      alert('챗봇 세션이 만료되었습니다. 페이지를 새로고침해주세요.');
+      window.location.reload();
     }
   });
   
