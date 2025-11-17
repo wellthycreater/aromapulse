@@ -808,6 +808,11 @@ orders.post('/confirm-payment', async (c) => {
     }
 
     // 주문 생성 (production DB schema에 정확히 맞춤)
+    // total_amount는 상품 금액, final_amount는 총 결제 금액 (상품 + 배송비)
+    const productAmount = orderData.product_amount || orderData.total_amount || 0;
+    const deliveryFee = orderData.delivery_fee || 0;
+    const finalAmount = orderData.final_amount || (productAmount + deliveryFee);
+    
     const orderResult = await c.env.DB.prepare(`
       INSERT INTO orders (
         order_number,
@@ -818,9 +823,9 @@ orders.post('/confirm-payment', async (c) => {
         customer_address,
         customer_address_detail,
         delivery_message,
-        product_amount,
         delivery_fee,
         total_amount,
+        final_amount,
         payment_method,
         payment_status,
         order_status,
@@ -836,11 +841,11 @@ orders.post('/confirm-payment', async (c) => {
       orderData.customer_phone,
       orderData.customer_zipcode || null,
       orderData.customer_address || null,
-      orderData.customer_detail_address || null,
+      orderData.customer_address_detail || null,
       orderData.delivery_message || null,
-      orderData.product_amount || orderData.total_amount,
-      orderData.delivery_fee,
-      orderData.final_amount || orderData.total_amount,
+      deliveryFee,
+      productAmount,
+      finalAmount,
       tossData.method || '간편결제',
       paymentKey,
       new Date().toISOString(),
