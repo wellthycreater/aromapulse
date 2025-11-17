@@ -6,341 +6,254 @@
     <title>제품 상세 - AromaPulse</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 네이버 스마트스토어 스타일 커스텀 CSS */
+        .product-image-main {
+            border: 1px solid #e5e7eb;
+        }
+        
+        .product-info-table {
+            border-top: 2px solid #333;
+        }
+        
+        .product-info-table tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .product-info-table th {
+            background-color: #f9fafb;
+            font-weight: 500;
+        }
+        
+        .tab-button {
+            position: relative;
+            padding: 16px 24px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab-button.active {
+            color: #7c3aed;
+            border-bottom-color: #7c3aed;
+            font-weight: 600;
+        }
+        
+        .sticky-purchase-bar {
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-white">
     <!-- 헤더 -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+    <header class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <button onclick="goBack()" class="text-gray-600 hover:text-gray-900">
                     <i class="fas fa-arrow-left text-xl"></i>
                 </button>
                 <a href="/" class="flex items-center space-x-2">
-                    <img src="/static/logo-light.png" alt="AromaPulse" class="h-8">
-                    <span class="text-xl font-bold text-purple-600">AromaPulse</span>
+                    <img src="/static/logo-light.png" alt="AromaPulse" class="h-7">
+                    <span class="text-lg font-bold text-purple-600">아로마펄스</span>
                 </a>
             </div>
-            <div class="flex items-center space-x-4">
-                <a href="/" class="text-gray-600 hover:text-gray-900">
-                    <i class="fas fa-home"></i> 홈
+            <div class="flex items-center space-x-6">
+                <a href="/shop" class="text-gray-700 hover:text-purple-600 text-sm">
+                    <i class="fas fa-th mr-1"></i>전체상품
                 </a>
-                <a href="/static/cart" class="text-gray-600 hover:text-gray-900 relative">
-                    <i class="fas fa-shopping-cart"></i> 장바구니
-                    <span id="cart-count" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                <a href="/static/cart" class="text-gray-700 hover:text-purple-600 relative">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span id="cart-count" class="hidden absolute -top-1 -right-2 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold">0</span>
                 </a>
             </div>
         </div>
     </header>
 
-    <!-- 로딩 인디케이터 -->
-    <div id="loading" class="flex items-center justify-center py-20">
+    <!-- 로딩 -->
+    <div id="loading" class="flex items-center justify-center py-32">
         <div class="text-center">
-            <i class="fas fa-spinner fa-spin text-4xl text-purple-600"></i>
-            <p class="mt-4 text-gray-600">제품 정보를 불러오는 중...</p>
+            <i class="fas fa-spinner fa-spin text-5xl text-purple-600 mb-4"></i>
+            <p class="text-gray-600">제품 정보를 불러오는 중...</p>
         </div>
     </div>
 
-    <!-- 제품 상세 컨텐츠 -->
-    <div id="product-detail" class="hidden max-w-7xl mx-auto px-4 py-8">
-        <!-- 상단: 대표 이미지 + 기본 정보 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <!-- 대표 이미지 -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <img id="product-thumbnail" src="" alt="제품 이미지" class="w-full rounded-lg object-contain" style="max-height: 500px;">
-            </div>
-
-            <!-- 제품 기본 정보 -->
-            <div class="bg-white rounded-xl shadow-lg p-8">
-                <div class="mb-6">
-                    <span id="product-concept" class="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold mb-3"></span>
-                    <h1 id="product-name" class="text-3xl font-bold text-gray-900 mb-4"></h1>
-                    <p id="product-description" class="text-gray-600 leading-relaxed mb-6"></p>
+    <!-- 메인 컨텐츠 -->
+    <div id="product-detail" class="hidden">
+        <!-- 제품 정보 영역 (이미지 + 구매 정보) -->
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- 왼쪽: 제품 이미지 -->
+                <div class="space-y-4">
+                    <div class="product-image-main bg-gray-50 rounded-lg overflow-hidden">
+                        <img id="product-thumbnail" src="" alt="제품 이미지" class="w-full h-auto object-contain" style="max-height: 600px;">
+                    </div>
                 </div>
 
-                <!-- 가격 정보 -->
-                <div class="border-t border-b border-gray-200 py-6 mb-6">
-                    <div class="flex items-baseline justify-between">
-                        <span class="text-gray-600">판매가</span>
-                        <div class="text-right">
-                            <span id="product-price" class="text-3xl font-bold text-purple-600"></span>
-                            <span class="text-xl text-gray-600">원</span>
+                <!-- 오른쪽: 제품 정보 및 구매 옵션 -->
+                <div class="space-y-6">
+                    <!-- 상품명 -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span id="product-concept" class="px-3 py-1 bg-purple-100 text-purple-700 rounded text-sm font-semibold"></span>
+                        </div>
+                        <h1 id="product-name" class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3"></h1>
+                        <p id="product-description" class="text-gray-600 leading-relaxed"></p>
+                    </div>
+
+                    <!-- 가격 -->
+                    <div class="border-t border-b py-6">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-700 text-lg">판매가</span>
+                            <div class="text-right">
+                                <span id="product-price" class="text-3xl lg:text-4xl font-bold text-gray-900"></span>
+                                <span class="text-2xl text-gray-600">원</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 제품 세부 정보 -->
-                <div class="space-y-3 mb-8">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">카테고리</span>
-                        <span id="product-category" class="font-medium text-gray-900"></span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">용량</span>
-                        <span id="product-volume" class="font-medium text-gray-900"></span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">재고</span>
-                        <span id="product-stock" class="font-medium text-gray-900"></span>
-                    </div>
-                </div>
+                    <!-- 상품 정보 테이블 -->
+                    <table class="product-info-table w-full text-sm">
+                        <tr>
+                            <th class="text-left py-3 px-4 w-32">카테고리</th>
+                            <td id="product-category" class="py-3 px-4 text-gray-700"></td>
+                        </tr>
+                        <tr>
+                            <th class="text-left py-3 px-4">용량</th>
+                            <td id="product-volume" class="py-3 px-4 text-gray-700"></td>
+                        </tr>
+                        <tr>
+                            <th class="text-left py-3 px-4">배송비</th>
+                            <td class="py-3 px-4 text-gray-700">3,000원 (30,000원 이상 무료배송)</td>
+                        </tr>
+                        <tr>
+                            <th class="text-left py-3 px-4">재고</th>
+                            <td class="py-3 px-4">
+                                <span id="product-stock" class="font-semibold"></span>
+                            </td>
+                        </tr>
+                    </table>
 
-                <!-- 수량 선택 -->
-                <div class="flex items-center space-x-4 mb-6">
-                    <span class="text-gray-700 font-medium">수량</span>
-                    <div class="flex items-center border border-gray-300 rounded-lg">
-                        <button onclick="decreaseQuantity()" class="px-4 py-2 text-gray-600 hover:bg-gray-100">
-                            <i class="fas fa-minus"></i>
+                    <!-- 수량 선택 -->
+                    <div class="bg-gray-50 rounded-lg p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="font-semibold text-gray-900">수량</span>
+                            <div class="flex items-center border-2 border-gray-300 rounded">
+                                <button onclick="decreaseQuantity()" class="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">
+                                    <i class="fas fa-minus text-sm"></i>
+                                </button>
+                                <input type="number" id="quantity" value="1" min="1" 
+                                    class="w-16 h-10 text-center border-x-2 border-gray-300 font-semibold" readonly>
+                                <button onclick="increaseQuantity()" class="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">
+                                    <i class="fas fa-plus text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 총 금액 -->
+                        <div class="flex items-center justify-between pt-4 border-t">
+                            <span class="text-lg font-semibold text-gray-900">총 상품금액</span>
+                            <div class="text-right">
+                                <span id="total-price" class="text-3xl font-bold text-purple-600"></span>
+                                <span class="text-xl text-gray-600">원</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 구매 버튼 -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="addToCart()" 
+                            class="py-4 bg-white border-2 border-purple-600 text-purple-600 rounded-lg font-bold text-lg hover:bg-purple-50 transition">
+                            <i class="fas fa-shopping-cart mr-2"></i>장바구니
                         </button>
-                        <input type="number" id="quantity" value="1" min="1" class="w-16 text-center border-x border-gray-300 py-2" readonly>
-                        <button onclick="increaseQuantity()" class="px-4 py-2 text-gray-600 hover:bg-gray-100">
-                            <i class="fas fa-plus"></i>
+                        <button onclick="buyNow()" 
+                            class="py-4 bg-purple-600 text-white rounded-lg font-bold text-lg hover:bg-purple-700 transition">
+                            <i class="fas fa-credit-card mr-2"></i>구매하기
                         </button>
                     </div>
-                </div>
 
-                <!-- 액션 버튼 -->
-                <div>
-                    <button onclick="addToCart()" class="w-full bg-purple-600 text-white py-4 rounded-lg hover:bg-purple-700 transition font-semibold text-lg">
-                        <i class="fas fa-shopping-cart mr-2"></i>
-                        장바구니 담기
+                    <!-- 안내 문구 -->
+                    <div class="text-center text-sm text-gray-500 pt-2">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        안전한 결제 시스템을 이용합니다
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 탭 메뉴 -->
+        <div class="border-t-2 border-gray-200 sticky top-[57px] bg-white z-40">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex">
+                    <button class="tab-button active" onclick="switchTab('detail')">
+                        <i class="fas fa-info-circle mr-2"></i>상세정보
                     </button>
-                    <p class="text-sm text-gray-500 text-center mt-3">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        장바구니에 담긴 상품은 상단 장바구니 아이콘에서 확인하세요
-                    </p>
+                    <button class="tab-button" onclick="switchTab('review')">
+                        <i class="fas fa-star mr-2"></i>리뷰 (0)
+                    </button>
+                    <button class="tab-button" onclick="switchTab('qna')">
+                        <i class="fas fa-question-circle mr-2"></i>문의 (0)
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- 하단: 상세 이미지 -->
-        <div class="bg-white rounded-xl shadow-lg p-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">
-                <i class="fas fa-info-circle text-purple-600 mr-2"></i>
-                상세 정보
-            </h2>
-            <div class="border-t border-gray-200 pt-6">
-                <img id="product-detail-image" src="" alt="상세 이미지" class="w-full rounded-lg">
+        <!-- 탭 컨텐츠 -->
+        <div class="max-w-7xl mx-auto px-4 py-12">
+            <!-- 상세정보 탭 -->
+            <div id="tab-detail" class="tab-content">
+                <div class="bg-white">
+                    <img id="product-detail-image" src="" alt="상세 이미지" class="w-full h-auto">
+                </div>
+            </div>
+
+            <!-- 리뷰 탭 -->
+            <div id="tab-review" class="tab-content hidden">
+                <div class="text-center py-20 text-gray-500">
+                    <i class="fas fa-comment-dots text-6xl mb-4"></i>
+                    <p class="text-lg">아직 작성된 리뷰가 없습니다.</p>
+                </div>
+            </div>
+
+            <!-- 문의 탭 -->
+            <div id="tab-qna" class="tab-content hidden">
+                <div class="text-center py-20 text-gray-500">
+                    <i class="fas fa-question-circle text-6xl mb-4"></i>
+                    <p class="text-lg">아직 작성된 문의가 없습니다.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 알림 토스트 -->
-    <div id="toast" class="hidden fixed top-20 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in-down">
-        <div class="flex items-center space-x-2">
-            <i class="fas fa-check-circle"></i>
-            <span id="toast-message">장바구니에 추가되었습니다!</span>
+    <!-- 하단 고정 구매 바 (모바일) -->
+    <div id="sticky-bar" class="lg:hidden fixed bottom-0 left-0 right-0 bg-white sticky-purchase-bar z-50 hidden">
+        <div class="grid grid-cols-2 gap-2 p-3">
+            <button onclick="addToCart()" 
+                class="py-3 bg-white border-2 border-purple-600 text-purple-600 rounded-lg font-bold hover:bg-purple-50 transition">
+                <i class="fas fa-shopping-cart mr-1"></i>장바구니
+            </button>
+            <button onclick="buyNow()" 
+                class="py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition">
+                <i class="fas fa-credit-card mr-1"></i>구매하기
+            </button>
         </div>
     </div>
 
-    <script>
-        let currentProduct = null;
+    <!-- 토스트 알림 -->
+    <div id="toast" class="hidden fixed top-20 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-[60]">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-check-circle text-xl"></i>
+            <span id="toast-message" class="font-semibold"></span>
+        </div>
+    </div>
 
-        // URL에서 제품 ID 가져오기
-        const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('id');
-
-        // 페이지 로드 시 제품 정보 가져오기
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (!productId) {
-                alert('제품 ID가 없습니다.');
-                window.location.href = '/';
-                return;
-            }
-
-            await loadProductDetail();
-            updateCartCount();
-        });
-
-        // 제품 상세 정보 로드
-        async function loadProductDetail() {
-            try {
-                const response = await fetch(`/api/products/${productId}`);
-                
-                if (!response.ok) {
-                    throw new Error('제품 정보를 불러올 수 없습니다.');
-                }
-
-                const product = await response.json();
-                currentProduct = product;
-
-                // 카테고리 한글 변환
-                const categoryMap = {
-                    'insomnia': '불면증',
-                    'depression': '우울증',
-                    'anxiety': '불안',
-                    'stress': '스트레스',
-                    'refresh': '리프레시',
-                    'symptom_care': '증상 케어'
-                };
-
-                // UI 업데이트
-                document.getElementById('product-name').textContent = product.name;
-                document.getElementById('product-description').textContent = product.description || '향기로운 아로마 제품입니다.';
-                document.getElementById('product-price').textContent = product.price.toLocaleString();
-                document.getElementById('product-category').textContent = categoryMap[product.category] || product.category || '-';
-                document.getElementById('product-volume').textContent = product.volume || '-';
-                
-                // 재고 표시 개선
-                const stockElement = document.getElementById('product-stock');
-                if (product.stock > 0) {
-                    stockElement.textContent = `${product.stock}개`;
-                    stockElement.className = 'font-medium text-green-600';
-                } else {
-                    stockElement.textContent = '품절';
-                    stockElement.className = 'font-medium text-red-600';
-                }
-
-                // 컨셉 뱃지
-                const conceptBadge = document.getElementById('product-concept');
-                if (product.concept === 'symptom_care') {
-                    conceptBadge.textContent = '증상 케어';
-                    conceptBadge.className = 'inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mb-3';
-                } else {
-                    conceptBadge.textContent = '리프레시';
-                    conceptBadge.className = 'inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mb-3';
-                }
-
-                // 이미지 설정
-                if (product.thumbnail_image) {
-                    document.getElementById('product-thumbnail').src = product.thumbnail_image;
-                } else if (product.main_image) {
-                    document.getElementById('product-thumbnail').src = product.main_image;
-                }
-
-                if (product.detail_image) {
-                    document.getElementById('product-detail-image').src = product.detail_image;
-                } else {
-                    document.getElementById('product-detail-image').parentElement.innerHTML = '<p class="text-gray-500 text-center py-8">상세 이미지가 준비 중입니다.</p>';
-                }
-
-                // 로딩 숨기고 컨텐츠 표시
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('product-detail').classList.remove('hidden');
-
-            } catch (error) {
-                console.error('제품 로드 오류:', error);
-                alert('제품 정보를 불러오는데 실패했습니다.');
-                window.location.href = '/';
-            }
-        }
-
-        // 수량 증가
-        function increaseQuantity() {
-            const quantityInput = document.getElementById('quantity');
-            const currentValue = parseInt(quantityInput.value);
-            const stock = currentProduct.stock;
-
-            if (currentValue < stock) {
-                quantityInput.value = currentValue + 1;
-            } else {
-                showToast('재고가 부족합니다.', 'error');
-            }
-        }
-
-        // 수량 감소
-        function decreaseQuantity() {
-            const quantityInput = document.getElementById('quantity');
-            const currentValue = parseInt(quantityInput.value);
-
-            if (currentValue > 1) {
-                quantityInput.value = currentValue - 1;
-            }
-        }
-
-        // 장바구니에 추가
-        function addToCart() {
-            if (!currentProduct) return;
-
-            const quantity = parseInt(document.getElementById('quantity').value);
-            
-            if (quantity > currentProduct.stock) {
-                showToast('재고가 부족합니다.', 'error');
-                return;
-            }
-
-            // 로컬 스토리지에서 장바구니 가져오기
-            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-
-            // 이미 있는 상품인지 확인
-            const existingIndex = cart.findIndex(item => item.id === currentProduct.id);
-
-            if (existingIndex >= 0) {
-                // 수량 업데이트
-                cart[existingIndex].quantity += quantity;
-            } else {
-                // 새 상품 추가
-                cart.push({
-                    id: currentProduct.id,
-                    name: currentProduct.name,
-                    price: currentProduct.price,
-                    quantity: quantity,
-                    image: currentProduct.thumbnail_image || currentProduct.main_image,
-                    concept: currentProduct.concept
-                });
-            }
-
-            // 저장
-            localStorage.setItem('cart', JSON.stringify(cart));
-
-            // 알림 표시
-            showToast('장바구니에 추가되었습니다!', 'success');
-            updateCartCount();
-        }
-
-        // 장바구니 개수 업데이트
-        function updateCartCount() {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-            
-            const cartCountEl = document.getElementById('cart-count');
-            if (count > 0) {
-                cartCountEl.textContent = count;
-                cartCountEl.classList.remove('hidden');
-            } else {
-                cartCountEl.classList.add('hidden');
-            }
-        }
-
-        // 토스트 알림
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            
-            toastMessage.textContent = message;
-            
-            if (type === 'error') {
-                toast.className = 'fixed top-20 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in-down';
-            } else {
-                toast.className = 'fixed top-20 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in-down';
-            }
-            
-            toast.classList.remove('hidden');
-            
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3000);
-        }
-
-        // 뒤로 가기
-        function goBack() {
-            window.history.back();
-        }
-    </script>
-
-    <style>
-        @keyframes fade-in-down {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-fade-in-down {
-            animation: fade-in-down 0.3s ease-out;
-        }
-    </style>
+    <script src="/static/product-detail.js"></script>
 </body>
 </html>
