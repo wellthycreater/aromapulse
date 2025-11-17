@@ -44,7 +44,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!response.ok) {
       console.error('❌ 결제 승인 실패:', result);
-      throw new Error(result.error || result.details || '결제 승인 실패');
+      console.error('❌ 에러 상세:', {
+        error: result.error,
+        details: result.details,
+        code: result.code,
+        message: result.message
+      });
+      throw new Error(result.details || result.message || result.error || '결제 승인 실패');
     }
 
     // 성공 처리

@@ -724,7 +724,17 @@ orders.post('/confirm-payment', async (c) => {
 
     // 토스페이먼츠 API로 결제 승인 요청
     console.log('토스페이먼츠 API 호출 시작');
-    const tossSecretKey = c.env.TOSS_SECRET_KEY || 'test_sk_ma60RZblrq7YNqnEzPKb3wzYWBn1';
+    const tossSecretKey = c.env.TOSS_SECRET_KEY;
+    
+    if (!tossSecretKey) {
+      console.error('❌ TOSS_SECRET_KEY 환경 변수가 설정되지 않았습니다');
+      return c.json({ 
+        error: '결제 시스템 설정 오류', 
+        details: 'TOSS_SECRET_KEY가 설정되지 않았습니다' 
+      }, 500);
+    }
+    
+    console.log('✅ TOSS_SECRET_KEY 사용 중 (앞 10자):', tossSecretKey.substring(0, 10) + '...');
     const encodedKey = btoa(tossSecretKey + ':');
 
     const tossResponse = await fetch('https://api.tosspayments.com/v1/payments/confirm', {
