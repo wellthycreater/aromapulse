@@ -2298,51 +2298,45 @@ async function uploadClassImage() {
     return;
   }
   
+  // 파일 크기 체크 (500KB)
+  const maxSize = 500 * 1024; // 500KB
+  if (file.size > maxSize) {
+    alert(`이미지 파일 크기는 500KB 이하여야 합니다.\n현재 크기: ${Math.round(file.size / 1024)}KB`);
+    return;
+  }
+  
   try {
-    // Base64로 변환
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      const base64Data = e.target.result;
-      
-      try {
-        const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
-        
-        const response = await fetch('/api/upload-image', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            image: base64Data,
-            folder: 'classes'
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error('이미지 업로드 실패');
-        }
-        
-        const result = await response.json();
-        
-        document.getElementById('class-image-preview').style.display = 'block';
-        document.getElementById('class-image-preview-img').src = result.url;
-        document.getElementById('class-image-url').textContent = result.url;
-        document.getElementById('class-image-url-hidden').value = result.url;
-        
-        alert('이미지가 업로드되었습니다.');
-        
-      } catch (error) {
-        console.error('이미지 업로드 오류:', error);
-        alert('이미지 업로드에 실패했습니다.');
-      }
-    };
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
     
-    reader.readAsDataURL(file);
+    // FormData로 전송
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await fetch('/api/admin-products/upload-image', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || '이미지 업로드 실패');
+    }
+    
+    const result = await response.json();
+    
+    document.getElementById('class-image-preview').style.display = 'block';
+    document.getElementById('class-image-preview-img').src = result.url;
+    document.getElementById('class-image-url').textContent = result.url;
+    document.getElementById('class-image-url-hidden').value = result.url;
+    
+    alert('이미지가 업로드되었습니다.');
     
   } catch (error) {
-    console.error('파일 읽기 오류:', error);
-    alert('파일을 읽는데 실패했습니다.');
+    console.error('이미지 업로드 오류:', error);
+    alert(`이미지 업로드에 실패했습니다:\n${error.message}`);
   }
 }
 
