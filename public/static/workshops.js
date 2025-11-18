@@ -76,7 +76,8 @@ function viewWorkshop(id) {
 // 워크샵 목록 로드
 async function loadWorkshops() {
     try {
-        const response = await fetch('/api/workshops?limit=100');
+        // type=workshop 파라미터로 B2B 워크샵만 가져오기
+        const response = await fetch('/api/workshops?limit=100&type=workshop');
         
         if (response.ok) {
             allWorkshops = await response.json();

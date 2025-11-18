@@ -40,7 +40,8 @@ function viewClass(id) {
 // 클래스 목록 로드
 async function loadClasses() {
     try {
-        const response = await fetch('/api/workshops?limit=100');
+        // type=class 파라미터로 원데이 클래스만 가져오기
+        const response = await fetch('/api/workshops?limit=100&type=class');
         
         if (response.ok) {
             allClasses = await response.json();

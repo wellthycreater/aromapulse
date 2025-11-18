@@ -7,15 +7,23 @@ const workshops = new Hono<{ Bindings: Bindings }>();
 workshops.get('/', async (c) => {
   try {
     const limit = c.req.query('limit') || '10';
+    const type = c.req.query('type'); // 'workshop' or 'class'
     
-    const result = await c.env.DB.prepare(
-      `SELECT w.*, u.name as provider_name 
+    let query = `SELECT w.*, u.name as provider_name 
        FROM workshops w
        JOIN users u ON w.provider_id = u.id
-       WHERE w.is_active = 1
-       ORDER BY w.created_at DESC
-       LIMIT ?`
-    ).bind(parseInt(limit)).all();
+       WHERE w.is_active = 1`;
+    
+    // type 파라미터가 있으면 필터링
+    if (type === 'workshop') {
+      query += ` AND w.type = 'workshop'`;
+    } else if (type === 'class') {
+      query += ` AND w.type = 'class'`;
+    }
+    
+    query += ` ORDER BY w.created_at DESC LIMIT ?`;
+    
+    const result = await c.env.DB.prepare(query).bind(parseInt(limit)).all();
     
     return c.json(result.results);
     
