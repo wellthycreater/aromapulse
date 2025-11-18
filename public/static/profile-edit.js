@@ -59,8 +59,6 @@ async function loadUserProfile() {
                 document.getElementById('gender-male').checked = true;
             } else if (user.gender === '여성') {
                 document.getElementById('gender-female').checked = true;
-            } else {
-                document.getElementById('gender-other').checked = true;
             }
         }
         
