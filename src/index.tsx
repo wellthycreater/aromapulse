@@ -21,6 +21,7 @@ import blogReviewsRoutes from './routes/blog-reviews';
 import ordersRoutes from './routes/orders';
 import userRoutes from './routes/user';
 import onedayClassesRoutes from './routes/oneday-classes';
+import workshopQuotesRoutes from './routes/workshop-quotes';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -48,6 +49,7 @@ app.route('/api/blog-reviews', blogReviewsRoutes);
 app.route('/api/orders', ordersRoutes);
 app.route('/api/user', userRoutes);
 app.route('/api/oneday-classes', onedayClassesRoutes);
+app.route('/api/workshop-quotes', workshopQuotesRoutes);
 
 // Health check
 app.get('/api/health', (c) => {

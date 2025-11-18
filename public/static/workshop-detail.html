@@ -7,279 +7,299 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.8s ease-out forwards;
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+        
+        .gradient-pink-purple {
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-card {
+            background: linear-gradient(135deg, #fdf2f8 0%, #faf5ff 100%);
+            border: 2px solid #f0abfc;
+        }
+        
+        input:checked + label {
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+            color: white;
+        }
+        
+        .instructor-checkbox:checked ~ .instructor-count {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .instructor-count {
+            opacity: 0.5;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <nav class="container mx-auto px-4 py-4">
+    <header class="glass-effect shadow-lg sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
-                <a href="/" class="flex items-center space-x-2">
-                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+                <a href="/" class="flex items-center space-x-3">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-12 hover:scale-105 transition">
                 </a>
                 
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="text-gray-700 hover:text-purple-600 font-medium transition">홈</a>
+                    <a href="/workshops" class="text-purple-600 font-semibold">워크샵</a>
+                    <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-medium transition">원데이 클래스</a>
+                    <a href="/shop" class="text-gray-700 hover:text-purple-600 font-medium transition">쇼핑</a>
+                </div>
+                
                 <div class="flex items-center space-x-4">
-                    <a href="/workshops" class="text-gray-700 hover:text-teal-600">워크샵</a>
-                    <a href="/dashboard" class="text-gray-700 hover:text-teal-600">대시보드</a>
-                    <a href="/login" id="auth-link" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
-                        로그인
+                    <a href="/dashboard" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                        <i class="fas fa-user-circle mr-2"></i>마이페이지
                     </a>
+                    <button id="auth-button" onclick="handleAuth()" class="gradient-pink-purple text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition">
+                        로그인
+                    </button>
                 </div>
             </div>
         </nav>
     </header>
 
     <!-- Loading State -->
-    <div id="loading" class="container mx-auto px-4 py-12 text-center">
-        <i class="fas fa-spinner fa-spin text-4xl text-teal-600 mb-4"></i>
-        <p class="text-gray-600">워크샵 정보를 불러오는 중...</p>
+    <div id="loading" class="container mx-auto px-6 py-24 text-center">
+        <div class="inline-block">
+            <i class="fas fa-spinner fa-spin text-6xl text-purple-600 mb-6"></i>
+            <p class="text-xl text-gray-600">워크샵 정보를 불러오는 중...</p>
+        </div>
     </div>
 
     <!-- Main Content -->
-    <div id="main-content" class="container mx-auto px-4 py-8" style="display: none;">
+    <div id="main-content" class="container mx-auto px-6 py-12" style="display: none;">
         <div class="grid lg:grid-cols-3 gap-8">
             <!-- Left Column - Workshop Details -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Image Gallery -->
-                <div class="bg-white rounded-lg overflow-hidden shadow-lg">
-                    <div class="aspect-video bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center">
-                        <i class="fas fa-spa text-8xl text-white opacity-50"></i>
+            <div class="lg:col-span-2 space-y-6 fade-in-up">
+                <!-- Image -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-xl">
+                    <div class="aspect-video bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 flex items-center justify-center relative">
+                        <img id="workshop-image" src="" alt="워크샵 이미지" class="w-full h-full object-cover" style="display: none;">
+                        <i class="fas fa-spa text-9xl text-white opacity-30" id="placeholder-icon"></i>
                     </div>
                 </div>
 
-                <!-- Workshop Info -->
-                <div class="bg-white rounded-lg p-6 shadow-lg">
-                    <div class="flex items-start justify-between mb-4">
+                <!-- Workshop Info Card -->
+                <div class="bg-white rounded-2xl p-8 shadow-xl">
+                    <div class="flex items-start justify-between mb-6">
                         <div class="flex-1">
-                            <span id="workshop-category" class="inline-block px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-semibold mb-2">
-                                카테고리
-                            </span>
-                            <h1 id="workshop-title" class="text-3xl font-bold text-gray-800 mb-2">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span id="workshop-category" class="inline-block px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full text-sm font-bold shadow-md">
+                                    카테고리
+                                </span>
+                                <span class="text-gray-500 text-sm">
+                                    <i class="far fa-calendar-alt mr-2"></i>
+                                    <span id="workshop-created"></span>
+                                </span>
+                            </div>
+                            <h1 id="workshop-title" class="text-4xl font-bold text-gray-900 mb-4">
                                 워크샵 제목
                             </h1>
-                            <div class="flex items-center text-gray-600 space-x-4">
+                            <div class="flex items-center gap-6 text-gray-600">
                                 <div class="flex items-center">
-                                    <i class="fas fa-map-marker-alt mr-2"></i>
-                                    <span id="workshop-location">위치</span>
+                                    <i class="fas fa-map-marker-alt text-pink-500 mr-2"></i>
+                                    <span id="workshop-location" class="font-medium">위치</span>
                                 </div>
                                 <div class="flex items-center">
-                                    <i class="fas fa-clock mr-2"></i>
-                                    <span id="workshop-duration">시간</span>
+                                    <i class="fas fa-clock text-purple-500 mr-2"></i>
+                                    <span id="workshop-duration" class="font-medium">시간</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-users text-blue-500 mr-2"></i>
+                                    <span id="workshop-max-participants" class="font-medium">인원</span>
                                 </div>
                             </div>
                         </div>
                         <div class="text-right">
-                            <div class="text-3xl font-bold text-teal-600" id="workshop-price">
+                            <div class="text-sm text-gray-500 mb-1">참가비</div>
+                            <div id="workshop-price" class="text-4xl font-bold gradient-pink-purple bg-clip-text text-transparent">
                                 0원
                             </div>
-                            <div class="text-sm text-gray-500">1인 기준</div>
+                            <div class="text-sm text-gray-500 mt-1">1인 기준</div>
                         </div>
                     </div>
 
-                    <div class="border-t pt-4 mt-4">
-                        <h2 class="text-xl font-bold text-gray-800 mb-3">
-                            <i class="fas fa-info-circle mr-2 text-teal-600"></i>상세 설명
+                    <!-- Description -->
+                    <div class="border-t-2 border-gray-100 pt-6 mt-6">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                            <div class="w-10 h-10 gradient-pink-purple rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-info-circle text-white"></i>
+                            </div>
+                            워크샵 소개
                         </h2>
-                        <p id="workshop-description" class="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        <p id="workshop-description" class="text-gray-700 leading-relaxed text-lg whitespace-pre-wrap">
                             워크샵 설명
                         </p>
                     </div>
 
-                    <div class="border-t pt-4 mt-4">
-                        <h2 class="text-xl font-bold text-gray-800 mb-3">
-                            <i class="fas fa-users mr-2 text-teal-600"></i>정원 정보
+                    <!-- Address -->
+                    <div class="border-t-2 border-gray-100 pt-6 mt-6">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                            <div class="w-10 h-10 gradient-pink-purple rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-map text-white"></i>
+                            </div>
+                            오시는 길
                         </h2>
-                        <div class="flex items-center">
-                            <span class="text-gray-700">최대 참가 인원: </span>
-                            <span id="workshop-max-participants" class="ml-2 font-semibold text-teal-600">0명</span>
-                        </div>
-                    </div>
-
-                    <div class="border-t pt-4 mt-4">
-                        <h2 class="text-xl font-bold text-gray-800 mb-3">
-                            <i class="fas fa-map mr-2 text-teal-600"></i>상세 주소
-                        </h2>
-                        <p id="workshop-address" class="text-gray-700">
+                        <p id="workshop-address" class="text-gray-700 text-lg">
                             주소 정보
                         </p>
                     </div>
                 </div>
 
-                <!-- Provider Info -->
-                <div class="bg-white rounded-lg p-6 shadow-lg">
-                    <h2 class="text-xl font-bold text-gray-800 mb-3">
-                        <i class="fas fa-user-tie mr-2 text-teal-600"></i>제공자 정보
+                <!-- Provider Info Card -->
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 shadow-lg border-2 border-purple-200">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <div class="w-10 h-10 gradient-pink-purple rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-user-tie text-white"></i>
+                        </div>
+                        제공자 정보
                     </h2>
-                    <div id="provider-info" class="text-gray-700">
-                        로딩 중...
-                    </div>
-                </div>
-
-                <!-- Reviews Section -->
-                <div class="bg-white rounded-lg p-6 shadow-lg">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800">
-                            <i class="fas fa-star mr-2 text-yellow-500"></i>리뷰
-                            <span id="review-count" class="text-lg text-gray-500">(0)</span>
-                        </h2>
-                        <div id="average-rating" class="flex items-center space-x-2">
-                            <div class="flex space-x-1" id="average-stars">
-                                <!-- Stars will be rendered here -->
-                            </div>
-                            <span id="rating-number" class="text-xl font-bold text-gray-800">0.0</span>
-                        </div>
-                    </div>
-
-                    <!-- Write Review Button (for logged in users) -->
-                    <div id="write-review-section" style="display: none;">
-                        <button 
-                            onclick="toggleReviewForm()"
-                            class="w-full mb-6 bg-teal-50 text-teal-700 border-2 border-teal-200 py-3 rounded-lg hover:bg-teal-100 transition-colors font-semibold"
-                        >
-                            <i class="fas fa-pen mr-2"></i>리뷰 작성하기
-                        </button>
-
-                        <!-- Review Form -->
-                        <div id="review-form" class="mb-6 p-4 bg-gray-50 rounded-lg" style="display: none;">
-                            <h3 class="font-bold text-gray-800 mb-4">리뷰 작성</h3>
-                            <form id="review-submit-form">
-                                <!-- Star Rating -->
-                                <div class="mb-4">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">별점</label>
-                                    <div class="flex space-x-2">
-                                        <button type="button" onclick="setRating(1)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="1">★</button>
-                                        <button type="button" onclick="setRating(2)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="2">★</button>
-                                        <button type="button" onclick="setRating(3)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="3">★</button>
-                                        <button type="button" onclick="setRating(4)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="4">★</button>
-                                        <button type="button" onclick="setRating(5)" class="star-btn text-3xl text-gray-300 hover:text-yellow-500" data-rating="5">★</button>
-                                    </div>
-                                    <input type="hidden" id="rating-input" value="0" required>
-                                </div>
-
-                                <!-- Comment -->
-                                <div class="mb-4">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">리뷰 내용</label>
-                                    <textarea 
-                                        id="comment-input"
-                                        rows="4"
-                                        placeholder="워크샵에 대한 솔직한 후기를 남겨주세요"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                        required
-                                    ></textarea>
-                                </div>
-
-                                <!-- Submit Buttons -->
-                                <div class="flex space-x-2">
-                                    <button 
-                                        type="submit"
-                                        class="flex-1 bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 font-semibold"
-                                    >
-                                        <i class="fas fa-check mr-2"></i>등록
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        onclick="toggleReviewForm()"
-                                        class="px-6 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
-                                    >
-                                        취소
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Reviews List -->
-                    <div id="reviews-list" class="space-y-4">
-                        <!-- Reviews will be rendered here -->
-                    </div>
-
-                    <!-- Empty State -->
-                    <div id="reviews-empty" class="text-center py-12" style="display: none;">
-                        <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-500">아직 리뷰가 없습니다</p>
-                        <p class="text-sm text-gray-400">첫 리뷰를 작성해주세요!</p>
-                    </div>
-
-                    <!-- Loading State -->
-                    <div id="reviews-loading" class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-2xl text-teal-600"></i>
+                    <div id="provider-info" class="text-gray-700 text-lg">
+                        <div class="animate-pulse">로딩 중...</div>
                     </div>
                 </div>
             </div>
 
             <!-- Right Column - Quote Request Form -->
             <div class="lg:col-span-1">
-                <div class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-6 shadow-xl sticky top-24 border border-purple-100">
-                    <div class="flex items-center justify-center mb-4">
-                        <div class="bg-gradient-to-r from-pink-500 to-purple-500 rounded-full p-3">
-                            <i class="fas fa-sparkles text-2xl text-white"></i>
+                <div class="form-card rounded-3xl p-6 shadow-2xl sticky top-24 slide-in-right">
+                    <!-- Header -->
+                    <div class="text-center mb-6">
+                        <div class="inline-block gradient-pink-purple rounded-full p-4 mb-4">
+                            <i class="fas fa-sparkles text-3xl text-white"></i>
                         </div>
+                        <h2 class="text-3xl font-bold gradient-pink-purple bg-clip-text text-transparent mb-2">
+                            견적 문의하기
+                        </h2>
+                        <p class="text-gray-600">
+                            우리 팀에 딱 맞는 워크샵을 준비해드려요 ✨
+                        </p>
                     </div>
-                    <h2 class="text-2xl font-bold text-center bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                        견적 문의하기
-                    </h2>
-                    <p class="text-sm text-center text-gray-600 mb-6">
-                        우리 팀에 딱 맞는 워크샵을 준비해드려요 ✨
-                    </p>
 
+                    <!-- Form -->
                     <form id="quote-form" class="space-y-4">
                         <!-- Company Info -->
-                        <div class="form-step bg-white rounded-xl p-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-building mr-2 text-purple-600"></i>기업 정보
+                                <i class="fas fa-building text-purple-600 mr-2"></i>기업 정보
                             </label>
                             <input 
                                 type="text" 
                                 id="company-name"
-                                placeholder="회사명"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-3"
+                                placeholder="회사명 *"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition mb-3"
                                 required
                             >
                             <input 
                                 type="text" 
                                 id="department"
                                 placeholder="부서명 (선택)"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
                             >
                         </div>
 
                         <!-- Contact Person -->
-                        <div class="form-step bg-white rounded-xl p-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-user-tie mr-2 text-purple-600"></i>담당자 정보
+                                <i class="fas fa-user-tie text-purple-600 mr-2"></i>담당자 정보
                             </label>
                             <input 
                                 type="text" 
                                 id="contact-name"
-                                placeholder="담당자 성함"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-3"
+                                placeholder="담당자 성함 *"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition mb-3"
                                 required
                             >
                             <input 
                                 type="tel" 
                                 id="contact-phone"
-                                placeholder="연락처 (010-1234-5678)"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-3"
+                                placeholder="연락처 (010-1234-5678) *"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition mb-3"
                                 required
                             >
                             <input 
                                 type="email" 
                                 id="contact-email"
-                                placeholder="이메일"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="이메일 *"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
                                 required
                             >
                         </div>
 
                         <!-- Participants & Date -->
-                        <div class="form-step bg-white rounded-xl p-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-users mr-2 text-purple-600"></i>예상 인원 및 희망 일정
+                                <i class="fas fa-users text-purple-600 mr-2"></i>예상 인원 및 희망 일정
                             </label>
-                            <div class="flex items-center space-x-3 mb-3">
+                            <div class="flex items-center gap-3 mb-3">
                                 <button 
                                     type="button" 
-                                    onclick="decreaseParticipants()"
-                                    class="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full hover:shadow-lg transition flex items-center justify-center"
+                                    onclick="adjustParticipants(-10)"
+                                    class="w-12 h-12 gradient-pink-purple text-white rounded-full hover:shadow-lg transition flex items-center justify-center font-bold text-xl"
                                 >
                                     <i class="fas fa-minus"></i>
                                 </button>
@@ -289,13 +309,14 @@
                                     value="10"
                                     min="10"
                                     max="1000"
-                                    class="flex-1 text-center px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-bold text-lg"
-                                    readonly
+                                    step="10"
+                                    class="flex-1 text-center px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-bold text-xl"
+                                    required
                                 >
                                 <button 
                                     type="button" 
-                                    onclick="increaseParticipants()"
-                                    class="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full hover:shadow-lg transition flex items-center justify-center"
+                                    onclick="adjustParticipants(10)"
+                                    class="w-12 h-12 gradient-pink-purple text-white rounded-full hover:shadow-lg transition flex items-center justify-center font-bold text-xl"
                                 >
                                     <i class="fas fa-plus"></i>
                                 </button>
@@ -303,43 +324,45 @@
                             <input 
                                 type="date" 
                                 id="preferred-date"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
                             >
-                            <p class="text-xs text-gray-500 mt-2">희망 일정은 조율 가능해요</p>
+                            <p class="text-xs text-gray-500 mt-2">💡 희망 일정은 조율 가능해요</p>
                         </div>
 
                         <!-- Instructor Requests -->
-                        <div class="form-step bg-white rounded-xl p-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-chalkboard-teacher mr-2 text-purple-600"></i>강사 초빙 (선택)
+                                <i class="fas fa-chalkboard-teacher text-purple-600 mr-2"></i>강사 초빙 (선택)
                             </label>
-                            <div class="space-y-2">
-                                <label class="flex items-center p-3 bg-pink-50 rounded-lg cursor-pointer hover:bg-pink-100 transition">
-                                    <input type="checkbox" id="perfumer" class="w-5 h-5 text-purple-600 rounded mr-3">
+                            <div class="space-y-3">
+                                <!-- Perfumer -->
+                                <div class="flex items-center p-3 bg-pink-50 rounded-xl hover:bg-pink-100 transition">
+                                    <input type="checkbox" id="perfumer" class="instructor-checkbox w-5 h-5 text-purple-600 rounded mr-3">
                                     <div class="flex-1">
                                         <div class="font-semibold text-gray-800">조향사</div>
                                         <div class="text-xs text-gray-600">향기 제조 전문가</div>
                                     </div>
-                                    <input type="number" id="perfumer-count" min="0" value="0" class="w-16 px-2 py-1 border rounded text-center" disabled>
-                                </label>
-                                <label class="flex items-center p-3 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100 transition">
-                                    <input type="checkbox" id="psychologist" class="w-5 h-5 text-purple-600 rounded mr-3">
+                                    <input type="number" id="perfumer-count" min="0" value="1" class="instructor-count w-16 px-2 py-1 border-2 border-purple-300 rounded-lg text-center font-bold">
+                                </div>
+                                <!-- Psychologist -->
+                                <div class="flex items-center p-3 bg-purple-50 rounded-xl hover:bg-purple-100 transition">
+                                    <input type="checkbox" id="psychologist" class="instructor-checkbox w-5 h-5 text-purple-600 rounded mr-3">
                                     <div class="flex-1">
                                         <div class="font-semibold text-gray-800">심리상담사</div>
                                         <div class="text-xs text-gray-600">멘탈케어 전문가</div>
                                     </div>
-                                    <input type="number" id="psychologist-count" min="0" value="0" class="w-16 px-2 py-1 border rounded text-center" disabled>
-                                </label>
+                                    <input type="number" id="psychologist-count" min="0" value="1" class="instructor-count w-16 px-2 py-1 border-2 border-purple-300 rounded-lg text-center font-bold">
+                                </div>
                             </div>
                         </div>
 
                         <!-- Workation Option -->
-                        <div class="form-step bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl p-4">
+                        <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl p-4 shadow-sm">
                             <label class="flex items-start cursor-pointer">
                                 <input type="checkbox" id="workation" class="w-5 h-5 text-purple-600 rounded mt-1 mr-3">
                                 <div class="flex-1">
-                                    <div class="font-bold text-gray-800 mb-1">
-                                        <i class="fas fa-mountain-sun mr-2 text-purple-600"></i>향기 테마 워케이션 포함
+                                    <div class="font-bold text-gray-900 mb-1">
+                                        <i class="fas fa-mountain-sun text-purple-600 mr-2"></i>향기 테마 워케이션 포함
                                     </div>
                                     <div class="text-sm text-gray-700">
                                         힐링 여행과 함께하는 특별한 워크샵 ✨
@@ -349,22 +372,22 @@
                         </div>
 
                         <!-- Special Requests -->
-                        <div class="form-step bg-white rounded-xl p-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-star mr-2 text-purple-600"></i>특별 요청사항
+                                <i class="fas fa-star text-purple-600 mr-2"></i>특별 요청사항
                             </label>
                             <textarea 
                                 id="special-requests"
                                 rows="3"
                                 placeholder="원하시는 워크샵 분위기, 특별 요청사항 등을 자유롭게 적어주세요 💜"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition resize-none"
                             ></textarea>
                         </div>
 
                         <!-- Submit Button -->
                         <button 
                             type="submit"
-                            class="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-4 rounded-xl font-bold hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-2"
+                            class="w-full gradient-pink-purple text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                         >
                             <i class="fas fa-paper-plane"></i>
                             <span>견적 문의 보내기</span>
@@ -382,21 +405,21 @@
 
     <!-- Success Modal -->
     <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="display: none;">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center transform animate-bounce-in">
-            <div class="w-20 h-20 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-heart text-4xl text-white"></i>
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center bounce-in">
+            <div class="w-24 h-24 gradient-pink-purple rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-heart text-5xl text-white"></i>
             </div>
-            <h3 class="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-3">
+            <h3 class="text-4xl font-bold gradient-pink-purple bg-clip-text text-transparent mb-4">
                 견적 문의 완료!
             </h3>
-            <p class="text-gray-700 mb-2 text-lg font-semibold">
+            <p class="text-gray-700 mb-2 text-xl font-semibold">
                 소중한 문의 감사합니다 ✨
             </p>
-            <p class="text-gray-600 mb-6 text-sm">
+            <p class="text-gray-600 mb-6">
                 담당자가 24시간 내에<br>
                 맞춤 견적을 보내드릴게요!
             </p>
-            <div class="bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg p-4 mb-6">
+            <div class="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4 mb-6">
                 <div class="text-sm text-gray-700 space-y-2">
                     <div class="flex items-center justify-center">
                         <i class="fas fa-check-circle text-purple-600 mr-2"></i>
@@ -408,88 +431,17 @@
                     </div>
                 </div>
             </div>
-            <div class="space-y-2">
-                <a href="/dashboard" class="block w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-3 rounded-xl hover:shadow-lg transition font-bold">
+            <div class="space-y-3">
+                <a href="/dashboard" class="block w-full gradient-pink-purple text-white py-3 rounded-xl hover:shadow-lg transition font-bold">
                     <i class="fas fa-home mr-2"></i>대시보드로 이동
                 </a>
-                <button onclick="closeSuccessModal()" class="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl hover:bg-gray-200 transition">
+                <button onclick="closeSuccessModal()" class="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl hover:bg-gray-200 transition font-semibold">
                     계속 둘러보기
                 </button>
             </div>
         </div>
     </div>
 
-    <style>
-        /* Date input styling */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            filter: invert(0.6);
-        }
-
-        input[type="date"]:hover::-webkit-calendar-picker-indicator {
-            filter: invert(0.4);
-        }
-
-        /* Number input styling */
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        /* Animations */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes bounce-in {
-            0% {
-                opacity: 0;
-                transform: scale(0.3);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1.05);
-            }
-            70% {
-                transform: scale(0.9);
-            }
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        .form-step {
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .animate-bounce-in {
-            animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-
-        /* Checkbox styling for instructor selection */
-        input[type="checkbox"]:checked + .flex-1 {
-            opacity: 1;
-        }
-
-        input[type="checkbox"] + .flex-1 + input[type="number"] {
-            transition: all 0.3s;
-        }
-
-        input[type="checkbox"]:checked + .flex-1 + input[type="number"] {
-            border-color: rgb(168, 85, 247);
-            background: rgb(250, 245, 255);
-        }
-    </style>
-
-    <script src="/static/activity-tracker.js"></script>
     <script src="/static/workshop-detail.js"></script>
 </body>
 </html>
