@@ -121,6 +121,9 @@ app.get('/profile-edit', (c) => c.redirect('/static/profile-edit.html'));
 // Workshops page - redirect to static file
 app.get('/workshops', (c) => c.redirect('/static/workshops.html'));
 
+// One-day classes page - redirect to workshops for now
+app.get('/oneday-classes', (c) => c.redirect('/static/workshops.html'));
+
 // Workshop detail page - redirect to static file with ID
 app.get('/workshop/:id', (c) => {
   const id = c.req.param('id');
@@ -229,11 +232,9 @@ app.get('/', (c) => {
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
-                        <!-- B2C용 원데이 클래스 메뉴 -->
-                        <a href="/oneday-classes" id="oneday-class-menu" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center" style="display: none;">
+                        <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-star mr-2"></i>원데이 클래스
                         </a>
-                        <!-- B2B용 워크샵 메뉴 -->
                         <a href="/workshops" id="workshop-menu" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center" style="display: none;">
                             <i class="fas fa-spa mr-2"></i>워크샵
                         </a>
@@ -668,36 +669,26 @@ app.get('/', (c) => {
                 
                 // 메뉴 가시성 제어
                 const token = localStorage.getItem('token');
-                const onedayClassMenu = document.getElementById('oneday-class-menu');
                 const workshopMenu = document.getElementById('workshop-menu');
                 
-                if (onedayClassMenu && workshopMenu) {
+                // 원데이 클래스는 항상 표시 (HTML에서 기본 표시)
+                // 워크샵은 B2B 사용자에게만 표시
+                if (workshopMenu) {
                     if (token) {
                         try {
                             const payload = JSON.parse(atob(token.split('.')[1]));
-                            // B2C 사용자는 원데이 클래스 메뉴 표시
-                            if (payload.userType === 'B2C') {
-                                onedayClassMenu.style.display = 'flex';
-                                workshopMenu.style.display = 'none';
-                            }
                             // B2B 사용자는 워크샵 메뉴 표시
-                            else if (payload.userType === 'B2B') {
-                                onedayClassMenu.style.display = 'none';
+                            if (payload.userType === 'B2B') {
                                 workshopMenu.style.display = 'flex';
-                            }
-                            // 그 외에는 둘 다 숨김
-                            else {
-                                onedayClassMenu.style.display = 'none';
+                            } else {
                                 workshopMenu.style.display = 'none';
                             }
                         } catch (e) {
-                            // 토큰 파싱 실패 시 둘 다 숨김
-                            onedayClassMenu.style.display = 'none';
+                            // 토큰 파싱 실패 시 워크샵 숨김
                             workshopMenu.style.display = 'none';
                         }
                     } else {
-                        // 로그인하지 않은 경우 둘 다 숨김
-                        onedayClassMenu.style.display = 'none';
+                        // 로그인하지 않은 경우 워크샵 숨김
                         workshopMenu.style.display = 'none';
                     }
                 }
