@@ -552,8 +552,11 @@ npm run db:migrate:prod
 **Last Updated**: 2025-11-18
 **Version**: 1.7.0 (Class Management System Added)
 **Status**: ✅ Cloudflare Pages 배포 완료
-**Production URL**: https://035a2253.aromapulse.pages.dev
-**Domain**: www.aromapulse.kr
+**Production URL**: https://aromapulse.pages.dev (자동 배포)
+**Custom Domains**: 
+  - https://aromapulse.kr ✅
+  - https://www.aromapulse.kr ✅
+**Latest Deployment**: https://394f5863.aromapulse.pages.dev
 **Dev URL**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai
 
 ## 🔄 사이트 구조 재정의 (v1.4.0)
