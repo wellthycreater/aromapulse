@@ -70,6 +70,7 @@
 7. **관리자 기능**
    - 리뷰/댓글 수동 태깅
    - 상품 관리 (CRUD)
+   - **클래스 관리 (CRUD)** ✅ NEW
    - 패치 신청 관리
    - 대시보드 통계
 
@@ -82,6 +83,43 @@
    - **컨텍스트 기반 AI 응답**: 오일 사용 고객에게 추가 질문으로 정확한 니즈 파악
    - 블로그 포스트별 통계 대시보드
    - Admin 페이지 "블로그 관리" 탭 UI
+
+## 🎓 클래스 관리 시스템 (NEW v1.7.0) ✅
+
+### 기능 설명
+관리자 페이지에서 아로마테라피 클래스/워크샵을 등록하고 관리할 수 있는 기능이 추가되었습니다.
+
+### 주요 기능
+- **클래스 등록**: 
+  - 클래스명, 설명, 카테고리 (캔들, 디퓨저, 향수, 룸스프레이, 섬유향수, 아로마테라피 기초 등)
+  - 지역, 상세 주소
+  - 가격, 소요 시간 (분), 최대 참가 인원
+  - 대표 이미지 업로드
+  - 활성/비활성 상태 관리
+  
+- **클래스 수정/삭제**: 
+  - 등록된 클래스 정보 수정
+  - 클래스 비활성화 (삭제)
+  
+- **클래스 검색/필터링**:
+  - 클래스명으로 검색
+  - 가격 범위 필터 (5만원 이하, 5~10만원, 10~20만원, 20만원 이상)
+  - 정렬 (최신순, 오래된순, 가격 낮은순/높은순, 이름순)
+  
+- **접근 방법**:
+  - 관리자 페이지 → "클래스 관리" 탭
+  - URL: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai/static/admin-products.html
+  - 프로덕션: https://aromapulse.pages.dev/static/admin-products.html
+
+### API 엔드포인트
+- `GET /api/workshops` - 전체 클래스 목록 조회
+- `GET /api/workshops/:id` - 클래스 상세 조회
+- `POST /api/workshops` - 클래스 등록
+- `PUT /api/workshops/:id` - 클래스 수정
+- `DELETE /api/workshops/:id` - 클래스 삭제 (비활성화)
+
+### 데이터베이스 테이블
+- `workshops`: 클래스 정보 저장 (id, provider_id, title, description, category, location, address, price, duration, max_participants, image_url, is_active)
 
 ## 🚀 블로그 댓글 수집 시스템 (v1.6.0)
 
@@ -501,8 +539,8 @@ npm run db:migrate:prod
 
 ---
 
-**Last Updated**: 2025-11-14
-**Version**: 1.5.0 (Blog Management System)
+**Last Updated**: 2025-11-18
+**Version**: 1.7.0 (Class Management System Added)
 **Status**: ✅ Cloudflare Pages 배포 완료
 **Production URL**: https://035a2253.aromapulse.pages.dev
 **Domain**: www.aromapulse.kr

@@ -9,6 +9,13 @@ let editingProductId = null;
 let blogPosts = [];
 let currentPeriod = 'all'; // 대시보드 기간 필터 (today, week, month, all)
 
+// 클래스 관리 관련 변수
+let currentClasses = [];
+let filteredClasses = [];
+let isEditingClass = false;
+let editingClassId = null;
+let currentMainTab = 'products'; // 'products' 또는 'classes'
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
@@ -26,6 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('product-modal').addEventListener('click', (e) => {
     if (e.target.id === 'product-modal') {
       closeModal();
+    }
+  });
+  
+  // 클래스 폼 제출 이벤트
+  document.getElementById('class-form').addEventListener('submit', handleClassFormSubmit);
+  
+  // 클래스 모달 외부 클릭시 닫기
+  document.getElementById('class-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'class-modal') {
+      closeClassModal();
     }
   });
 });
@@ -1941,4 +1958,398 @@ async function addNewBlogPost() {
     console.error('게시물 추가 오류:', error);
     alert(`게시물 추가 중 오류가 발생했습니다:\n${error.message}`);
   }
+}
+
+// ============================================
+// 클래스 관리 함수들
+// ============================================
+
+// 메인 탭 전환 (제품 관리 / 클래스 관리)
+function switchTab(tab) {
+  if (tab === 'products') {
+    currentMainTab = 'products';
+    document.getElementById('tab-products').classList.add('bg-purple-600', 'text-white');
+    document.getElementById('tab-products').classList.remove('text-gray-700', 'hover:bg-gray-100');
+    document.getElementById('tab-classes').classList.remove('bg-purple-600', 'text-white');
+    document.getElementById('tab-classes').classList.add('text-gray-700', 'hover:bg-gray-100');
+    
+    document.getElementById('content-products').style.display = 'block';
+    document.getElementById('content-classes').style.display = 'none';
+  } else if (tab === 'classes') {
+    currentMainTab = 'classes';
+    document.getElementById('tab-classes').classList.add('bg-purple-600', 'text-white');
+    document.getElementById('tab-classes').classList.remove('text-gray-700', 'hover:bg-gray-100');
+    document.getElementById('tab-products').classList.remove('bg-purple-600', 'text-white');
+    document.getElementById('tab-products').classList.add('text-gray-700', 'hover:bg-gray-100');
+    
+    document.getElementById('content-products').style.display = 'none';
+    document.getElementById('content-classes').style.display = 'block';
+    
+    // 클래스 로드
+    loadClasses();
+  }
+}
+
+// 클래스 목록 로드
+async function loadClasses() {
+  try {
+    document.getElementById('class-loading').style.display = 'block';
+    document.getElementById('classes-grid').innerHTML = '';
+    document.getElementById('class-empty-state').style.display = 'none';
+    
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch('/api/workshops?limit=100', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('클래스 목록 조회 실패');
+    }
+    
+    currentClasses = await response.json();
+    filteredClasses = currentClasses;
+    
+    document.getElementById('class-loading').style.display = 'none';
+    
+    if (currentClasses.length === 0) {
+      document.getElementById('class-empty-state').style.display = 'block';
+    } else {
+      renderClasses();
+    }
+    
+  } catch (error) {
+    console.error('클래스 로드 오류:', error);
+    document.getElementById('class-loading').style.display = 'none';
+    alert('클래스 목록을 불러오는데 실패했습니다.');
+  }
+}
+
+// 클래스 렌더링
+function renderClasses() {
+  const grid = document.getElementById('classes-grid');
+  grid.innerHTML = '';
+  
+  document.getElementById('class-filter-result-count').textContent = filteredClasses.length;
+  
+  filteredClasses.forEach(classItem => {
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-xl shadow-md hover:shadow-lg transition p-6';
+    
+    const statusBadge = classItem.is_active 
+      ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">활성</span>'
+      : '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">비활성</span>';
+    
+    const imageUrl = classItem.image_url || '/static/placeholder-class.jpg';
+    const price = classItem.price ? `${classItem.price.toLocaleString()}원` : '가격 미정';
+    const duration = classItem.duration ? `${classItem.duration}분` : '시간 미정';
+    const maxParticipants = classItem.max_participants ? `최대 ${classItem.max_participants}명` : '인원 제한 없음';
+    
+    card.innerHTML = `
+      <div class="mb-4">
+        <img src="${imageUrl}" alt="${classItem.title}" 
+          class="w-full h-48 object-cover rounded-lg" 
+          onerror="this.src='/static/placeholder-class.jpg'">
+      </div>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-bold text-gray-800">${classItem.title}</h3>
+        ${statusBadge}
+      </div>
+      ${classItem.category ? `<p class="text-sm text-purple-600 mb-2"><i class="fas fa-tag mr-1"></i>${classItem.category}</p>` : ''}
+      <p class="text-sm text-gray-600 mb-3 line-clamp-2">${classItem.description || '설명 없음'}</p>
+      <div class="space-y-1 mb-4 text-sm text-gray-600">
+        <div><i class="fas fa-map-marker-alt text-purple-600 mr-2 w-4"></i>${classItem.location}</div>
+        ${classItem.address ? `<div><i class="fas fa-building text-purple-600 mr-2 w-4"></i>${classItem.address}</div>` : ''}
+        <div><i class="fas fa-clock text-purple-600 mr-2 w-4"></i>${duration}</div>
+        <div><i class="fas fa-users text-purple-600 mr-2 w-4"></i>${maxParticipants}</div>
+      </div>
+      <div class="flex items-center justify-between mb-4 pt-3 border-t">
+        <span class="text-xl font-bold text-purple-600">${price}</span>
+      </div>
+      <div class="flex space-x-2">
+        <button onclick="editClass(${classItem.id})" 
+          class="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 text-sm">
+          <i class="fas fa-edit mr-1"></i>수정
+        </button>
+        <button onclick="deleteClass(${classItem.id}, '${classItem.title}')" 
+          class="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 text-sm">
+          <i class="fas fa-trash mr-1"></i>삭제
+        </button>
+      </div>
+    `;
+    
+    grid.appendChild(card);
+  });
+}
+
+// 클래스 필터 적용
+function applyClassFilter() {
+  const searchInput = document.getElementById('class-search-input');
+  const priceFilter = document.getElementById('class-price-filter');
+  const sortFilter = document.getElementById('class-sort-filter');
+  
+  if (!searchInput || !priceFilter || !sortFilter) return;
+  
+  const searchTerm = searchInput.value.toLowerCase();
+  const priceRange = priceFilter.value;
+  const sortBy = sortFilter.value;
+  
+  // 검색어 필터
+  filteredClasses = currentClasses.filter(c => {
+    const matchesSearch = c.title.toLowerCase().includes(searchTerm) || 
+                         (c.description && c.description.toLowerCase().includes(searchTerm));
+    return matchesSearch;
+  });
+  
+  // 가격 범위 필터
+  if (priceRange) {
+    const [min, max] = priceRange.split('-').map(Number);
+    filteredClasses = filteredClasses.filter(c => {
+      if (!c.price) return false;
+      return c.price >= min && c.price <= max;
+    });
+  }
+  
+  // 정렬
+  filteredClasses.sort((a, b) => {
+    switch(sortBy) {
+      case 'newest':
+        return new Date(b.created_at) - new Date(a.created_at);
+      case 'oldest':
+        return new Date(a.created_at) - new Date(b.created_at);
+      case 'price-low':
+        return (a.price || 0) - (b.price || 0);
+      case 'price-high':
+        return (b.price || 0) - (a.price || 0);
+      case 'name':
+        return a.title.localeCompare(b.title);
+      default:
+        return 0;
+    }
+  });
+  
+  renderClasses();
+}
+
+// 새 클래스 모달 열기
+function openNewClassModal() {
+  isEditingClass = false;
+  editingClassId = null;
+  document.getElementById('class-modal-title').textContent = '클래스 등록';
+  document.getElementById('class-form').reset();
+  document.getElementById('class-active').checked = true;
+  document.getElementById('class-image-preview').style.display = 'none';
+  document.getElementById('class-image-url-hidden').value = '';
+  document.getElementById('class-modal').classList.remove('hidden');
+}
+
+// 클래스 수정
+async function editClass(id) {
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch(`/api/workshops/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('클래스 정보 조회 실패');
+    }
+    
+    const classData = await response.json();
+    
+    isEditingClass = true;
+    editingClassId = id;
+    
+    document.getElementById('class-modal-title').textContent = '클래스 수정';
+    document.getElementById('class-title').value = classData.title || '';
+    document.getElementById('class-description').value = classData.description || '';
+    document.getElementById('class-category').value = classData.category || '';
+    document.getElementById('class-location').value = classData.location || '';
+    document.getElementById('class-address').value = classData.address || '';
+    document.getElementById('class-price').value = classData.price || '';
+    document.getElementById('class-duration').value = classData.duration || '';
+    document.getElementById('class-max-participants').value = classData.max_participants || '';
+    document.getElementById('class-active').checked = classData.is_active === 1;
+    
+    if (classData.image_url) {
+      document.getElementById('class-image-preview').style.display = 'block';
+      document.getElementById('class-image-preview-img').src = classData.image_url;
+      document.getElementById('class-image-url').textContent = classData.image_url;
+      document.getElementById('class-image-url-hidden').value = classData.image_url;
+    }
+    
+    document.getElementById('class-modal').classList.remove('hidden');
+    
+  } catch (error) {
+    console.error('클래스 수정 오류:', error);
+    alert('클래스 정보를 불러오는데 실패했습니다.');
+  }
+}
+
+// 클래스 삭제
+async function deleteClass(id, title) {
+  if (!confirm(`"${title}" 클래스를 삭제하시겠습니까?\n\n삭제된 클래스는 비활성화되며 복구할 수 있습니다.`)) {
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch(`/api/workshops/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('클래스 삭제 실패');
+    }
+    
+    alert('클래스가 삭제되었습니다.');
+    loadClasses();
+    
+  } catch (error) {
+    console.error('클래스 삭제 오류:', error);
+    alert('클래스 삭제에 실패했습니다.');
+  }
+}
+
+// 클래스 폼 제출
+async function handleClassFormSubmit(e) {
+  e.preventDefault();
+  
+  const title = document.getElementById('class-title').value.trim();
+  const description = document.getElementById('class-description').value.trim();
+  const category = document.getElementById('class-category').value;
+  const location = document.getElementById('class-location').value;
+  const address = document.getElementById('class-address').value.trim();
+  const price = parseInt(document.getElementById('class-price').value);
+  const duration = document.getElementById('class-duration').value ? parseInt(document.getElementById('class-duration').value) : null;
+  const maxParticipants = document.getElementById('class-max-participants').value ? parseInt(document.getElementById('class-max-participants').value) : null;
+  const isActive = document.getElementById('class-active').checked ? 1 : 0;
+  const imageUrl = document.getElementById('class-image-url-hidden').value;
+  
+  if (!title || !location || !price) {
+    alert('필수 항목을 모두 입력해주세요.');
+    return;
+  }
+  
+  const classData = {
+    title,
+    description: description || null,
+    category: category || null,
+    location,
+    address: address || null,
+    price,
+    duration,
+    max_participants: maxParticipants,
+    is_active: isActive,
+    image_url: imageUrl || null
+  };
+  
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const url = isEditingClass ? `/api/workshops/${editingClassId}` : '/api/workshops';
+    const method = isEditingClass ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(classData)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || '클래스 저장 실패');
+    }
+    
+    alert(isEditingClass ? '클래스가 수정되었습니다.' : '클래스가 등록되었습니다.');
+    closeClassModal();
+    loadClasses();
+    
+  } catch (error) {
+    console.error('클래스 저장 오류:', error);
+    alert(`클래스 저장에 실패했습니다:\n${error.message}`);
+  }
+}
+
+// 클래스 이미지 업로드
+async function uploadClassImage() {
+  const fileInput = document.getElementById('class-image-upload');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('이미지 파일을 선택해주세요.');
+    return;
+  }
+  
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드 가능합니다.');
+    return;
+  }
+  
+  try {
+    // Base64로 변환
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const base64Data = e.target.result;
+      
+      try {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+        
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            image: base64Data,
+            folder: 'classes'
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('이미지 업로드 실패');
+        }
+        
+        const result = await response.json();
+        
+        document.getElementById('class-image-preview').style.display = 'block';
+        document.getElementById('class-image-preview-img').src = result.url;
+        document.getElementById('class-image-url').textContent = result.url;
+        document.getElementById('class-image-url-hidden').value = result.url;
+        
+        alert('이미지가 업로드되었습니다.');
+        
+      } catch (error) {
+        console.error('이미지 업로드 오류:', error);
+        alert('이미지 업로드에 실패했습니다.');
+      }
+    };
+    
+    reader.readAsDataURL(file);
+    
+  } catch (error) {
+    console.error('파일 읽기 오류:', error);
+    alert('파일을 읽는데 실패했습니다.');
+  }
+}
+
+// 클래스 모달 닫기
+function closeClassModal() {
+  document.getElementById('class-modal').classList.add('hidden');
+  document.getElementById('class-form').reset();
+  isEditingClass = false;
+  editingClassId = null;
 }
