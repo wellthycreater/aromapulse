@@ -60,11 +60,11 @@
         }
         
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #34d399 100%);
         }
         
-        .gradient-pink-purple {
-            background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+        .gradient-green-teal {
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
         }
         
         .glass-effect {
@@ -73,12 +73,12 @@
         }
         
         .form-card {
-            background: linear-gradient(135deg, #fdf2f8 0%, #faf5ff 100%);
-            border: 2px solid #f0abfc;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 2px solid #86efac;
         }
         
         input:checked + label {
-            background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
             color: white;
         }
         
@@ -104,17 +104,17 @@
                 </a>
                 
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="/" class="text-gray-700 hover:text-purple-600 font-medium transition">홈</a>
-                    <a href="/workshops" class="text-purple-600 font-semibold">워크샵</a>
-                    <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-medium transition">원데이 클래스</a>
-                    <a href="/shop" class="text-gray-700 hover:text-purple-600 font-medium transition">쇼핑</a>
+                    <a href="/" class="text-gray-700 hover:text-green-600 font-medium transition">홈</a>
+                    <a href="/workshops" class="text-gray-700 hover:text-green-600 font-medium transition">워크샵</a>
+                    <a href="/classes" class="text-green-600 font-bold">원데이 클래스</a>
+                    <a href="/shop" class="text-gray-700 hover:text-green-600 font-medium transition">쇼핑</a>
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <a href="/dashboard" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <a href="/dashboard" class="text-gray-700 hover:text-green-600 font-medium transition">
                         <i class="fas fa-user-circle mr-2"></i>마이페이지
                     </a>
-                    <button id="auth-button" onclick="handleAuth()" class="gradient-pink-purple text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition">
+                    <button id="auth-button" onclick="handleAuth()" class="gradient-green-teal text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition">
                         로그인
                     </button>
                 </div>
@@ -125,8 +125,8 @@
     <!-- Loading State -->
     <div id="loading" class="container mx-auto px-6 py-24 text-center">
         <div class="inline-block">
-            <i class="fas fa-spinner fa-spin text-6xl text-purple-600 mb-6"></i>
-            <p class="text-xl text-gray-600">워크샵 정보를 불러오는 중...</p>
+            <i class="fas fa-spinner fa-spin text-6xl text-green-600 mb-6"></i>
+            <p class="text-xl text-gray-600">클래스 정보를 불러오는 중...</p>
         </div>
     </div>
 
@@ -229,77 +229,100 @@
                 <div class="form-card rounded-3xl p-6 shadow-2xl sticky top-24 slide-in-right">
                     <!-- Header -->
                     <div class="text-center mb-6">
-                        <div class="inline-block gradient-pink-purple rounded-full p-4 mb-4">
-                            <i class="fas fa-sparkles text-3xl text-white"></i>
+                        <div class="inline-block gradient-green-teal rounded-full p-4 mb-4">
+                            <i class="fas fa-calendar-check text-3xl text-white"></i>
                         </div>
-                        <h2 class="text-3xl font-bold gradient-pink-purple bg-clip-text text-transparent mb-2">
-                            견적 문의하기
+                        <h2 class="text-3xl font-bold gradient-green-teal bg-clip-text text-transparent mb-2">
+                            클래스 신청하기
                         </h2>
                         <p class="text-gray-600">
-                            우리 팀에 딱 맞는 워크샵을 준비해드려요 ✨
+                            나만의 향기를 만드는 특별한 시간 ✨
                         </p>
                     </div>
 
                     <!-- Form -->
                     <form id="quote-form" class="space-y-4">
-                        <!-- Company Info -->
+                        <!-- Booking Type Selection -->
                         <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-building text-purple-600 mr-2"></i>기업 정보
+                                <i class="fas fa-check-circle text-green-600 mr-2"></i>신청 유형
+                            </label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <input type="radio" id="booking-type-personal" name="booking-type" value="personal" class="hidden peer" checked onchange="toggleBookingType()">
+                                    <label for="booking-type-personal" class="block p-4 text-center border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 peer-checked:text-green-700 transition">
+                                        <i class="fas fa-user text-2xl mb-2"></i>
+                                        <div class="font-bold">개인</div>
+                                        <div class="text-xs text-gray-500">혼자 또는 친구/가족과</div>
+                                    </label>
+                                </div>
+                                <div>
+                                    <input type="radio" id="booking-type-company" name="booking-type" value="company" class="hidden peer" onchange="toggleBookingType()">
+                                    <label for="booking-type-company" class="block p-4 text-center border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 peer-checked:text-green-700 transition">
+                                        <i class="fas fa-building text-2xl mb-2"></i>
+                                        <div class="font-bold">기업/단체</div>
+                                        <div class="text-xs text-gray-500">소규모 팀 활동</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Company Info (shown when company is selected) -->
+                        <div id="company-info-section" class="bg-white rounded-xl p-4 shadow-sm" style="display: none;">
+                            <label class="block text-sm font-bold text-gray-800 mb-3">
+                                <i class="fas fa-building text-green-600 mr-2"></i>기업/단체 정보
                             </label>
                             <input 
                                 type="text" 
                                 id="company-name"
-                                placeholder="회사명 *"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition mb-3"
-                                required
+                                placeholder="회사명/단체명"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition mb-3"
                             >
                             <input 
                                 type="text" 
                                 id="industry"
-                                placeholder="업종 (예: IT/제조/서비스/금융 등) *"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition mb-3"
-                                required
+                                placeholder="업종 (예: IT/제조/서비스/금융 등)"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition mb-3"
                             >
                             <input 
                                 type="text" 
                                 id="department"
                                 placeholder="부서명 (예: 인사팀/복리후생팀 등)"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
                             >
                         </div>
 
-                        <!-- Contact Person -->
+                        <!-- Contact Info -->
                         <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-user-tie text-purple-600 mr-2"></i>담당자 정보
+                                <i class="fas fa-user text-green-600 mr-2"></i><span id="contact-label">신청자 정보</span>
                             </label>
                             <input 
                                 type="text" 
                                 id="contact-position"
-                                placeholder="직책 (예: 팀장/과장/대리 등) *"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition mb-3"
-                                required
+                                placeholder="직책 (예: 팀장/과장/대리 등)"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition mb-3"
+                                style="display: none;"
                             >
                             <input 
                                 type="text" 
                                 id="contact-name"
-                                placeholder="담당자 성함 *"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition mb-3"
+                                placeholder="이름 *"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition mb-3"
                                 required
                             >
                             <input 
                                 type="tel" 
                                 id="contact-phone"
                                 placeholder="연락처 (010-1234-5678) *"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition mb-3"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition mb-3"
                                 required
                             >
                             <input 
                                 type="email" 
                                 id="contact-email"
                                 placeholder="이메일 *"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
                                 required
                             >
                         </div>
@@ -307,23 +330,23 @@
                         <!-- Participants & Date -->
                         <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-users text-purple-600 mr-2"></i>예상 인원 및 희망 일정
+                                <i class="fas fa-users text-green-600 mr-2"></i>참여 인원 및 희망 날짜
                             </label>
                             <div class="flex items-center gap-3 mb-3">
                                 <button 
                                     type="button" 
-                                    onclick="adjustParticipants(-10)"
-                                    class="w-12 h-12 gradient-pink-purple text-white rounded-full hover:shadow-lg transition flex items-center justify-center font-bold text-xl"
+                                    onclick="adjustParticipants(-1)"
+                                    class="w-12 h-12 gradient-green-teal text-white rounded-full hover:shadow-lg transition flex items-center justify-center font-bold text-xl"
                                 >
                                     <i class="fas fa-minus"></i>
                                 </button>
                                 <input 
                                     type="number" 
                                     id="participants"
-                                    value="10"
+                                    value="1"
                                     min="1"
-                                    step="10"
-                                    class="flex-1 text-center px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-bold text-xl"
+                                    step="1"
+                                    class="flex-1 text-center px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-bold text-xl"
                                     required
                                 >
                                 <button 

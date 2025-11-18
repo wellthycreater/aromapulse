@@ -1,29 +1,59 @@
-// Workshop Detail Page JavaScript
+// Class Detail Page JavaScript
 
-let workshopId = null;
-let workshopData = null;
+let classId = null;
+let classData = null;
 
 // Initialize page
 window.addEventListener('DOMContentLoaded', async () => {
-    // Get workshop ID from URL
+    // Get class ID from URL
     const urlParams = new URLSearchParams(window.location.search);
-    workshopId = urlParams.get('id');
+    classId = urlParams.get('id');
     
-    if (!workshopId) {
-        alert('워크샵 ID가 없습니다.');
-        window.location.href = '/workshops';
+    if (!classId) {
+        alert('클래스 ID가 없습니다.');
+        window.location.href = '/classes';
         return;
     }
     
     // Check authentication
     checkAuth();
     
-    // Load workshop data
-    await loadWorkshop();
+    // Load class data
+    await loadClass();
     
     // Setup form handlers
     setupFormHandlers();
 });
+
+// Toggle booking type (personal/company)
+function toggleBookingType() {
+    const bookingType = document.querySelector('input[name="booking-type"]:checked').value;
+    const companySection = document.getElementById('company-info-section');
+    const contactLabel = document.getElementById('contact-label');
+    const contactPosition = document.getElementById('contact-position');
+    
+    if (bookingType === 'company') {
+        // Show company fields
+        companySection.style.display = 'block';
+        contactLabel.textContent = '담당자 정보';
+        contactPosition.style.display = 'block';
+        
+        // Make company fields required
+        document.getElementById('company-name').setAttribute('required', 'required');
+        document.getElementById('industry').setAttribute('required', 'required');
+        document.getElementById('contact-position').setAttribute('required', 'required');
+    } else {
+        // Hide company fields
+        companySection.style.display = 'none';
+        contactLabel.textContent = '신청자 정보';
+        contactPosition.style.display = 'none';
+        
+        // Make company fields optional
+        document.getElementById('company-name').removeAttribute('required');
+        document.getElementById('industry').removeAttribute('required');
+        document.getElementById('contact-position').removeAttribute('required');
+    }
+}
 
 // Check authentication and update UI
 function checkAuth() {
@@ -53,30 +83,30 @@ function handleAuth() {
     }
 }
 
-// Load workshop data
-async function loadWorkshop() {
+// Load class data
+async function loadClass() {
     try {
-        const response = await fetch(`/api/workshops/${workshopId}`);
+        const response = await fetch(`/api/workshops/${classId}`);
         
         if (!response.ok) {
-            throw new Error('워크샵을 찾을 수 없습니다');
+            throw new Error('클래스를 찾을 수 없습니다');
         }
         
-        workshopData = await response.json();
-        renderWorkshop(workshopData);
+        classData = await response.json();
+        renderClass(classData);
         
         document.getElementById('loading').style.display = 'none';
         document.getElementById('main-content').style.display = 'block';
         
     } catch (error) {
-        console.error('워크샵 로드 오류:', error);
-        alert('워크샵 정보를 불러오는데 실패했습니다.');
-        window.location.href = '/workshops';
+        console.error('클래스 로드 오류:', error);
+        alert('클래스 정보를 불러오는데 실패했습니다.');
+        window.location.href = '/classes';
     }
 }
 
-// Render workshop data
-function renderWorkshop(workshop) {
+// Render class data
+function renderClass(workshop) {
     // Title and basic info
     document.getElementById('workshop-title').textContent = workshop.title;
     document.getElementById('workshop-category').textContent = workshop.category || '워크샵';
@@ -125,7 +155,7 @@ function renderWorkshop(workshop) {
 // Adjust participants count
 function adjustParticipants(amount) {
     const input = document.getElementById('participants');
-    let currentValue = parseInt(input.value) || 10;
+    let currentValue = parseInt(input.value) || 1;
     let newValue = currentValue + amount;
     
     // Minimum 1, no maximum limit
@@ -180,80 +210,33 @@ function setupFormHandlers() {
 }
 
 // Check quote permission (same as workshops.js)
-function checkQuotePermission() {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-        return { hasPermission: false, reason: 'not_logged_in' };
-    }
-    
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-        return { hasPermission: false, reason: 'no_user_data' };
-    }
-    
-    const user = JSON.parse(userStr);
-    
-    // B2B 사용자 체크
-    if (user.user_type !== 'B2B') {
-        return { hasPermission: false, reason: 'not_b2b' };
-    }
-    
-    // 회사 규모 체크 (20인 이상)
-    const validCompanySizes = ['20_50', '50_100', '100_300', '300_plus'];
-    if (!user.company_size || !validCompanySizes.includes(user.company_size)) {
-        return { hasPermission: false, reason: 'company_size' };
-    }
-    
-    // 담당자 역할 체크 (HR, 조직문화, 복리후생)
-    const allowedRoles = ['hr_manager', 'culture_team', 'welfare_manager'];
-    if (!user.company_role || !allowedRoles.includes(user.company_role)) {
-        return { hasPermission: false, reason: 'not_manager' };
-    }
-    
-    // 모든 조건 충족
-    return { hasPermission: true };
-}
-
-// Submit quote request
+// Submit class booking request
 async function submitQuoteRequest() {
     try {
-        // Check permission first
-        const permissionCheck = checkQuotePermission();
-        
-        if (!permissionCheck.hasPermission) {
-            // Show specific error message based on reason
-            let errorMessage = '';
-            switch (permissionCheck.reason) {
-                case 'not_logged_in':
-                    errorMessage = '로그인이 필요합니다.';
-                    alert(errorMessage);
-                    window.location.href = '/login';
-                    return;
-                case 'not_b2b':
-                    errorMessage = '워크샵 견적 문의는 B2B 기업 고객만 가능합니다.';
-                    break;
-                case 'company_size':
-                    errorMessage = '워크샵은 20인 이상 규모의 기업만 이용 가능합니다.';
-                    break;
-                case 'not_manager':
-                    errorMessage = 'HR팀, 조직문화팀, 복리후생 담당자만 워크샵 견적을 문의할 수 있습니다.';
-                    break;
-                default:
-                    errorMessage = '워크샵 견적 문의 권한이 없습니다.';
-            }
-            alert(errorMessage);
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            window.location.href = '/login';
             return;
         }
         
-        // Get token (permission already checked)
-        const token = localStorage.getItem('token');
+        // Get booking type
+        const bookingType = document.querySelector('input[name="booking-type"]:checked').value;
         
-        // Get form data
-        const companyName = document.getElementById('company-name').value;
-        const industry = document.getElementById('industry').value;
-        const department = document.getElementById('department').value;
-        const contactPosition = document.getElementById('contact-position').value;
+        // Get form data based on booking type
+        let companyName = null;
+        let industry = null;
+        let department = null;
+        let contactPosition = null;
+        
+        if (bookingType === 'company') {
+            companyName = document.getElementById('company-name').value;
+            industry = document.getElementById('industry').value;
+            department = document.getElementById('department').value;
+            contactPosition = document.getElementById('contact-position').value;
+        }
+        
         const contactName = document.getElementById('contact-name').value;
         const contactPhone = document.getElementById('contact-phone').value;
         const contactEmail = document.getElementById('contact-email').value;
@@ -261,49 +244,21 @@ async function submitQuoteRequest() {
         const preferredDate = document.getElementById('preferred-date').value;
         const specialRequests = document.getElementById('special-requests').value;
         
-        // Get instructor requests
-        const instructorType = document.getElementById('instructor-type').value;
-        const requestedInstructors = [];
-        
-        // Perfumer is always included
-        const perfumerCount = parseInt(document.getElementById('perfumer-count').value) || 1;
-        requestedInstructors.push({
-            type: 'perfumer',
-            count: perfumerCount,
-            specialization: '조향사'
-        });
-        
-        // Add psychologist if selected
-        if (instructorType === 'both' || instructorType === 'perfumer_psychologist') {
-            const psychologistCount = parseInt(document.getElementById('psychologist-count').value) || 0;
-            if (psychologistCount > 0) {
-                const specializationType = instructorType === 'both' ? '심리상담사' : '멘탈케어 전문가';
-                requestedInstructors.push({
-                    type: 'psychologist',
-                    count: psychologistCount,
-                    specialization: specializationType
-                });
-            }
-        }
-        
-        // Get workation option
-        const isWorkation = document.getElementById('workation').checked;
-        
-        // Prepare quote data
-        const quoteData = {
-            workshop_id: workshopId,
-            company_name: companyName,
-            company_industry: industry,
+        // Prepare booking data
+        const bookingData = {
+            workshop_id: classId,
+            company_name: companyName || null,
+            company_industry: industry || null,
             company_department: department || null,
-            company_contact_position: contactPosition,
+            company_contact_position: contactPosition || null,
             company_contact_name: contactName,
             company_contact_phone: contactPhone,
             company_contact_email: contactEmail,
             participant_count: participants,
             preferred_date: preferredDate || null,
-            requested_instructors: JSON.stringify(requestedInstructors),
+            requested_instructors: null,
             special_requests: specialRequests || null,
-            is_workation: isWorkation ? 1 : 0
+            is_workation: 0
         };
         
         // Send request
@@ -313,12 +268,12 @@ async function submitQuoteRequest() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(quoteData)
+            body: JSON.stringify(bookingData)
         });
         
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '견적 문의 전송 실패');
+            throw new Error(error.error || '클래스 신청 전송 실패');
         }
         
         // Show success modal
@@ -326,16 +281,17 @@ async function submitQuoteRequest() {
         
         // Reset form
         document.getElementById('quote-form').reset();
-        document.getElementById('participants').value = 10;
+        document.getElementById('participants').value = 1;
+        toggleBookingType(); // Reset form visibility
         
     } catch (error) {
-        console.error('견적 문의 오류:', error);
-        alert(`견적 문의 전송에 실패했습니다:\n${error.message}`);
+        console.error('클래스 신청 오류:', error);
+        alert(`클래스 신청에 실패했습니다:\n${error.message}`);
     }
 }
 
 // Close success modal
 function closeSuccessModal() {
     document.getElementById('success-modal').style.display = 'none';
-    window.location.href = '/workshops';
+    window.location.href = '/classes';
 }
