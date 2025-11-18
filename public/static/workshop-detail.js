@@ -179,16 +179,75 @@ function setupFormHandlers() {
     });
 }
 
+// Check quote permission (same as workshops.js)
+function checkQuotePermission() {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        return { hasPermission: false, reason: 'not_logged_in' };
+    }
+    
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+        return { hasPermission: false, reason: 'no_user_data' };
+    }
+    
+    const user = JSON.parse(userStr);
+    
+    // B2B 사용자 체크
+    if (user.user_type !== 'B2B') {
+        return { hasPermission: false, reason: 'not_b2b' };
+    }
+    
+    // 회사 규모 체크 (20인 이상)
+    const validCompanySizes = ['20_50', '50_100', '100_300', '300_plus'];
+    if (!user.company_size || !validCompanySizes.includes(user.company_size)) {
+        return { hasPermission: false, reason: 'company_size' };
+    }
+    
+    // 담당자 역할 체크 (HR, 조직문화, 복리후생)
+    const allowedRoles = ['hr_manager', 'culture_team', 'welfare_manager'];
+    if (!user.company_role || !allowedRoles.includes(user.company_role)) {
+        return { hasPermission: false, reason: 'not_manager' };
+    }
+    
+    // 모든 조건 충족
+    return { hasPermission: true };
+}
+
 // Submit quote request
 async function submitQuoteRequest() {
     try {
-        // Get token
-        const token = localStorage.getItem('token');
-        if (!token) {
-            alert('로그인이 필요합니다.');
-            window.location.href = '/login';
+        // Check permission first
+        const permissionCheck = checkQuotePermission();
+        
+        if (!permissionCheck.hasPermission) {
+            // Show specific error message based on reason
+            let errorMessage = '';
+            switch (permissionCheck.reason) {
+                case 'not_logged_in':
+                    errorMessage = '로그인이 필요합니다.';
+                    alert(errorMessage);
+                    window.location.href = '/login';
+                    return;
+                case 'not_b2b':
+                    errorMessage = '워크샵 견적 문의는 B2B 기업 고객만 가능합니다.';
+                    break;
+                case 'company_size':
+                    errorMessage = '워크샵은 20인 이상 규모의 기업만 이용 가능합니다.';
+                    break;
+                case 'not_manager':
+                    errorMessage = 'HR팀, 조직문화팀, 복리후생 담당자만 워크샵 견적을 문의할 수 있습니다.';
+                    break;
+                default:
+                    errorMessage = '워크샵 견적 문의 권한이 없습니다.';
+            }
+            alert(errorMessage);
             return;
         }
+        
+        // Get token (permission already checked)
+        const token = localStorage.getItem('token');
         
         // Get form data
         const companyName = document.getElementById('company-name').value;

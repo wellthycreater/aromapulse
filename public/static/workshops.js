@@ -6,203 +6,71 @@ let currentPriceFilter = 'all';
 
 // 페이지 로드 시 실행
 window.addEventListener('DOMContentLoaded', async () => {
-    const accessGranted = checkAuth();
+    // 워크샵 목록은 모두에게 공개, 권한 체크는 업데이트만
+    updateAuthUI();
     
-    if (!accessGranted) {
-        showAccessDenied();
-        return;
-    }
-    
+    // 워크샵 로드 (모든 사용자)
     await loadWorkshops();
     
     // 페이지 뷰 트래킹
     trackPageView('workshops_list');
 });
 
-// 인증 확인 및 HR/복리후생 담당자 권한 체크
-function checkAuth() {
+// UI 업데이트 (인증 링크)
+function updateAuthUI() {
     const token = localStorage.getItem('token');
     const authLink = document.getElementById('auth-link');
     
     if (!token) {
-        // 로그인하지 않은 경우 - 로그인 유도
+        // 로그인하지 않은 경우
         authLink.textContent = '로그인';
         authLink.href = '/login';
-        return false;
+    } else {
+        // 로그인된 경우
+        authLink.textContent = '대시보드';
+        authLink.href = '/dashboard';
+    }
+}
+
+// 견적 문의 권한 체크 (상세 페이지에서 사용)
+function checkQuotePermission() {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        return { hasPermission: false, reason: 'not_logged_in' };
     }
     
-    // 로그인된 사용자 정보 확인
     const userStr = localStorage.getItem('user');
     if (!userStr) {
-        return false;
+        return { hasPermission: false, reason: 'no_user_data' };
     }
     
     const user = JSON.parse(userStr);
     
     // B2B 사용자 체크
     if (user.user_type !== 'B2B') {
-        console.log('[워크샵] B2C 사용자 접근 차단:', user.email);
-        return false;
+        return { hasPermission: false, reason: 'not_b2b' };
     }
     
     // 회사 규모 체크 (20인 이상)
     const validCompanySizes = ['20_50', '50_100', '100_300', '300_plus'];
     if (!user.company_size || !validCompanySizes.includes(user.company_size)) {
-        console.log('[워크샵] 회사 규모 부적합 (20인 미만):', user.email);
-        return false;
+        return { hasPermission: false, reason: 'company_size' };
     }
     
     // 담당자 역할 체크 (HR, 조직문화, 복리후생)
     const allowedRoles = ['hr_manager', 'culture_team', 'welfare_manager'];
     if (!user.company_role || !allowedRoles.includes(user.company_role)) {
-        console.log('[워크샵] 담당자 권한 없음:', user.email, user.company_role);
-        return false;
+        return { hasPermission: false, reason: 'not_manager' };
     }
     
-    // 모든 조건 충족 - 접근 허용
-    authLink.textContent = '대시보드';
-    authLink.href = '/dashboard';
-    return true;
+    // 모든 조건 충족
+    return { hasPermission: true };
 }
 
-// 접근 거부 메시지 표시
-function showAccessDenied() {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('workshops-container').style.display = 'none';
-    document.getElementById('empty-state').style.display = 'none';
-    
-    // Hero 섹션도 숨김
-    const heroSection = document.querySelector('.bg-gradient-to-br');
-    if (heroSection) {
-        heroSection.style.display = 'none';
-    }
-    
-    // 필터 섹션 숨김
-    const filterSection = document.querySelector('.flex.gap-2.mb-6');
-    if (filterSection) {
-        filterSection.style.display = 'none';
-    }
-    
-    // 현재 사용자 정보 확인
-    const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    
-    let denialReason = '';
-    let actionButton = '';
-    
-    if (!user) {
-        // 로그인 안 한 경우
-        denialReason = '워크샵 서비스는 <strong>로그인이 필요한 서비스</strong>입니다.';
-        actionButton = `
-            <a href="/login" class="inline-block bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-lg hover:shadow-xl font-semibold transition-all">
-                <i class="fas fa-sign-in-alt mr-2"></i>로그인하기
-            </a>
-        `;
-    } else if (user.user_type !== 'B2B') {
-        // B2C 사용자
-        denialReason = '워크샵 서비스는 <strong>기업 담당자 전용</strong>입니다.<br>일반 고객님은 <strong>원데이 클래스</strong>를 이용해 주세요.';
-        actionButton = `
-            <a href="/oneday-classes" class="inline-block bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-3 rounded-lg hover:shadow-xl font-semibold transition-all">
-                <i class="fas fa-chalkboard-teacher mr-2"></i>원데이 클래스 보기
-            </a>
-        `;
-    } else if (!user.company_role || !['hr_manager', 'culture_team', 'welfare_manager'].includes(user.company_role)) {
-        // B2B이지만 담당자 권한 없음
-        denialReason = '워크샵 서비스는 <strong>HR팀, 조직문화팀, 복리후생 담당자</strong>만 이용 가능합니다.';
-        actionButton = `
-            <div class="text-center">
-                <p class="text-gray-600 mb-4">담당자가 아니시라면 <strong>원데이 클래스</strong>를 이용해 주세요.</p>
-                <a href="/oneday-classes" class="inline-block bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-3 rounded-lg hover:shadow-xl font-semibold transition-all">
-                    <i class="fas fa-chalkboard-teacher mr-2"></i>원데이 클래스 보기
-                </a>
-            </div>
-        `;
-    } else if (!user.company_size || !['20_50', '50_100', '100_300', '300_plus'].includes(user.company_size)) {
-        // 회사 규모 부적합
-        denialReason = '워크샵 서비스는 <strong>20인 이상 기업</strong>을 대상으로 합니다.';
-        actionButton = `
-            <div class="text-center">
-                <p class="text-gray-600 mb-4">소규모 기업이시라면 <strong>원데이 클래스</strong>를 이용해 주세요.</p>
-                <a href="/oneday-classes" class="inline-block bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-3 rounded-lg hover:shadow-xl font-semibold transition-all">
-                    <i class="fas fa-chalkboard-teacher mr-2"></i>원데이 클래스 보기
-                </a>
-            </div>
-        `;
-    }
-    
-    // 접근 거부 메시지 표시
-    const container = document.querySelector('.container.mx-auto.px-4.py-12');
-    if (container) {
-        container.innerHTML = `
-            <div class="max-w-3xl mx-auto text-center py-16">
-                <div class="bg-white rounded-2xl shadow-2xl p-10">
-                    <!-- Icon -->
-                    <div class="w-24 h-24 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-user-shield text-5xl text-purple-600"></i>
-                    </div>
-                    
-                    <!-- Title -->
-                    <h2 class="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                        기업 담당자 전용 서비스
-                    </h2>
-                    
-                    <!-- Reason -->
-                    <p class="text-lg text-gray-700 mb-8">
-                        ${denialReason}
-                    </p>
-                    
-                    <!-- Info Box -->
-                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500 p-6 mb-8 text-left rounded-lg">
-                        <h3 class="font-bold text-purple-900 mb-4 text-xl flex items-center">
-                            <i class="fas fa-users-cog mr-3 text-2xl"></i>
-                            워크샵 서비스 이용 대상
-                        </h3>
-                        <div class="space-y-3 text-purple-800">
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-600 mt-1 mr-3"></i>
-                                <div>
-                                    <strong>HR팀 담당자</strong>
-                                    <p class="text-sm text-purple-700">인사 및 인재개발 담당</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-600 mt-1 mr-3"></i>
-                                <div>
-                                    <strong>조직문화팀 담당자</strong>
-                                    <p class="text-sm text-purple-700">조직문화 및 팀빌딩 담당</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-600 mt-1 mr-3"></i>
-                                <div>
-                                    <strong>복리후생 담당자</strong>
-                                    <p class="text-sm text-purple-700">직원 복지 및 교육 담당</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-600 mt-1 mr-3"></i>
-                                <div>
-                                    <strong>회사 규모</strong>
-                                    <p class="text-sm text-purple-700">20인 ~ 50인 이상 기업</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Action Button -->
-                    <div class="space-y-4">
-                        ${actionButton}
-                        
-                        <div class="text-gray-500 text-sm mt-6">
-                            <a href="/dashboard" class="text-purple-600 hover:underline font-semibold inline-flex items-center">
-                                <i class="fas fa-arrow-left mr-2"></i>대시보드로 돌아가기
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+// 워크샵 상세 페이지로 이동 (권한 체크 없이)
+function viewWorkshop(id) {
+    window.location.href = `/workshop/${id}`;
 }
 
 // 워크샵 목록 로드
