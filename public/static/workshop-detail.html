@@ -332,26 +332,65 @@
                         <!-- Instructor Requests -->
                         <div class="bg-white rounded-xl p-4 shadow-sm">
                             <label class="block text-sm font-bold text-gray-800 mb-3">
-                                <i class="fas fa-chalkboard-teacher text-purple-600 mr-2"></i>강사 초빙 (선택)
+                                <i class="fas fa-chalkboard-teacher text-purple-600 mr-2"></i>강사 초빙
                             </label>
                             <div class="space-y-3">
-                                <!-- Perfumer -->
-                                <div class="flex items-center p-3 bg-pink-50 rounded-xl hover:bg-pink-100 transition">
-                                    <input type="checkbox" id="perfumer" class="instructor-checkbox w-5 h-5 text-purple-600 rounded mr-3">
-                                    <div class="flex-1">
-                                        <div class="font-semibold text-gray-800">조향사</div>
-                                        <div class="text-xs text-gray-600">향기 제조 전문가</div>
-                                    </div>
-                                    <input type="number" id="perfumer-count" min="0" value="1" class="instructor-count w-16 px-2 py-1 border-2 border-purple-300 rounded-lg text-center font-bold">
+                                <!-- Instructor Type Selection -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">강사 선택</label>
+                                    <select id="instructor-type" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition font-medium" onchange="updateInstructorFields()">
+                                        <option value="perfumer">조향사만 (필수)</option>
+                                        <option value="both">조향사 + 심리상담사 (추천)</option>
+                                        <option value="perfumer_psychologist">조향사 + 멘탈케어 전문가</option>
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        <i class="fas fa-info-circle text-purple-500"></i>
+                                        조향사는 워크샵의 핵심 강사입니다
+                                    </p>
                                 </div>
-                                <!-- Psychologist -->
-                                <div class="flex items-center p-3 bg-purple-50 rounded-xl hover:bg-purple-100 transition">
-                                    <input type="checkbox" id="psychologist" class="instructor-checkbox w-5 h-5 text-purple-600 rounded mr-3">
+                                
+                                <!-- Perfumer (Always Required) -->
+                                <div id="perfumer-section" class="flex items-center p-3 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl border-2 border-pink-300">
                                     <div class="flex-1">
-                                        <div class="font-semibold text-gray-800">심리상담사</div>
-                                        <div class="text-xs text-gray-600">멘탈케어 전문가</div>
+                                        <div class="font-bold text-gray-900 flex items-center">
+                                            <i class="fas fa-flask text-pink-600 mr-2"></i>
+                                            조향사
+                                            <span class="ml-2 text-xs bg-pink-600 text-white px-2 py-1 rounded-full">필수</span>
+                                        </div>
+                                        <div class="text-xs text-gray-600 mt-1">향기 제조 및 아로마 전문가</div>
                                     </div>
-                                    <input type="number" id="psychologist-count" min="0" value="1" class="instructor-count w-16 px-2 py-1 border-2 border-purple-300 rounded-lg text-center font-bold">
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="adjustInstructorCount('perfumer', -1)" class="w-8 h-8 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition flex items-center justify-center font-bold">
+                                            <i class="fas fa-minus text-xs"></i>
+                                        </button>
+                                        <input type="number" id="perfumer-count" min="1" max="10" value="1" class="w-16 px-2 py-2 border-2 border-pink-400 rounded-lg text-center font-bold bg-white" readonly>
+                                        <button type="button" onclick="adjustInstructorCount('perfumer', 1)" class="w-8 h-8 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition flex items-center justify-center font-bold">
+                                            <i class="fas fa-plus text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Psychologist (Optional) -->
+                                <div id="psychologist-section" class="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border-2 border-purple-300" style="display: none;">
+                                    <div class="flex items-center mb-3">
+                                        <div class="flex-1">
+                                            <div class="font-bold text-gray-900 flex items-center">
+                                                <i class="fas fa-brain text-purple-600 mr-2"></i>
+                                                심리상담사 / 멘탈케어
+                                                <span class="ml-2 text-xs bg-purple-500 text-white px-2 py-1 rounded-full">선택</span>
+                                            </div>
+                                            <div class="text-xs text-gray-600 mt-1">직원 스트레스 관리 및 정서 케어 전문가</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="adjustInstructorCount('psychologist', -1)" class="w-8 h-8 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition flex items-center justify-center font-bold">
+                                            <i class="fas fa-minus text-xs"></i>
+                                        </button>
+                                        <input type="number" id="psychologist-count" min="0" max="10" value="1" class="w-16 px-2 py-2 border-2 border-purple-400 rounded-lg text-center font-bold bg-white" readonly>
+                                        <button type="button" onclick="adjustInstructorCount('psychologist', 1)" class="w-8 h-8 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition flex items-center justify-center font-bold">
+                                            <i class="fas fa-plus text-xs"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

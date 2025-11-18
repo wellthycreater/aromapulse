@@ -134,32 +134,43 @@ function adjustParticipants(amount) {
     input.value = newValue;
 }
 
+// Update instructor fields based on selection
+function updateInstructorFields() {
+    const instructorType = document.getElementById('instructor-type').value;
+    const psychologistSection = document.getElementById('psychologist-section');
+    
+    if (instructorType === 'perfumer') {
+        // Only perfumer (hide psychologist)
+        psychologistSection.style.display = 'none';
+        document.getElementById('psychologist-count').value = 0;
+    } else if (instructorType === 'both' || instructorType === 'perfumer_psychologist') {
+        // Show psychologist section
+        psychologistSection.style.display = 'block';
+        document.getElementById('psychologist-count').value = 1;
+    }
+}
+
+// Adjust instructor count
+function adjustInstructorCount(type, amount) {
+    const input = document.getElementById(`${type}-count`);
+    let currentValue = parseInt(input.value) || 0;
+    let newValue = currentValue + amount;
+    
+    // Perfumer: minimum 1, maximum 10
+    if (type === 'perfumer') {
+        newValue = Math.max(1, Math.min(10, newValue));
+    }
+    // Psychologist: minimum 0, maximum 10
+    else if (type === 'psychologist') {
+        newValue = Math.max(0, Math.min(10, newValue));
+    }
+    
+    input.value = newValue;
+}
+
 // Setup form handlers
 function setupFormHandlers() {
     const form = document.getElementById('quote-form');
-    
-    // Handle checkbox changes for instructor counts
-    document.getElementById('perfumer').addEventListener('change', function(e) {
-        const countInput = document.getElementById('perfumer-count');
-        if (e.target.checked) {
-            countInput.classList.remove('instructor-count');
-            countInput.disabled = false;
-        } else {
-            countInput.classList.add('instructor-count');
-            countInput.disabled = true;
-        }
-    });
-    
-    document.getElementById('psychologist').addEventListener('change', function(e) {
-        const countInput = document.getElementById('psychologist-count');
-        if (e.target.checked) {
-            countInput.classList.remove('instructor-count');
-            countInput.disabled = false;
-        } else {
-            countInput.classList.add('instructor-count');
-            countInput.disabled = true;
-        }
-    });
     
     // Handle form submission
     form.addEventListener('submit', async (e) => {
@@ -190,20 +201,28 @@ async function submitQuoteRequest() {
         const specialRequests = document.getElementById('special-requests').value;
         
         // Get instructor requests
+        const instructorType = document.getElementById('instructor-type').value;
         const requestedInstructors = [];
-        if (document.getElementById('perfumer').checked) {
-            requestedInstructors.push({
-                type: 'perfumer',
-                count: parseInt(document.getElementById('perfumer-count').value) || 1,
-                specialization: '조향사'
-            });
-        }
-        if (document.getElementById('psychologist').checked) {
-            requestedInstructors.push({
-                type: 'psychologist',
-                count: parseInt(document.getElementById('psychologist-count').value) || 1,
-                specialization: '심리상담사'
-            });
+        
+        // Perfumer is always included
+        const perfumerCount = parseInt(document.getElementById('perfumer-count').value) || 1;
+        requestedInstructors.push({
+            type: 'perfumer',
+            count: perfumerCount,
+            specialization: '조향사'
+        });
+        
+        // Add psychologist if selected
+        if (instructorType === 'both' || instructorType === 'perfumer_psychologist') {
+            const psychologistCount = parseInt(document.getElementById('psychologist-count').value) || 0;
+            if (psychologistCount > 0) {
+                const specializationType = instructorType === 'both' ? '심리상담사' : '멘탈케어 전문가';
+                requestedInstructors.push({
+                    type: 'psychologist',
+                    count: psychologistCount,
+                    specialization: specializationType
+                });
+            }
         }
         
         // Get workation option
