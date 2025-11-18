@@ -126,7 +126,8 @@ app.get('/profile-edit', (c) => c.redirect('/static/profile-edit.html'));
 app.get('/workshops', (c) => c.redirect('/static/workshops.html'));
 
 // One-day classes page - redirect to static file (B2C + B2B 개인 - 로컬 공방 클래스)
-app.get('/oneday-classes', (c) => c.redirect('/static/oneday-classes.html'));
+app.get('/oneday-classes', (c) => c.redirect('/static/classes.html'));
+app.get('/classes', (c) => c.redirect('/static/classes.html'));
 
 // Workshop detail page - redirect to static file with ID
 app.get('/workshop/:id', (c) => {
@@ -137,6 +138,11 @@ app.get('/workshop/:id', (c) => {
 // One-day class detail page - redirect to static file with ID
 app.get('/oneday-class/:id', (c) => {
   const id = c.req.param('id');
+  return c.redirect(`/static/class-detail.html?id=${id}`);
+});
+app.get('/class/:id', (c) => {
+  const id = c.req.param('id');
+  return c.redirect(`/static/class-detail.html?id=${id}`);
   return c.redirect(`/static/oneday-class-detail.html?id=${id}`);
 });
 
