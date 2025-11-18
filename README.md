@@ -91,7 +91,7 @@
 
 ### 주요 기능
 - **클래스 등록**: 
-  - 클래스명, 설명, 카테고리 (캔들, 디퓨저, 향수, 룸스프레이, 섬유향수, 아로마테라피 기초 등)
+  - 클래스명, 설명, 카테고리 (캔들, 디퓨저, 향수, 룸스프레이, 섬유향수, 섬유 탈취제, 아로마테라피 기초 등)
   - 지역, 상세 주소
   - 가격, 소요 시간 (분), 최대 참가 인원
   - 대표 이미지 업로드
@@ -117,6 +117,16 @@
 - `POST /api/workshops` - 클래스 등록
 - `PUT /api/workshops/:id` - 클래스 수정
 - `DELETE /api/workshops/:id` - 클래스 삭제 (비활성화)
+
+### 카테고리 지원
+- 캔들 만들기
+- 디퓨저 만들기
+- 향수 만들기
+- 룸스프레이 만들기
+- 섬유향수 만들기
+- 섬유 탈취제 만들기
+- 아로마테라피 기초
+- 기타
 
 ### 데이터베이스 테이블
 - `workshops`: 클래스 정보 저장 (id, provider_id, title, description, category, location, address, price, duration, max_participants, image_url, is_active)
