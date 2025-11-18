@@ -45,6 +45,16 @@ document.addEventListener('DOMContentLoaded', () => {
       closeClassModal();
     }
   });
+  
+  // 원데이 클래스 폼 제출 이벤트
+  document.getElementById('oneday-class-form').addEventListener('submit', handleOnedayClassFormSubmit);
+  
+  // 원데이 클래스 모달 외부 클릭시 닫기
+  document.getElementById('oneday-class-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'oneday-class-modal') {
+      closeOnedayClassModal();
+    }
+  });
 });
 
 // 탭 전환
@@ -2587,7 +2597,7 @@ async function deleteOnedayClass(id) {
 }
 
 // 원데이 클래스 폼 제출
-document.getElementById('oneday-class-form').addEventListener('submit', async (e) => {
+async function handleOnedayClassFormSubmit(e) {
   e.preventDefault();
   
   try {
@@ -2611,6 +2621,8 @@ document.getElementById('oneday-class-form').addEventListener('submit', async (e
       is_active: document.getElementById('oneday-class-active').checked ? 1 : 0,
       type: 'class'
     };
+    
+    console.log('원데이 클래스 제출 데이터:', data); // 디버깅용
     
     const url = isEditingOnedayClass 
       ? `/api/workshops/${editingOnedayClassId}`
@@ -2642,7 +2654,7 @@ document.getElementById('oneday-class-form').addEventListener('submit', async (e
     console.error('원데이 클래스 저장 오류:', error);
     alert(`원데이 클래스 저장에 실패했습니다:\n${error.message}`);
   }
-});
+}
 
 // 원데이 클래스 이미지 업로드
 async function uploadOnedayClassImage() {
