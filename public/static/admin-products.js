@@ -2020,7 +2020,7 @@ async function loadClasses() {
     
     const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
     
-    const response = await fetch('/api/workshops?limit=100', {
+    const response = await fetch('/api/workshops?type=workshop&limit=100', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -2385,7 +2385,7 @@ async function loadOnedayClasses() {
     
     const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
     
-    const response = await fetch('/api/oneday-classes?limit=100', {
+    const response = await fetch('/api/workshops?type=class&limit=100', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
