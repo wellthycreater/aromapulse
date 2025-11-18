@@ -2076,7 +2076,7 @@ function renderClasses() {
       ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">활성</span>'
       : '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">비활성</span>';
     
-    const imageUrl = classItem.image_url || '/static/placeholder-class.jpg';
+    const imageUrl = (classItem.image_url && classItem.image_url !== 'null') ? classItem.image_url : 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800';
     const price = classItem.price ? `${classItem.price.toLocaleString()}원` : '가격 미정';
     const duration = classItem.duration ? `${classItem.duration}분` : '시간 미정';
     const maxParticipants = classItem.max_participants ? `최대 ${classItem.max_participants}명` : '인원 제한 없음';
@@ -2452,9 +2452,10 @@ function renderOnedayClasses() {
     
     card.innerHTML = `
       <div class="relative h-48">
-        <img src="${classItem.image_url || '/static/placeholder.jpg'}" 
+        <img src="${(classItem.image_url && classItem.image_url !== 'null') ? classItem.image_url : 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800'}" 
              alt="${classItem.title}" 
-             class="w-full h-full object-cover">
+             class="w-full h-full object-cover"
+             onerror="this.src='https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800'">
         <div class="absolute top-2 right-2">
           <span class="px-3 py-1 rounded-full text-xs font-semibold ${classItem.is_active ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}">
             ${classItem.is_active ? '활성' : '비활성'}
