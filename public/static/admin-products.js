@@ -2274,7 +2274,8 @@ async function handleClassFormSubmit(e) {
     duration,
     max_participants: maxParticipants,
     is_active: isActive,
-    image_url: imageUrl || null
+    image_url: imageUrl || null,
+    type: 'workshop'
   };
   
   try {
@@ -2607,12 +2608,13 @@ document.getElementById('oneday-class-form').addEventListener('submit', async (e
       duration: parseInt(document.getElementById('oneday-class-duration').value) || null,
       max_participants: parseInt(document.getElementById('oneday-class-max-participants').value) || null,
       image_url: imageUrl || null,
-      is_active: document.getElementById('oneday-class-active').checked ? 1 : 0
+      is_active: document.getElementById('oneday-class-active').checked ? 1 : 0,
+      type: 'class'
     };
     
     const url = isEditingOnedayClass 
-      ? `/api/oneday-classes/${editingOnedayClassId}`
-      : '/api/oneday-classes';
+      ? `/api/workshops/${editingOnedayClassId}`
+      : '/api/workshops';
     
     const method = isEditingOnedayClass ? 'PUT' : 'POST';
     
