@@ -28,15 +28,10 @@ async function loadUserProfile() {
         const user = response.data.user;
         currentUser = user;
         
-        // 사용자 유형 배지 설정
-        const badge = document.getElementById('user-type-badge');
+        // 사용자 유형에 따라 해당 섹션 표시
         if (user.user_type === 'B2C') {
-            badge.textContent = 'B2C 개인고객';
-            badge.classList.add('bg-purple-100', 'text-purple-700');
             document.getElementById('b2c-section').style.display = 'block';
         } else if (user.user_type === 'B2B') {
-            badge.textContent = 'B2B 비즈니스';
-            badge.classList.add('bg-blue-100', 'text-blue-700');
             document.getElementById('b2b-section').style.display = 'block';
         }
         
