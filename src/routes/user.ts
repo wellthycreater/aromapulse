@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
+import { verifyToken } from '../utils/jwt';
 
 const user = new Hono<{ Bindings: Bindings }>();
 
@@ -13,16 +14,6 @@ async function hashPassword(password: string): Promise<string> {
     .join('');
 }
 
-// JWT 토큰에서 사용자 정보 추출
-function getUserFromToken(token: string): any {
-  try {
-    const payload = JSON.parse(atob(token));
-    return payload;
-  } catch (error) {
-    return null;
-  }
-}
-
 // 인증 미들웨어
 async function authMiddleware(c: any, next: any) {
   const authHeader = c.req.header('Authorization');
@@ -32,17 +23,24 @@ async function authMiddleware(c: any, next: any) {
   }
   
   const token = authHeader.substring(7);
-  const tokenData = getUserFromToken(token);
   
-  if (!tokenData || !tokenData.userId) {
-    return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+  try {
+    // JWT 토큰 검증
+    const tokenData = await verifyToken(token, c.env.JWT_SECRET);
+    
+    if (!tokenData || !tokenData.userId) {
+      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+    }
+    
+    // 토큰에서 사용자 ID 추출하여 context에 저장
+    c.set('userId', tokenData.userId);
+    c.set('userEmail', tokenData.email);
+    
+    await next();
+  } catch (error: any) {
+    console.error('Token verification failed:', error.message);
+    return c.json({ error: '토큰 인증 실패: ' + error.message }, 401);
   }
-  
-  // 토큰에서 사용자 ID 추출하여 context에 저장
-  c.set('userId', tokenData.userId);
-  c.set('userEmail', tokenData.email);
-  
-  await next();
 }
 
 // 모든 user 라우트에 인증 적용
