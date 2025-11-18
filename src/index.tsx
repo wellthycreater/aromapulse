@@ -678,7 +678,29 @@ app.get('/', (c) => {
             buttonBottom: '20px',
             buttonRight: '20px'
         });
+        
+        // 챗봇 버튼 고정 스타일 추가
+        setTimeout(function() {
+            const chatbotButton = document.querySelector('[id*="sidetalk"], [class*="sidetalk"]');
+            if (chatbotButton) {
+                chatbotButton.style.position = 'fixed';
+                chatbotButton.style.bottom = '20px';
+                chatbotButton.style.right = '20px';
+                chatbotButton.style.zIndex = '9999';
+            }
+        }, 1000);
         </script>
+        
+        <style>
+            /* 사이드톡 챗봇 버튼 강제 고정 */
+            [id*="sidetalk"],
+            [class*="sidetalk"] {
+                position: fixed !important;
+                bottom: 20px !important;
+                right: 20px !important;
+                z-index: 9999 !important;
+            }
+        </style>
     </body>
     </html>
   `);
