@@ -128,8 +128,8 @@ function adjustParticipants(amount) {
     let currentValue = parseInt(input.value) || 10;
     let newValue = currentValue + amount;
     
-    // Keep within bounds
-    newValue = Math.max(10, Math.min(1000, newValue));
+    // Minimum 1, no maximum limit
+    newValue = Math.max(1, newValue);
     
     input.value = newValue;
 }
