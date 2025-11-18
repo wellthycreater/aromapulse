@@ -19,6 +19,7 @@ import blogAnalysisRoutes from './routes/blog-analysis';
 import chatbotRoutes from './routes/chatbot';
 import blogReviewsRoutes from './routes/blog-reviews';
 import ordersRoutes from './routes/orders';
+import userRoutes from './routes/user';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -44,6 +45,7 @@ app.route('/api/blog-analysis', blogAnalysisRoutes);
 app.route('/api/chatbot', chatbotRoutes);
 app.route('/api/blog-reviews', blogReviewsRoutes);
 app.route('/api/orders', ordersRoutes);
+app.route('/api/user', userRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
@@ -100,11 +102,21 @@ app.get('/login', (c) => c.redirect('/static/login.html'));
 // Forgot password page - redirect to static file
 app.get('/forgot-password', (c) => c.redirect('/static/forgot-password.html'));
 
+// Developer login page - redirect to static file (DEV ONLY)
+app.get('/dev-login', (c) => c.redirect('/static/dev-login.html'));
+
+// Test login debug page (DEV ONLY)
+app.get('/test-login', (c) => c.redirect('/static/test-login-debug.html'));
+
 // Signup page - redirect to static file  
 app.get('/signup', (c) => c.redirect('/static/signup.html'));
 
 // Dashboard page - redirect to static file
 app.get('/dashboard', (c) => c.redirect('/static/dashboard.html'));
+
+// Profile edit page - redirect to static file
+app.get('/profile', (c) => c.redirect('/static/profile-edit.html'));
+app.get('/profile-edit', (c) => c.redirect('/static/profile-edit.html'));
 
 // Workshops page - redirect to static file
 app.get('/workshops', (c) => c.redirect('/static/workshops.html'));
@@ -149,6 +161,10 @@ app.get('/admin/blog-reviews', (c) => c.redirect('/static/blog-reviews.html'));
 // B2B Leads management page
 app.get('/admin/b2b-leads', (c) => c.redirect('/static/b2b-leads.html'));
 app.get('/b2b-leads', (c) => c.redirect('/static/b2b-leads.html'));
+
+// Admin users management page
+app.get('/admin/users', (c) => c.redirect('/static/admin-users.html'));
+app.get('/admin-users', (c) => c.redirect('/static/admin-users.html'));
 
 // Admin creation page
 app.get('/create-admin', (c) => c.redirect('/static/create-admin.html'));
@@ -213,7 +229,12 @@ app.get('/', (c) => {
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
-                        <a href="/workshops" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                        <!-- B2C용 원데이 클래스 메뉴 -->
+                        <a href="/oneday-classes" id="oneday-class-menu" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center" style="display: none;">
+                            <i class="fas fa-star mr-2"></i>원데이 클래스
+                        </a>
+                        <!-- B2B용 워크샵 메뉴 -->
+                        <a href="/workshops" id="workshop-menu" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center" style="display: none;">
                             <i class="fas fa-spa mr-2"></i>워크샵
                         </a>
                         <a href="/dashboard" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
@@ -647,23 +668,37 @@ app.get('/', (c) => {
                 
                 // 메뉴 가시성 제어
                 const token = localStorage.getItem('token');
-                const workshopLink = document.querySelector('a[href="/workshops"]');
+                const onedayClassMenu = document.getElementById('oneday-class-menu');
+                const workshopMenu = document.getElementById('workshop-menu');
                 
-                if (workshopLink) {
+                if (onedayClassMenu && workshopMenu) {
                     if (token) {
                         try {
                             const payload = JSON.parse(atob(token.split('.')[1]));
-                            // B2B 사용자만 워크샵 메뉴 표시
-                            if (payload.userType === 'B2B') {
-                                workshopLink.style.display = 'flex';
-                            } else {
-                                workshopLink.style.display = 'none';
+                            // B2C 사용자는 원데이 클래스 메뉴 표시
+                            if (payload.userType === 'B2C') {
+                                onedayClassMenu.style.display = 'flex';
+                                workshopMenu.style.display = 'none';
+                            }
+                            // B2B 사용자는 워크샵 메뉴 표시
+                            else if (payload.userType === 'B2B') {
+                                onedayClassMenu.style.display = 'none';
+                                workshopMenu.style.display = 'flex';
+                            }
+                            // 그 외에는 둘 다 숨김
+                            else {
+                                onedayClassMenu.style.display = 'none';
+                                workshopMenu.style.display = 'none';
                             }
                         } catch (e) {
-                            workshopLink.style.display = 'none';
+                            // 토큰 파싱 실패 시 둘 다 숨김
+                            onedayClassMenu.style.display = 'none';
+                            workshopMenu.style.display = 'none';
                         }
                     } else {
-                        workshopLink.style.display = 'none';
+                        // 로그인하지 않은 경우 둘 다 숨김
+                        onedayClassMenu.style.display = 'none';
+                        workshopMenu.style.display = 'none';
                     }
                 }
             });

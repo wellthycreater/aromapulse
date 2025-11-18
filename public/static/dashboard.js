@@ -4,7 +4,14 @@ let currentUser = null;
 
 // 페이지 로드 시 실행
 window.addEventListener('DOMContentLoaded', async () => {
-    await loadUserData();
+    console.log('[DASHBOARD] Page loaded, checking localStorage...');
+    console.log('[DASHBOARD] localStorage.token exists:', !!localStorage.getItem('token'));
+    console.log('[DASHBOARD] localStorage.user exists:', !!localStorage.getItem('user'));
+    
+    // 짧은 지연 후 실행 (localStorage 준비 대기)
+    setTimeout(async () => {
+        await loadUserData();
+    }, 100);
 });
 
 // 사용자 데이터 로드
@@ -14,13 +21,18 @@ async function loadUserData() {
         const token = localStorage.getItem('token');
         const userStr = localStorage.getItem('user');
         
+        console.log('[DEBUG] Dashboard load - token:', token ? 'exists' : 'missing');
+        console.log('[DEBUG] Dashboard load - userStr:', userStr ? 'exists' : 'missing');
+        
         if (!token || !userStr) {
             // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
+            console.log('[DEBUG] Redirecting to login - missing token or user');
             window.location.href = '/login';
             return;
         }
         
         currentUser = JSON.parse(userStr);
+        console.log('[DEBUG] Current user loaded:', currentUser.email, currentUser.user_type);
         
         // 헤더에 사용자 이름 표시
         document.getElementById('user-name').textContent = currentUser.name;
@@ -78,11 +90,15 @@ async function loadB2CDashboard() {
     
     // 카테고리 한글 변환
     const categoryText = getCategoryText(currentUser.b2c_category, currentUser.b2c_subcategory);
-    document.getElementById('b2c-category').textContent = categoryText;
+    document.getElementById('b2c-category').textContent = categoryText || '미설정';
     
     // 가입일 포맷
-    const createdDate = new Date(currentUser.created_at).toLocaleDateString('ko-KR');
-    document.getElementById('b2c-created').textContent = createdDate;
+    if (currentUser.created_at) {
+        const createdDate = new Date(currentUser.created_at).toLocaleDateString('ko-KR');
+        document.getElementById('b2c-created').textContent = createdDate;
+    } else {
+        document.getElementById('b2c-created').textContent = '정보 없음';
+    }
     
     // 통계 데이터 로드
     await loadB2CStats();
@@ -102,11 +118,15 @@ async function loadB2BDashboard() {
     
     // 카테고리 한글 변환
     const categoryText = getB2BCategoryText(currentUser.b2b_category);
-    document.getElementById('b2b-category').textContent = categoryText;
+    document.getElementById('b2b-category').textContent = categoryText || '미설정';
     
     // 가입일 포맷
-    const createdDate = new Date(currentUser.created_at).toLocaleDateString('ko-KR');
-    document.getElementById('b2b-created').textContent = createdDate;
+    if (currentUser.created_at) {
+        const createdDate = new Date(currentUser.created_at).toLocaleDateString('ko-KR');
+        document.getElementById('b2b-created').textContent = createdDate;
+    } else {
+        document.getElementById('b2b-created').textContent = '정보 없음';
+    }
     
     // 통계 데이터 로드
     await loadB2BStats();

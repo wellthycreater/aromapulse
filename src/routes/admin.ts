@@ -229,4 +229,59 @@ admin.get('/dashboard/stats', async (c) => {
   }
 });
 
+// 회원 목록 조회
+admin.get('/users', async (c) => {
+  try {
+    const users = await c.env.DB.prepare(`
+      SELECT id, email, name, user_type, phone, gender, age_group, 
+             is_active, created_at, last_login_at, role,
+             b2b_company_name, b2b_business_type
+      FROM users 
+      ORDER BY created_at DESC
+    `).all();
+    
+    return c.json({ users: users.results || [] });
+  } catch (error: any) {
+    console.error('Get users error:', error);
+    return c.json({ error: '회원 목록 조회 실패', details: error.message }, 500);
+  }
+});
+
+// 특정 회원 상세 조회
+admin.get('/users/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    const user = await c.env.DB.prepare(`
+      SELECT * FROM users WHERE id = ?
+    `).bind(id).first();
+    
+    if (!user) {
+      return c.json({ error: '회원을 찾을 수 없습니다' }, 404);
+    }
+    
+    return c.json({ user });
+  } catch (error: any) {
+    console.error('Get user detail error:', error);
+    return c.json({ error: '회원 조회 실패', details: error.message }, 500);
+  }
+});
+
+// 회원 상태 변경 (활성화/비활성화)
+admin.patch('/users/:id/status', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const { is_active } = await c.req.json();
+    
+    await c.env.DB.prepare(`
+      UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+    `).bind(is_active ? 1 : 0, id).run();
+    
+    return c.json({ message: '회원 상태가 변경되었습니다' });
+  } catch (error: any) {
+    console.error('Update user status error:', error);
+    return c.json({ error: '상태 변경 실패', details: error.message }, 500);
+  }
+});
+
 export default admin;

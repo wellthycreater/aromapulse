@@ -713,20 +713,122 @@ curl -X POST https://your-domain/api/auth/create-admin \
   }'
 ```
 
-**기본 관리자 계정**:
-- 이메일: `admin@aromapulse.kr`
-- 비밀번호: (초기 설정 시 지정)
-- 역할: `admin`
+**개발자 테스트 계정** ✅ (2025-11-18 업데이트):
+- **B2C 일반 사용자**: 
+  - 이메일: `b2c@test.com`
+  - 비밀번호: `test`
+  - 용도: B2C 대시보드 및 기능 테스트
+- **B2B 기업 사용자**: 
+  - 이메일: `b2b@test.com`
+  - 비밀번호: `test`
+  - 용도: B2B 대시보드 및 워크샵 기능 테스트
+- **관리자**: 
+  - 이메일: `admin@test.com`
+  - 비밀번호: `test`
+  - 역할: `admin`
+  - 용도: 관리자 페이지 및 회원 관리 기능 테스트
+
+**개발자 안내 페이지**: `/dev-login` - 테스트 계정 정보 및 로그인 페이지 바로가기
 
 **관리자 페이지 접근**:
 - 제품 관리: `/admin-products`
 - 블로그 리뷰 분석: `/admin/blog-reviews`
+- 회원 관리: `/admin/users` ✅ (NEW)
 
-리: `/admin-products`
-- 블로그 리뷰 분석: `/admin/blog-reviews`
+**사용자 프로필 관리**:
+- 프로필 수정: `/profile` ✅ (NEW - 2025-11-18)
+  - B2C 사용자: 일상/직무 스트레스 카테고리 및 세부 정보 수정
+  - B2B 사용자: 조향사/기업/매장/독립직군 카테고리 및 비즈니스 정보 수정
+  - 공통: 기본 정보, 비밀번호 변경 기능
 
 
-## 🆕 최신 업데이트 (v1.5.0) - 블로그 관리 시스템
+## 🆕 최신 업데이트 (v1.6.0) - 프로필 관리 시스템
+
+### ✅ 완료된 작업 (2025-11-18)
+
+**프로필 수정 기능 추가**
+1. **프로필 수정 페이지 구현** (`/profile`)
+   - B2C와 B2B 사용자 유형에 따른 동적 폼
+   - 기본 정보 수정 (이름, 전화번호, 지역, 성별, 연령대)
+   - 비밀번호 변경 기능
+   - 대시보드에서 "프로필 수정" 버튼으로 접근
+
+2. **B2C 사용자 프로필 관리**
+   - **일상 스트레스 카테고리**:
+     - 학생: 고등학생, 대학생, 대학원생
+     - 구직자: 고시 준비생, 신규 졸업자, 경력 전환 희망자, 파트타임 구직자, 단기 구직자, 장기 구직자
+     - 양육자: 워킹맘, 워킹대디, 전업 양육자, 한부모
+   - **직무 스트레스 카테고리**:
+     - 9개 업종: IT 개발자, 디자인 기획, 교육 강사, 의료 복지, 서비스 고객 응대, 제조 생산, 공공 행정, 영업 마케팅, 연구 기술
+
+3. **B2B 사용자 프로필 관리**
+   - **조향사 (파트너 제휴)**:
+     - 공방/브랜드 이름
+     - 협업 관심 분야 (제품 공동 개발, 워크숍/클래스, 제품 유통)
+   - **기업 (대량 납품/클래스)**:
+     - 기업명, 기업 규모, 부서, 직책
+     - 문의 유형 (대량 납품, 기업 단체 클래스, 복리후생 프로그램, 워크샵)
+   - **매장 (제품 문의)**:
+     - 매장명, 매장 유형 (향수 전문점, 라이프스타일 편집샵, 카페, 요가센터)
+     - 문의 유형 (제품 입고 문의, 도매 거래, 협업 제안)
+   - **독립 직군**:
+     - 독립 직군 유형 (자영업자, 창업자/스타트업, 프리랜서, 크리에이터/인플루언서)
+     - 사업자명/활동명, 사업/활동 분야
+     - 관심 분야 (제품 협업, 홍보/마케팅, 워크샵/클래스)
+   - **공통 B2B 정보**: 사업자 번호, 사업장 주소
+
+4. **백엔드 API 구현**
+   - `GET /api/user/profile` - 현재 사용자 프로필 조회
+   - `PUT /api/user/profile` - 프로필 정보 수정
+   - `PUT /api/user/change-password` - 비밀번호 변경
+   - JWT 토큰 기반 인증 미들웨어
+
+5. **사용자 경험 개선**
+   - 카테고리 선택 시 관련 필드만 동적으로 표시
+   - 현재 저장된 정보 자동 로드 및 폼 채우기
+   - 체크박스 항목 (관심 분야 등) JSON 파싱 및 저장
+   - 저장 후 localStorage 업데이트 및 대시보드로 자동 이동
+
+### 📋 프로필 관리 API 엔드포인트
+
+**프로필 조회 및 수정**:
+- `GET /api/user/profile` - 현재 사용자 프로필 조회 (JWT 인증 필요)
+- `PUT /api/user/profile` - 프로필 정보 수정 (JWT 인증 필요)
+- `PUT /api/user/change-password` - 비밀번호 변경 (JWT 인증 필요)
+
+**사용 예시**:
+```bash
+# 프로필 조회
+curl -X GET https://your-domain/api/user/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# 프로필 수정
+curl -X PUT https://your-domain/api/user/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "홍길동",
+    "phone": "010-1234-5678",
+    "region": "서울",
+    "age_group": "30대",
+    "gender": "남성",
+    "b2c_category": "work_stress",
+    "b2c_subcategory": "it_developer"
+  }'
+
+# 비밀번호 변경
+curl -X PUT https://your-domain/api/user/change-password \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "current_password": "old_password",
+    "new_password": "new_password_123"
+  }'
+```
+
+---
+
+## 🆕 이전 업데이트 (v1.5.0) - 블로그 관리 시스템
 
 ### ✅ 완료된 작업 (2025-11-14)
 

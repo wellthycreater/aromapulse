@@ -142,7 +142,9 @@ auth.post('/login', async (c) => {
         user_type: user.user_type,
         role: user.role || 'user',
         b2c_category: user.b2c_category,
-        b2b_category: user.b2b_category
+        b2b_category: user.b2b_category,
+        created_at: user.created_at,
+        b2b_business_name: user.b2b_business_name
       }
     });
     
@@ -646,7 +648,9 @@ auth.post('/admin-login', async (c) => {
         user_type: user.user_type,
         role: user.role || 'user',
         b2c_category: user.b2c_category,
-        b2b_category: user.b2b_category
+        b2b_category: user.b2b_category,
+        created_at: user.created_at,
+        b2b_business_name: user.b2b_business_name
       }
     });
     
@@ -1039,6 +1043,95 @@ auth.post('/forgot-password', async (c) => {
     console.error('[Forgot Password] Error:', error);
     return c.json({ 
       error: '비밀번호 재설정 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
+// Developer Login - Password-less authentication for testing
+auth.post('/dev-login', async (c) => {
+  try {
+    const { email } = await c.req.json();
+    
+    console.log('[DEV-LOGIN] 개발자 로그인 요청:', email);
+    
+    if (!email) {
+      return c.json({ error: '이메일을 입력해주세요' }, 400);
+    }
+    
+    // Find existing user
+    let user = await c.env.DB.prepare(
+      'SELECT id, email, name, user_type, gender, phone FROM users WHERE email = ?'
+    ).bind(email).first();
+    
+    // If user doesn't exist, auto-create test account
+    if (!user) {
+      console.log('[DEV-LOGIN] 사용자가 없음, 자동 생성:', email);
+      
+      const userType = email.includes('b2b') ? 'B2B' : 
+                       email.includes('admin') ? 'B2B' : 'B2C';
+      const name = email.includes('b2c') ? 'B2C 테스트 사용자' : 
+                   email.includes('b2b') ? 'B2B 테스트 사용자' : 
+                   email.includes('admin') ? '개발자 관리자' : '개발 테스트 사용자';
+      
+      // Generate dummy password hash (not used in dev login)
+      const dummyPassword = 'dev-test-password';
+      const encoder = new TextEncoder();
+      const data = encoder.encode(dummyPassword);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const password_hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      const result = await c.env.DB.prepare(
+        `INSERT INTO users (email, name, password_hash, user_type, is_active) 
+         VALUES (?, ?, ?, ?, 1)`
+      ).bind(email, name, password_hash, userType).run();
+      
+      console.log('[DEV-LOGIN] 사용자 생성 완료, ID:', result.meta.last_row_id);
+      
+      // Fetch the newly created user
+      user = await c.env.DB.prepare(
+        'SELECT id, email, name, user_type, gender, phone FROM users WHERE id = ?'
+      ).bind(result.meta.last_row_id).first();
+    }
+    
+    if (!user) {
+      return c.json({ error: '사용자 생성 실패' }, 500);
+    }
+    
+    console.log('[DEV-LOGIN] 로그인 성공:', user.email, user.name, user.user_type);
+    
+    // Generate JWT token (simplified for dev environment)
+    const tokenPayload = {
+      userId: user.id,
+      email: user.email,
+      userType: user.user_type,
+      name: user.name,
+      iat: Date.now()
+    };
+    
+    // Base64 encode the token using TextEncoder for UTF-8 support
+    const encoder = new TextEncoder();
+    const data = encoder.encode(JSON.stringify(tokenPayload));
+    const base64 = btoa(String.fromCharCode(...data));
+    const token = base64;
+    
+    return c.json({ 
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        userType: user.user_type,
+        gender: user.gender,
+        phone: user.phone
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('[DEV-LOGIN] 에러:', error.message);
+    return c.json({ 
+      error: '개발자 로그인 실패', 
       details: error.message 
     }, 500);
   }

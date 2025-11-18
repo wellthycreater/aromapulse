@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원 관리 - AromaPulse Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-users-cog text-3xl text-purple-600"></i>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">회원 관리</h1>
+                    <p class="text-sm text-gray-600">User Management</p>
+                </div>
+            </div>
+            <nav class="flex items-center space-x-4">
+                <a href="/admin/products" class="text-gray-600 hover:text-purple-600 transition">
+                    <i class="fas fa-box mr-1"></i>제품 관리
+                </a>
+                <a href="/admin/orders" class="text-gray-600 hover:text-purple-600 transition">
+                    <i class="fas fa-shopping-cart mr-1"></i>주문 관리
+                </a>
+                <button onclick="logout()" class="text-red-600 hover:text-red-800 transition">
+                    <i class="fas fa-sign-out-alt mr-1"></i>로그아웃
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-80">전체 회원</p>
+                        <p class="text-3xl font-bold" id="totalUsers">-</p>
+                    </div>
+                    <i class="fas fa-users text-4xl opacity-50"></i>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-80">B2C 회원</p>
+                        <p class="text-3xl font-bold" id="b2cUsers">-</p>
+                    </div>
+                    <i class="fas fa-user text-4xl opacity-50"></i>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-80">B2B 회원</p>
+                        <p class="text-3xl font-bold" id="b2bUsers">-</p>
+                    </div>
+                    <i class="fas fa-building text-4xl opacity-50"></i>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-80">오늘 가입</p>
+                        <p class="text-3xl font-bold" id="todayUsers">-</p>
+                    </div>
+                    <i class="fas fa-user-plus text-4xl opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">회원 유형</label>
+                    <select id="filterUserType" onchange="filterUsers()" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <option value="">전체</option>
+                        <option value="B2C">B2C</option>
+                        <option value="B2B">B2B</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">활성 상태</label>
+                    <select id="filterActive" onchange="filterUsers()" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <option value="">전체</option>
+                        <option value="1">활성</option>
+                        <option value="0">비활성</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">검색</label>
+                    <input type="text" id="searchInput" onkeyup="filterUsers()" placeholder="이름, 이메일 검색..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이메일</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">유형</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">전화번호</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">가입일</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                                <p>회원 정보를 불러오는 중...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div id="userDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+                <h3 class="text-xl font-bold">
+                    <i class="fas fa-user-circle mr-2"></i>
+                    회원 상세 정보
+                </h3>
+                <button onclick="closeUserModal()" class="text-white hover:text-gray-200 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="userDetailContent" class="p-6">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+        let currentUser = null;
+
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/admin-login';
+        }
+
+        // Set axios default headers
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        // Load users on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+        });
+
+        async function loadUsers() {
+            try {
+                const response = await axios.get('/api/admin/users');
+                allUsers = response.data.users || [];
+                displayStatistics();
+                displayUsers(allUsers);
+            } catch (error) {
+                console.error('회원 목록 로딩 실패:', error);
+                if (error.response?.status === 401 || error.response?.status === 403) {
+                    alert('관리자 권한이 필요합니다.');
+                    window.location.href = '/admin-login';
+                } else {
+                    alert('회원 목록 로딩에 실패했습니다: ' + (error.response?.data?.error || error.message));
+                }
+            }
+        }
+
+        function displayStatistics() {
+            const total = allUsers.length;
+            const b2c = allUsers.filter(u => u.user_type === 'B2C').length;
+            const b2b = allUsers.filter(u => u.user_type === 'B2B').length;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayCount = allUsers.filter(u => u.created_at?.startsWith(today)).length;
+
+            document.getElementById('totalUsers').textContent = total;
+            document.getElementById('b2cUsers').textContent = b2c;
+            document.getElementById('b2bUsers').textContent = b2b;
+            document.getElementById('todayUsers').textContent = todayCount;
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fas fa-user-slash text-4xl mb-4"></i>
+                            <p>회원이 없습니다.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.name || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                            user.user_type === 'B2C' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                        }">
+                            ${user.user_type}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${user.phone || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(user.created_at)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                            user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }">
+                            ${user.is_active ? '활성' : '비활성'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="viewUserDetail(${user.id})" 
+                                class="text-purple-600 hover:text-purple-800 mr-3">
+                            <i class="fas fa-eye"></i> 보기
+                        </button>
+                        <button onclick="toggleUserStatus(${user.id}, ${user.is_active ? 0 : 1})" 
+                                class="text-${user.is_active ? 'red' : 'green'}-600 hover:text-${user.is_active ? 'red' : 'green'}-800">
+                            <i class="fas fa-${user.is_active ? 'ban' : 'check-circle'}"></i> ${user.is_active ? '비활성화' : '활성화'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterUsers() {
+            const userType = document.getElementById('filterUserType').value;
+            const activeStatus = document.getElementById('filterActive').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allUsers;
+
+            if (userType) {
+                filtered = filtered.filter(u => u.user_type === userType);
+            }
+
+            if (activeStatus !== '') {
+                filtered = filtered.filter(u => u.is_active === parseInt(activeStatus));
+            }
+
+            if (searchTerm) {
+                filtered = filtered.filter(u => 
+                    u.email.toLowerCase().includes(searchTerm) ||
+                    (u.name && u.name.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            displayUsers(filtered);
+        }
+
+        async function viewUserDetail(userId) {
+            try {
+                const response = await axios.get(`/api/admin/users/${userId}`);
+                const user = response.data.user;
+                currentUser = user;
+
+                const content = `
+                    <div class="space-y-6">
+                        <!-- Basic Info -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-id-card mr-2 text-purple-600"></i>
+                                기본 정보
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">ID</p>
+                                    <p class="font-medium">${user.id}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">이메일</p>
+                                    <p class="font-medium">${user.email}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">이름</p>
+                                    <p class="font-medium">${user.name || '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">전화번호</p>
+                                    <p class="font-medium">${user.phone || '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">성별</p>
+                                    <p class="font-medium">${user.gender || '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">연령대</p>
+                                    <p class="font-medium">${user.age_group || '-'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Info -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-user-cog mr-2 text-blue-600"></i>
+                                계정 정보
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">회원 유형</p>
+                                    <p class="font-medium">
+                                        <span class="px-3 py-1 rounded-full text-xs ${
+                                            user.user_type === 'B2C' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                                        }">
+                                            ${user.user_type}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">상태</p>
+                                    <p class="font-medium">
+                                        <span class="px-3 py-1 rounded-full text-xs ${
+                                            user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                        }">
+                                            ${user.is_active ? '활성' : '비활성'}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">가입일</p>
+                                    <p class="font-medium">${formatDate(user.created_at)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">최근 로그인</p>
+                                    <p class="font-medium">${user.last_login_at ? formatDate(user.last_login_at) : '기록 없음'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${user.user_type === 'B2B' ? `
+                        <!-- B2B Info -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-building mr-2 text-green-600"></i>
+                                B2B 정보
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">회사명</p>
+                                    <p class="font-medium">${user.b2b_company_name || '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">사업 유형</p>
+                                    <p class="font-medium">${user.b2b_business_type || '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">회사 규모</p>
+                                    <p class="font-medium">${user.b2b_company_size || '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">부서</p>
+                                    <p class="font-medium">${user.b2b_department || '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">직급</p>
+                                    <p class="font-medium">${user.b2b_position || '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">문의 유형</p>
+                                    <p class="font-medium">${user.b2b_inquiry_type || '-'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Actions -->
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button onclick="toggleUserStatus(${user.id}, ${user.is_active ? 0 : 1})" 
+                                    class="px-6 py-2 bg-${user.is_active ? 'red' : 'green'}-600 text-white rounded-lg hover:bg-${user.is_active ? 'red' : 'green'}-700 transition">
+                                <i class="fas fa-${user.is_active ? 'ban' : 'check-circle'} mr-2"></i>
+                                ${user.is_active ? '비활성화' : '활성화'}
+                            </button>
+                            <button onclick="closeUserModal()" 
+                                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                                닫기
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('userDetailContent').innerHTML = content;
+                document.getElementById('userDetailModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('회원 상세 정보 로딩 실패:', error);
+                alert('회원 정보를 불러올 수 없습니다: ' + (error.response?.data?.error || error.message));
+            }
+        }
+
+        function closeUserModal() {
+            document.getElementById('userDetailModal').classList.add('hidden');
+            currentUser = null;
+        }
+
+        async function toggleUserStatus(userId, newStatus) {
+            if (!confirm(`정말로 이 회원을 ${newStatus ? '활성화' : '비활성화'}하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                await axios.patch(`/api/admin/users/${userId}/status`, {
+                    is_active: newStatus
+                });
+
+                alert('회원 상태가 변경되었습니다.');
+                closeUserModal();
+                await loadUsers();
+            } catch (error) {
+                console.error('상태 변경 실패:', error);
+                alert('상태 변경에 실패했습니다: ' + (error.response?.data?.error || error.message));
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function logout() {
+            if (confirm('로그아웃하시겠습니까?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/admin-login';
+            }
+        }
+    </script>
+</body>
+</html>

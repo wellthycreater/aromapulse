@@ -125,8 +125,12 @@
                 
                 if (response.ok) {
                     // 로그인 성공 - 토큰 저장
-                    localStorage.setItem('auth_token', data.token);
+                    console.log('[LOGIN] Login successful, saving to localStorage');
+                    console.log('[LOGIN] User data:', data.user);
+                    localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    console.log('[LOGIN] Saved - token exists:', !!localStorage.getItem('token'));
+                    console.log('[LOGIN] Saved - user exists:', !!localStorage.getItem('user'));
                     
                     // 관리자인 경우 관리자 페이지로, 아니면 대시보드로
                     const user = data.user;
@@ -137,6 +141,7 @@
                     }
                     
                     const redirect = new URLSearchParams(window.location.search).get('redirect') || redirectUrl;
+                    console.log('[LOGIN] Redirecting to:', redirect);
                     window.location.href = redirect;
                 } else {
                     alert(data.error || '로그인에 실패했습니다.');
