@@ -374,6 +374,134 @@ app.get('/', (c) => {
             </div>
         </section>
 
+        <!-- Popular Classes Section -->
+        <section class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">인기 클래스</h2>
+                    <p class="text-xl text-gray-600">가장 사랑받는 원데이 클래스를 만나보세요</p>
+                </div>
+                <div id="popular-classes" class="grid md:grid-cols-3 gap-8">
+                    <!-- 클래스 카드 1 -->
+                    <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition">
+                        <div class="h-48 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                            <i class="fas fa-spa text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">입문자 추천</span>
+                                <div class="flex items-center text-yellow-500">
+                                    <i class="fas fa-star mr-1"></i>
+                                    <span class="font-bold">4.9</span>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">향기 치유 입문 클래스</h3>
+                            <p class="text-gray-600 text-sm mb-4">아로마테라피의 기초부터 나만의 향수 만들기까지</p>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    <span>2시간</span>
+                                </div>
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-users mr-2"></i>
+                                    <span>최대 8명</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-2xl font-bold text-purple-600">45,000</span>
+                                    <span class="text-gray-500 text-sm">원</span>
+                                </div>
+                                <button onclick="location.href='/oneday-classes'" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                                    예약하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 클래스 카드 2 -->
+                    <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition">
+                        <div class="h-48 bg-gradient-to-br from-teal-400 to-blue-400 flex items-center justify-center">
+                            <i class="fas fa-leaf text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="bg-teal-100 text-teal-700 text-xs font-bold px-3 py-1 rounded-full">스트레스 해소</span>
+                                <div class="flex items-center text-yellow-500">
+                                    <i class="fas fa-star mr-1"></i>
+                                    <span class="font-bold">4.8</span>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">힐링 아로마 블렌딩</h3>
+                            <p class="text-gray-600 text-sm mb-4">나만의 스트레스 해소 블렌딩 오일 만들기</p>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    <span>2.5시간</span>
+                                </div>
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-users mr-2"></i>
+                                    <span>최대 6명</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-2xl font-bold text-teal-600">55,000</span>
+                                    <span class="text-gray-500 text-sm">원</span>
+                                </div>
+                                <button onclick="location.href='/oneday-classes'" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
+                                    예약하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 클래스 카드 3 -->
+                    <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition">
+                        <div class="h-48 bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center">
+                            <i class="fas fa-heart text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="bg-pink-100 text-pink-700 text-xs font-bold px-3 py-1 rounded-full">인기</span>
+                                <div class="flex items-center text-yellow-500">
+                                    <i class="fas fa-star mr-1"></i>
+                                    <span class="font-bold">5.0</span>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">커플 향수 만들기</h3>
+                            <p class="text-gray-600 text-sm mb-4">소중한 사람과 함께하는 특별한 향기 경험</p>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    <span>3시간</span>
+                                </div>
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-users mr-2"></i>
+                                    <span>커플 전용</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-2xl font-bold text-pink-600">89,000</span>
+                                    <span class="text-gray-500 text-sm">원</span>
+                                </div>
+                                <button onclick="location.href='/oneday-classes'" class="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition">
+                                    예약하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-12">
+                    <button onclick="location.href='/oneday-classes'" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-full text-lg font-bold hover:shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        모든 클래스 보기
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <!-- User Type Selection -->
         <section class="py-20 bg-white" id="user-type">
             <div class="container mx-auto px-6">
