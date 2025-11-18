@@ -676,7 +676,33 @@ app.get('/', (c) => {
             siteKey: '2836b61bcbfd435c0e1a407bf6ce71885c532aba4c648de494338d3942f565c1',
             buttonText: 'AI 상담',
             buttonBottom: '20px',
-            buttonRight: '20px'
+            buttonRight: '20px',
+            position: 'fixed' // 명시적으로 고정 위치 지정
+        });
+        
+        // 추가 보장: 챗봇 버튼이 로드된 후 스타일 강제 적용
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                // 사이드톡 버튼 찾기 (여러 방법 시도)
+                const selectors = [
+                    '#sidetalk-button',
+                    '[class*="sidetalk"]',
+                    '[id*="sidetalk"]',
+                    'iframe[src*="sidetalk"]'
+                ];
+                
+                for (let selector of selectors) {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        element.style.position = 'fixed';
+                        element.style.bottom = '20px';
+                        element.style.right = '20px';
+                        element.style.zIndex = '999999';
+                        console.log('Chatbot button fixed:', selector);
+                        break;
+                    }
+                }
+            }, 2000); // 2초 후 실행
         });
         </script>
     </body>
