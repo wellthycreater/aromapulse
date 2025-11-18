@@ -2393,27 +2393,35 @@ let editingOnedayClassId = null;
 // 원데이 클래스 목록 로드
 async function loadOnedayClasses() {
   try {
+    console.log('[원데이 클래스] 로딩 시작...');
     document.getElementById('oneday-class-loading').style.display = 'block';
     document.getElementById('oneday-classes-grid').innerHTML = '';
     document.getElementById('oneday-class-empty-state').style.display = 'none';
     
     const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    console.log('[원데이 클래스] 토큰:', token ? '있음' : '없음');
     
     const headers = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
+    console.log('[원데이 클래스] API 호출: /api/workshops?type=class&limit=100');
     const response = await fetch('/api/workshops?type=class&limit=100', {
       headers: headers
     });
     
+    console.log('[원데이 클래스] 응답 상태:', response.status, response.statusText);
+    
     if (!response.ok) {
-      throw new Error('원데이 클래스 목록 조회 실패');
+      const errorText = await response.text();
+      console.error('[원데이 클래스] 에러 응답:', errorText);
+      throw new Error(`원데이 클래스 목록 조회 실패 (${response.status}): ${errorText}`);
     }
     
     currentOnedayClasses = await response.json();
     filteredOnedayClasses = currentOnedayClasses;
+    console.log('[원데이 클래스] 로드 완료:', currentOnedayClasses.length, '개');
     
     document.getElementById('oneday-class-loading').style.display = 'none';
     
