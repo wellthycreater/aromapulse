@@ -251,7 +251,9 @@ async function submitQuoteRequest() {
         
         // Get form data
         const companyName = document.getElementById('company-name').value;
+        const industry = document.getElementById('industry').value;
         const department = document.getElementById('department').value;
+        const contactPosition = document.getElementById('contact-position').value;
         const contactName = document.getElementById('contact-name').value;
         const contactPhone = document.getElementById('contact-phone').value;
         const contactEmail = document.getElementById('contact-email').value;
@@ -291,7 +293,9 @@ async function submitQuoteRequest() {
         const quoteData = {
             workshop_id: workshopId,
             company_name: companyName,
+            company_industry: industry,
             company_department: department || null,
+            company_contact_position: contactPosition,
             company_contact_name: contactName,
             company_contact_phone: contactPhone,
             company_contact_email: contactEmail,

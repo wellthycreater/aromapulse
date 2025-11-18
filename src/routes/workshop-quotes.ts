@@ -19,7 +19,9 @@ workshopQuotes.post('/', async (c) => {
     const {
       workshop_id,
       company_name,
+      company_industry,
       company_department,
+      company_contact_position,
       company_contact_name,
       company_contact_phone,
       company_contact_email,
@@ -31,21 +33,23 @@ workshopQuotes.post('/', async (c) => {
     } = data;
     
     // Validate required fields
-    if (!workshop_id || !company_name || !company_contact_name || !company_contact_phone || !company_contact_email || !participant_count) {
+    if (!workshop_id || !company_name || !company_industry || !company_contact_position || !company_contact_name || !company_contact_phone || !company_contact_email || !participant_count) {
       return c.json({ error: '필수 항목을 모두 입력해주세요' }, 400);
     }
     
     const result = await c.env.DB.prepare(
       `INSERT INTO workshop_quotes (
-        workshop_id, user_id, company_name, company_contact_name,
-        company_contact_phone, company_contact_email, company_department,
-        participant_count, preferred_date, requested_instructors,
+        workshop_id, user_id, company_name, company_industry, company_contact_position,
+        company_contact_name, company_contact_phone, company_contact_email, 
+        company_department, participant_count, preferred_date, requested_instructors,
         special_requests, is_workation, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
     ).bind(
       workshop_id,
       userId,
       company_name,
+      company_industry,
+      company_contact_position,
       company_contact_name,
       company_contact_phone,
       company_contact_email,
