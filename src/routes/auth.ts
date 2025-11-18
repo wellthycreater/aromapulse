@@ -34,7 +34,11 @@ auth.post('/signup', async (c) => {
       b2b_category, // 'perfumer', 'company', 'shop', 'independent'
       b2b_business_name,
       b2b_business_number,
-      b2b_address
+      b2b_address,
+      // Company role and size
+      company_role, // 'hr_manager', 'culture_team', 'welfare_manager', 'general_employee'
+      company_size, // 'under_20', '20_50', '50_100', '100_300', '300_plus'
+      department
     } = data;
     
     // 필수 필드 검증
@@ -60,9 +64,10 @@ auth.post('/signup', async (c) => {
         email, password_hash, name, phone, user_type,
         b2c_category, b2c_subcategory,
         b2b_category, b2b_business_name, b2b_business_number, b2b_address,
+        company_role, company_size, department,
         oauth_provider
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       email,
       password_hash,
@@ -77,6 +82,10 @@ auth.post('/signup', async (c) => {
       b2b_business_name || null,
       b2b_business_number || null,
       b2b_address || null,
+      // Company info
+      company_role || null,
+      company_size || null,
+      department || null,
       'email' // OAuth provider for email/password signup
     ).run();
     
@@ -84,7 +93,7 @@ auth.post('/signup', async (c) => {
     const userId = result.meta.last_row_id;
     const user = await c.env.DB.prepare(
       `SELECT id, email, name, user_type, b2c_category, b2c_subcategory, 
-       b2b_category, b2b_business_name, created_at 
+       b2b_category, b2b_business_name, company_role, company_size, department, created_at 
        FROM users WHERE id = ?`
     ).bind(userId).first();
     
@@ -143,6 +152,9 @@ auth.post('/login', async (c) => {
         role: user.role || 'user',
         b2c_category: user.b2c_category,
         b2b_category: user.b2b_category,
+        company_role: user.company_role,
+        company_size: user.company_size,
+        department: user.department,
         created_at: user.created_at,
         b2b_business_name: user.b2b_business_name
       }
@@ -649,6 +661,9 @@ auth.post('/admin-login', async (c) => {
         role: user.role || 'user',
         b2c_category: user.b2c_category,
         b2b_category: user.b2b_category,
+        company_role: user.company_role,
+        company_size: user.company_size,
+        department: user.department,
         created_at: user.created_at,
         b2b_business_name: user.b2b_business_name
       }
