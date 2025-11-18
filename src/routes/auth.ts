@@ -981,4 +981,67 @@ auth.get('/users/:userId/profile-image', async (c) => {
   }
 });
 
+// 비밀번호 찾기 (임시 비밀번호 발급)
+auth.post('/forgot-password', async (c) => {
+  try {
+    const { email } = await c.req.json();
+    
+    if (!email) {
+      return c.json({ error: '이메일을 입력해주세요' }, 400);
+    }
+    
+    console.log('[Forgot Password] Email:', email);
+    
+    // 사용자 조회
+    const user = await c.env.DB.prepare(
+      'SELECT id, email, name FROM users WHERE email = ?'
+    ).bind(email).first();
+    
+    if (!user) {
+      // 보안상 이유로 사용자가 없어도 성공 메시지 반환
+      return c.json({ 
+        message: '해당 이메일로 임시 비밀번호를 전송했습니다.',
+        note: '이메일이 등록되어 있지 않다면 메일이 발송되지 않습니다.'
+      });
+    }
+    
+    // 임시 비밀번호 생성 (8자리 영문+숫자)
+    const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase();
+    
+    // 비밀번호 해시 생성
+    const encoder = new TextEncoder();
+    const data = encoder.encode(tempPassword);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const password_hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    console.log('[Forgot Password] Generated temp password for user:', user.id);
+    
+    // 데이터베이스 업데이트
+    await c.env.DB.prepare(
+      'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).bind(password_hash, user.id).run();
+    
+    // TODO: 실제 운영 환경에서는 이메일 발송 서비스 연동 필요
+    // 현재는 임시로 콘솔에 출력
+    console.log('[Forgot Password] Temporary password:', tempPassword);
+    console.log('[Forgot Password] 실제 서비스에서는 이메일로 발송되어야 합니다.');
+    
+    // 개발 환경에서는 임시 비밀번호를 응답에 포함 (운영 환경에서는 제거 필요)
+    return c.json({ 
+      message: '임시 비밀번호가 생성되었습니다.',
+      // 개발 환경에서만 임시로 반환 (운영 환경에서는 삭제!)
+      tempPassword: tempPassword,
+      note: '개발 환경입니다. 운영 환경에서는 이메일로 발송됩니다.'
+    });
+    
+  } catch (error: any) {
+    console.error('[Forgot Password] Error:', error);
+    return c.json({ 
+      error: '비밀번호 재설정 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 export default auth;

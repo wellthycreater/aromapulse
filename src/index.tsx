@@ -97,6 +97,9 @@ app.get('/api/db-check', async (c) => {
 // Login page - redirect to static file
 app.get('/login', (c) => c.redirect('/static/login.html'));
 
+// Forgot password page - redirect to static file
+app.get('/forgot-password', (c) => c.redirect('/static/forgot-password.html'));
+
 // Signup page - redirect to static file  
 app.get('/signup', (c) => c.redirect('/static/signup.html'));
 
