@@ -20,6 +20,7 @@ import chatbotRoutes from './routes/chatbot';
 import blogReviewsRoutes from './routes/blog-reviews';
 import ordersRoutes from './routes/orders';
 import userRoutes from './routes/user';
+import onedayClassesRoutes from './routes/oneday-classes';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -46,6 +47,7 @@ app.route('/api/chatbot', chatbotRoutes);
 app.route('/api/blog-reviews', blogReviewsRoutes);
 app.route('/api/orders', ordersRoutes);
 app.route('/api/user', userRoutes);
+app.route('/api/oneday-classes', onedayClassesRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
@@ -118,16 +120,22 @@ app.get('/dashboard', (c) => c.redirect('/static/dashboard.html'));
 app.get('/profile', (c) => c.redirect('/static/profile-edit.html'));
 app.get('/profile-edit', (c) => c.redirect('/static/profile-edit.html'));
 
-// Workshops page - redirect to static file
+// Workshops page - redirect to static file (B2B 전용 - 기업 팀빌딩)
 app.get('/workshops', (c) => c.redirect('/static/workshops.html'));
 
-// One-day classes page - redirect to workshops for now
-app.get('/oneday-classes', (c) => c.redirect('/static/workshops.html'));
+// One-day classes page - redirect to static file (B2C + B2B 개인 - 로컬 공방 클래스)
+app.get('/oneday-classes', (c) => c.redirect('/static/oneday-classes.html'));
 
 // Workshop detail page - redirect to static file with ID
 app.get('/workshop/:id', (c) => {
   const id = c.req.param('id');
   return c.redirect(`/static/workshop-detail.html?id=${id}`);
+});
+
+// One-day class detail page - redirect to static file with ID
+app.get('/oneday-class/:id', (c) => {
+  const id = c.req.param('id');
+  return c.redirect(`/static/oneday-class-detail.html?id=${id}`);
 });
 
 // Shop page - redirect to static file

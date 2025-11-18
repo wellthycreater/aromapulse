@@ -1972,21 +1972,42 @@ function switchTab(tab) {
     document.getElementById('tab-products').classList.remove('text-gray-700', 'hover:bg-gray-100');
     document.getElementById('tab-classes').classList.remove('bg-purple-600', 'text-white');
     document.getElementById('tab-classes').classList.add('text-gray-700', 'hover:bg-gray-100');
+    document.getElementById('tab-oneday-classes').classList.remove('bg-purple-600', 'text-white');
+    document.getElementById('tab-oneday-classes').classList.add('text-gray-700', 'hover:bg-gray-100');
     
     document.getElementById('content-products').style.display = 'block';
     document.getElementById('content-classes').style.display = 'none';
+    document.getElementById('content-oneday-classes').style.display = 'none';
   } else if (tab === 'classes') {
     currentMainTab = 'classes';
     document.getElementById('tab-classes').classList.add('bg-purple-600', 'text-white');
     document.getElementById('tab-classes').classList.remove('text-gray-700', 'hover:bg-gray-100');
     document.getElementById('tab-products').classList.remove('bg-purple-600', 'text-white');
     document.getElementById('tab-products').classList.add('text-gray-700', 'hover:bg-gray-100');
+    document.getElementById('tab-oneday-classes').classList.remove('bg-purple-600', 'text-white');
+    document.getElementById('tab-oneday-classes').classList.add('text-gray-700', 'hover:bg-gray-100');
     
     document.getElementById('content-products').style.display = 'none';
     document.getElementById('content-classes').style.display = 'block';
+    document.getElementById('content-oneday-classes').style.display = 'none';
     
-    // 클래스 로드
+    // 워크샵 로드
     loadClasses();
+  } else if (tab === 'oneday-classes') {
+    currentMainTab = 'oneday-classes';
+    document.getElementById('tab-oneday-classes').classList.add('bg-purple-600', 'text-white');
+    document.getElementById('tab-oneday-classes').classList.remove('text-gray-700', 'hover:bg-gray-100');
+    document.getElementById('tab-products').classList.remove('bg-purple-600', 'text-white');
+    document.getElementById('tab-products').classList.add('text-gray-700', 'hover:bg-gray-100');
+    document.getElementById('tab-classes').classList.remove('bg-purple-600', 'text-white');
+    document.getElementById('tab-classes').classList.add('text-gray-700', 'hover:bg-gray-100');
+    
+    document.getElementById('content-products').style.display = 'none';
+    document.getElementById('content-classes').style.display = 'none';
+    document.getElementById('content-oneday-classes').style.display = 'block';
+    
+    // 원데이 클래스 로드
+    loadOnedayClasses();
   }
 }
 
@@ -2346,4 +2367,332 @@ function closeClassModal() {
   document.getElementById('class-form').reset();
   isEditingClass = false;
   editingClassId = null;
+}
+
+// ==================== 원데이 클래스 관리 ====================
+
+let currentOnedayClasses = [];
+let filteredOnedayClasses = [];
+let isEditingOnedayClass = false;
+let editingOnedayClassId = null;
+
+// 원데이 클래스 목록 로드
+async function loadOnedayClasses() {
+  try {
+    document.getElementById('oneday-class-loading').style.display = 'block';
+    document.getElementById('oneday-classes-grid').innerHTML = '';
+    document.getElementById('oneday-class-empty-state').style.display = 'none';
+    
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch('/api/oneday-classes?limit=100', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('원데이 클래스 목록 조회 실패');
+    }
+    
+    currentOnedayClasses = await response.json();
+    filteredOnedayClasses = currentOnedayClasses;
+    
+    document.getElementById('oneday-class-loading').style.display = 'none';
+    
+    if (currentOnedayClasses.length === 0) {
+      document.getElementById('oneday-class-empty-state').style.display = 'block';
+    } else {
+      renderOnedayClasses();
+    }
+    
+  } catch (error) {
+    console.error('원데이 클래스 로드 오류:', error);
+    document.getElementById('oneday-class-loading').style.display = 'none';
+    alert('원데이 클래스 목록을 불러오는데 실패했습니다.');
+  }
+}
+
+// 원데이 클래스 렌더링
+function renderOnedayClasses() {
+  const grid = document.getElementById('oneday-classes-grid');
+  grid.innerHTML = '';
+  
+  document.getElementById('oneday-class-filter-result-count').textContent = filteredOnedayClasses.length;
+  
+  filteredOnedayClasses.forEach(classItem => {
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition';
+    
+    card.innerHTML = `
+      <div class="relative h-48">
+        <img src="${classItem.image_url || '/static/placeholder.jpg'}" 
+             alt="${classItem.title}" 
+             class="w-full h-full object-cover">
+        <div class="absolute top-2 right-2">
+          <span class="px-3 py-1 rounded-full text-xs font-semibold ${classItem.is_active ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}">
+            ${classItem.is_active ? '활성' : '비활성'}
+          </span>
+        </div>
+      </div>
+      <div class="p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-2">${classItem.title}</h3>
+        <div class="space-y-1 text-sm text-gray-600 mb-4">
+          ${classItem.studio_name ? `<p><i class="fas fa-store mr-2"></i>${classItem.studio_name}</p>` : ''}
+          ${classItem.instructor_name ? `<p><i class="fas fa-user-tie mr-2"></i>${classItem.instructor_name}</p>` : ''}
+          <p><i class="fas fa-map-marker-alt mr-2"></i>${classItem.location}</p>
+          <p><i class="fas fa-won-sign mr-2"></i>${(classItem.price || 0).toLocaleString()}원</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="editOnedayClass(${classItem.id})" 
+            class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+            <i class="fas fa-edit mr-1"></i>수정
+          </button>
+          <button onclick="deleteOnedayClass(${classItem.id})" 
+            class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+            <i class="fas fa-trash mr-1"></i>삭제
+          </button>
+        </div>
+      </div>
+    `;
+    
+    grid.appendChild(card);
+  });
+}
+
+// 원데이 클래스 필터 적용
+function applyOnedayClassFilter() {
+  const searchText = document.getElementById('oneday-class-search-input').value.toLowerCase();
+  const priceRange = document.getElementById('oneday-class-price-filter').value;
+  const sortBy = document.getElementById('oneday-class-sort-filter').value;
+  
+  filteredOnedayClasses = currentOnedayClasses.filter(classItem => {
+    const matchesSearch = !searchText || classItem.title.toLowerCase().includes(searchText);
+    
+    let matchesPrice = true;
+    if (priceRange) {
+      const [min, max] = priceRange.split('-').map(Number);
+      matchesPrice = classItem.price >= min && classItem.price <= max;
+    }
+    
+    return matchesSearch && matchesPrice;
+  });
+  
+  // 정렬
+  filteredOnedayClasses.sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.created_at) - new Date(a.created_at);
+      case 'oldest':
+        return new Date(a.created_at) - new Date(b.created_at);
+      case 'price-low':
+        return (a.price || 0) - (b.price || 0);
+      case 'price-high':
+        return (b.price || 0) - (a.price || 0);
+      case 'name':
+        return a.title.localeCompare(b.title);
+      default:
+        return 0;
+    }
+  });
+  
+  renderOnedayClasses();
+}
+
+// 새 원데이 클래스 모달 열기
+function openNewOnedayClassModal() {
+  isEditingOnedayClass = false;
+  editingOnedayClassId = null;
+  document.getElementById('oneday-class-modal-title').textContent = '원데이 클래스 등록';
+  document.getElementById('oneday-class-form').reset();
+  document.getElementById('oneday-class-active').checked = true;
+  document.getElementById('oneday-class-image-preview').style.display = 'none';
+  document.getElementById('oneday-class-modal').classList.remove('hidden');
+}
+
+// 원데이 클래스 수정
+async function editOnedayClass(id) {
+  try {
+    const classItem = currentOnedayClasses.find(c => c.id === id);
+    if (!classItem) {
+      alert('원데이 클래스를 찾을 수 없습니다.');
+      return;
+    }
+    
+    isEditingOnedayClass = true;
+    editingOnedayClassId = id;
+    
+    document.getElementById('oneday-class-modal-title').textContent = '원데이 클래스 수정';
+    document.getElementById('oneday-class-title').value = classItem.title || '';
+    document.getElementById('oneday-class-description').value = classItem.description || '';
+    document.getElementById('oneday-class-category').value = classItem.category || '';
+    document.getElementById('oneday-class-studio-name').value = classItem.studio_name || '';
+    document.getElementById('oneday-class-instructor-name').value = classItem.instructor_name || '';
+    document.getElementById('oneday-class-location').value = classItem.location || '';
+    document.getElementById('oneday-class-address').value = classItem.address || '';
+    document.getElementById('oneday-class-price').value = classItem.price || '';
+    document.getElementById('oneday-class-duration').value = classItem.duration || '';
+    document.getElementById('oneday-class-max-participants').value = classItem.max_participants || '';
+    document.getElementById('oneday-class-active').checked = classItem.is_active === 1;
+    
+    if (classItem.image_url) {
+      document.getElementById('oneday-class-image-preview').style.display = 'block';
+      document.getElementById('oneday-class-image-preview-img').src = classItem.image_url;
+      document.getElementById('oneday-class-image-url').textContent = classItem.image_url;
+    }
+    
+    document.getElementById('oneday-class-modal').classList.remove('hidden');
+    
+  } catch (error) {
+    console.error('원데이 클래스 수정 오류:', error);
+    alert('원데이 클래스 정보를 불러오는데 실패했습니다.');
+  }
+}
+
+// 원데이 클래스 삭제
+async function deleteOnedayClass(id) {
+  if (!confirm('정말로 이 원데이 클래스를 삭제하시겠습니까?')) {
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const response = await fetch(`/api/oneday-classes/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('원데이 클래스 삭제 실패');
+    }
+    
+    alert('원데이 클래스가 삭제되었습니다.');
+    loadOnedayClasses();
+    
+  } catch (error) {
+    console.error('원데이 클래스 삭제 오류:', error);
+    alert('원데이 클래스 삭제에 실패했습니다.');
+  }
+}
+
+// 원데이 클래스 폼 제출
+document.getElementById('oneday-class-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const imageUrlElement = document.getElementById('oneday-class-image-url');
+    const imageUrl = imageUrlElement ? imageUrlElement.textContent : '';
+    
+    const data = {
+      title: document.getElementById('oneday-class-title').value,
+      description: document.getElementById('oneday-class-description').value || null,
+      category: document.getElementById('oneday-class-category').value || null,
+      studio_name: document.getElementById('oneday-class-studio-name').value || null,
+      instructor_name: document.getElementById('oneday-class-instructor-name').value || null,
+      location: document.getElementById('oneday-class-location').value,
+      address: document.getElementById('oneday-class-address').value || null,
+      price: parseInt(document.getElementById('oneday-class-price').value) || null,
+      duration: parseInt(document.getElementById('oneday-class-duration').value) || null,
+      max_participants: parseInt(document.getElementById('oneday-class-max-participants').value) || null,
+      image_url: imageUrl || null,
+      is_active: document.getElementById('oneday-class-active').checked ? 1 : 0
+    };
+    
+    const url = isEditingOnedayClass 
+      ? `/api/oneday-classes/${editingOnedayClassId}`
+      : '/api/oneday-classes';
+    
+    const method = isEditingOnedayClass ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || '원데이 클래스 저장 실패');
+    }
+    
+    const result = await response.json();
+    alert(result.message || '원데이 클래스가 저장되었습니다.');
+    
+    closeOnedayClassModal();
+    loadOnedayClasses();
+    
+  } catch (error) {
+    console.error('원데이 클래스 저장 오류:', error);
+    alert(`원데이 클래스 저장에 실패했습니다:\n${error.message}`);
+  }
+});
+
+// 원데이 클래스 이미지 업로드
+async function uploadOnedayClassImage() {
+  const fileInput = document.getElementById('oneday-class-image-upload');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('파일을 선택해주세요.');
+    return;
+  }
+  
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드할 수 있습니다.');
+    return;
+  }
+  
+  const maxSize = 500 * 1024; // 500KB
+  if (file.size > maxSize) {
+    alert(`파일 크기는 500KB 이하여야 합니다.\n현재 크기: ${(file.size / 1024).toFixed(2)}KB`);
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await fetch('/api/admin-products/upload-image', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || '이미지 업로드 실패');
+    }
+    
+    const result = await response.json();
+    
+    document.getElementById('oneday-class-image-preview').style.display = 'block';
+    document.getElementById('oneday-class-image-preview-img').src = result.url;
+    document.getElementById('oneday-class-image-url').textContent = result.url;
+    
+    alert('이미지가 업로드되었습니다.');
+    
+  } catch (error) {
+    console.error('이미지 업로드 오류:', error);
+    alert(`이미지 업로드에 실패했습니다:\n${error.message}`);
+  }
+}
+
+// 원데이 클래스 모달 닫기
+function closeOnedayClassModal() {
+  document.getElementById('oneday-class-modal').classList.add('hidden');
+  document.getElementById('oneday-class-form').reset();
+  isEditingOnedayClass = false;
+  editingOnedayClassId = null;
 }
