@@ -1,5 +1,6 @@
 // 현재 사용자 정보
 let currentUser = null;
+let profileImageBase64 = null; // 프로필 이미지 Base64 데이터
 
 // 페이지 로드 시 사용자 정보 불러오기
 window.addEventListener('DOMContentLoaded', async () => {
@@ -37,6 +38,12 @@ async function loadUserProfile() {
             badge.textContent = 'B2B 비즈니스';
             badge.classList.add('bg-blue-100', 'text-blue-700');
             document.getElementById('b2b-section').style.display = 'block';
+        }
+        
+        // 프로필 이미지 로드
+        if (user.profile_image) {
+            profileImageBase64 = user.profile_image;
+            displayProfileImage(user.profile_image);
         }
         
         // 기본 정보 채우기
@@ -148,6 +155,57 @@ async function loadUserProfile() {
     }
 }
 
+// 프로필 이미지 표시
+function displayProfileImage(base64Data) {
+    const preview = document.getElementById('profile-image-preview');
+    const icon = document.getElementById('profile-image-icon');
+    
+    if (base64Data) {
+        preview.src = base64Data;
+        preview.classList.remove('hidden');
+        icon.classList.add('hidden');
+    } else {
+        preview.classList.add('hidden');
+        icon.classList.remove('hidden');
+    }
+}
+
+// 이미지 업로드 핸들러
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    
+    if (!file) return;
+    
+    // 파일 타입 검증
+    if (!file.type.match('image/(jpeg|jpg|png)')) {
+        alert('JPG 또는 PNG 파일만 업로드 가능합니다.');
+        return;
+    }
+    
+    // 파일 크기 검증 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('파일 크기는 5MB를 초과할 수 없습니다.');
+        return;
+    }
+    
+    // 파일을 Base64로 변환
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        profileImageBase64 = e.target.result;
+        displayProfileImage(profileImageBase64);
+    };
+    reader.readAsDataURL(file);
+}
+
+// 프로필 이미지 삭제
+function removeProfileImage() {
+    if (confirm('프로필 이미지를 삭제하시겠습니까?')) {
+        profileImageBase64 = null;
+        displayProfileImage(null);
+        document.getElementById('profile-image-input').value = '';
+    }
+}
+
 // B2C 카테고리 변경 핸들러
 document.getElementById('b2c_category')?.addEventListener('change', handleB2CCategoryChange);
 
@@ -199,7 +257,8 @@ async function saveProfile() {
             phone: document.getElementById('phone').value,
             region: document.getElementById('region').value,
             age_group: document.getElementById('age_group').value,
-            gender: document.querySelector('input[name="gender"]:checked')?.value || null
+            gender: document.querySelector('input[name="gender"]:checked')?.value || null,
+            profile_image: profileImageBase64 // 프로필 이미지 Base64
         };
         
         // B2C 정보 수집

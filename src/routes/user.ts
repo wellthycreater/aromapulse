@@ -57,6 +57,7 @@ user.get('/profile', async (c) => {
       SELECT 
         id, email, name, phone, region, age_group, gender,
         user_type, role, oauth_provider, is_active,
+        profile_image,
         b2c_category, b2c_subcategory,
         b2b_category, b2b_business_name, b2b_business_number, 
         b2b_address, b2b_company_size, b2b_department, 
@@ -109,6 +110,10 @@ user.put('/profile', async (c) => {
     if (data.gender !== undefined) {
       updateFields.push('gender = ?');
       updateValues.push(data.gender || null);
+    }
+    if (data.profile_image !== undefined) {
+      updateFields.push('profile_image = ?');
+      updateValues.push(data.profile_image || null);
     }
     
     // B2C 정보
@@ -181,6 +186,7 @@ user.put('/profile', async (c) => {
       SELECT 
         id, email, name, phone, region, age_group, gender,
         user_type, role, oauth_provider, is_active,
+        profile_image,
         b2c_category, b2c_subcategory,
         b2b_category, b2b_business_name, b2b_business_number, 
         b2b_address, b2b_company_size, b2b_department, 

@@ -88,6 +88,13 @@ async function loadB2CDashboard() {
     document.getElementById('b2c-user-name').textContent = currentUser.name;
     document.getElementById('b2c-user-email').textContent = currentUser.email;
     
+    // 프로필 이미지 표시
+    if (currentUser.profile_image) {
+        document.getElementById('b2c-profile-image').src = currentUser.profile_image;
+        document.getElementById('b2c-profile-image').classList.remove('hidden');
+        document.getElementById('b2c-profile-icon').classList.add('hidden');
+    }
+    
     // 카테고리 한글 변환
     const categoryText = getCategoryText(currentUser.b2c_category, currentUser.b2c_subcategory);
     document.getElementById('b2c-category').textContent = categoryText || '미설정';
@@ -115,6 +122,13 @@ async function loadB2BDashboard() {
     document.getElementById('b2b-business-name').textContent = currentUser.b2b_business_name || currentUser.name;
     document.getElementById('b2b-user-email').textContent = currentUser.email;
     document.getElementById('b2b-user-name').textContent = currentUser.name;
+    
+    // 프로필 이미지 표시
+    if (currentUser.profile_image) {
+        document.getElementById('b2b-profile-image').src = currentUser.profile_image;
+        document.getElementById('b2b-profile-image').classList.remove('hidden');
+        document.getElementById('b2b-profile-icon').classList.add('hidden');
+    }
     
     // 카테고리 한글 변환
     const categoryText = getB2BCategoryText(currentUser.b2b_category);

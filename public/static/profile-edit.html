@@ -45,6 +45,35 @@
                     </h2>
                     
                     <form id="basic-form" class="space-y-4">
+                        <!-- 프로필 이미지 -->
+                        <div class="flex items-center space-x-6 mb-6">
+                            <div class="relative">
+                                <div class="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-4 border-teal-500">
+                                    <img id="profile-image-preview" src="" alt="프로필 이미지" class="w-full h-full object-cover hidden">
+                                    <i id="profile-image-icon" class="fas fa-user text-gray-400 text-5xl"></i>
+                                </div>
+                                <button type="button" onclick="document.getElementById('profile-image-input').click()" 
+                                    class="absolute bottom-0 right-0 bg-teal-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-teal-700 shadow-lg">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 mb-2">프로필 사진</h3>
+                                <p class="text-sm text-gray-600 mb-3">JPG, PNG 파일 (최대 5MB)</p>
+                                <input type="file" id="profile-image-input" accept="image/jpeg,image/png,image/jpg" class="hidden" onchange="handleImageUpload(event)">
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="document.getElementById('profile-image-input').click()" 
+                                        class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm">
+                                        <i class="fas fa-upload mr-2"></i>이미지 선택
+                                    </button>
+                                    <button type="button" onclick="removeProfileImage()" 
+                                        class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm">
+                                        <i class="fas fa-trash mr-2"></i>삭제
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="grid md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold mb-2">이름 *</label>
