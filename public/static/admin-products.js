@@ -2020,10 +2020,13 @@ async function loadClasses() {
     
     const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
     
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch('/api/workshops?type=workshop&limit=100', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: headers
     });
     
     if (!response.ok) {
@@ -2385,10 +2388,13 @@ async function loadOnedayClasses() {
     
     const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
     
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch('/api/workshops?type=class&limit=100', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: headers
     });
     
     if (!response.ok) {
@@ -2408,8 +2414,9 @@ async function loadOnedayClasses() {
     
   } catch (error) {
     console.error('원데이 클래스 로드 오류:', error);
+    console.error('Error details:', error.message);
     document.getElementById('oneday-class-loading').style.display = 'none';
-    alert('원데이 클래스 목록을 불러오는데 실패했습니다.');
+    alert('원데이 클래스 목록을 불러오는데 실패했습니다.\n오류: ' + error.message + '\n브라우저 콘솔(F12)을 확인해주세요.');
   }
 }
 
