@@ -45,6 +45,34 @@ userAnalytics.get('/stats', async (c) => {
       console.error('B2C category stats error:', e);
     }
     
+    // 3-1. 직무 스트레스 사용자 업종별 통계
+    let occupationStats: any = { results: [] };
+    try {
+      occupationStats = await DB.prepare(`
+        SELECT occupation, COUNT(*) as count
+        FROM users
+        WHERE b2c_category = 'work_stress' AND occupation IS NOT NULL
+        GROUP BY occupation
+        ORDER BY count DESC
+      `).all();
+    } catch (e) {
+      console.error('Occupation stats error:', e);
+    }
+    
+    // 3-2. 일상 스트레스 사용자 생활 상황별 통계
+    let lifeSituationStats: any = { results: [] };
+    try {
+      lifeSituationStats = await DB.prepare(`
+        SELECT life_situation, COUNT(*) as count
+        FROM users
+        WHERE b2c_category = 'daily_stress' AND life_situation IS NOT NULL
+        GROUP BY life_situation
+        ORDER BY count DESC
+      `).all();
+    } catch (e) {
+      console.error('Life situation stats error:', e);
+    }
+    
     // 4. B2B 세부 카테고리별 (개인, 기업, 공방)
     let b2bCategoryStats: any = { results: [] };
     try {
@@ -149,6 +177,8 @@ userAnalytics.get('/stats', async (c) => {
       total: (totalUsers as any)?.count || 0,
       by_user_type: userTypeStats.results || [],
       by_b2c_category: b2cCategoryStats.results || [],
+      by_occupation: occupationStats.results || [],
+      by_life_situation: lifeSituationStats.results || [],
       by_b2b_category: b2bCategoryStats.results || [],
       by_role: roleStats.results || [],
       by_region: regionStats.results || [],

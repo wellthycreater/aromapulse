@@ -2379,3 +2379,197 @@ function renderMonthlySignupChartNew(data) {
 }
 
 console.log('✅ New user analytics chart functions loaded');
+
+// Chart instances for occupation/life situation
+let occupationChart = null;
+let lifeSituationChart = null;
+
+// 7. Occupation Chart (직무 스트레스 - 업종별)
+function renderOccupationChart(data) {
+    const ctx = document.getElementById('occupationChart');
+    if (!ctx) return;
+    
+    if (!data.by_occupation || data.by_occupation.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">직무 스트레스 사용자의 업종 데이터가 없습니다</p><p class="text-gray-400 text-xs mt-1">회원가입 시 업종 정보를 수집하면 표시됩니다</p></div>';
+        return;
+    }
+    
+    const occupationLabels = {
+        'management_executive': '관리자/임원',
+        'office_it': '사무직(IT)',
+        'service_retail': '서비스업',
+        'medical_care': '의료·간병',
+        'education': '교육',
+        'manufacturing_logistics': '제조·물류',
+        'freelancer_self_employed': '프리랜서',
+        'finance': '금융·회계',
+        'other': '기타'
+    };
+    
+    const labels = data.by_occupation.map(item => 
+        occupationLabels[item.occupation] || item.occupation
+    );
+    const counts = data.by_occupation.map(item => item.count);
+    
+    if (occupationChart) occupationChart.destroy();
+    
+    occupationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '직무 스트레스 회원 수',
+                data: counts,
+                backgroundColor: [
+                    'rgba(99, 102, 241, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(147, 51, 234, 0.8)',
+                    'rgba(236, 72, 153, 0.8)',
+                    'rgba(249, 115, 22, 0.8)',
+                    'rgba(34, 197, 94, 0.8)',
+                    'rgba(168, 85, 247, 0.8)',
+                    'rgba(20, 184, 166, 0.8)',
+                    'rgba(156, 163, 175, 0.8)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const occupation = data.by_occupation[context.dataIndex].occupation;
+                            const stressTypes = {
+                                'office_it': '💻 고강도 인지부하',
+                                'service_retail': '👥 고객대면 스트레스',
+                                'medical_care': '💔 정서적 소모, 교대근무',
+                                'education': '💔 정서적 소모',
+                                'manufacturing_logistics': '🌙 교대·야간근무',
+                                'freelancer_self_employed': '📊 불안정 소득',
+                                'finance': '💻 고강도 인지부하'
+                            };
+                            return stressTypes[occupation] || '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 8. Life Situation Chart (일상 스트레스 - 생활 상황별)
+function renderLifeSituationChart(data) {
+    const ctx = document.getElementById('lifeSituationChart');
+    if (!ctx) return;
+    
+    if (!data.by_life_situation || data.by_life_situation.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">일상 스트레스 사용자의 생활 상황 데이터가 없습니다</p><p class="text-gray-400 text-xs mt-1">회원가입 시 생활 상황 정보를 수집하면 표시됩니다</p></div>';
+        return;
+    }
+    
+    const lifeSituationLabels = {
+        'student': '학생',
+        'parent': '양육자',
+        'homemaker': '전업주부',
+        'job_seeker': '취업준비생',
+        'retiree': '은퇴자',
+        'caregiver': '간병인',
+        'other': '기타'
+    };
+    
+    const labels = data.by_life_situation.map(item => 
+        lifeSituationLabels[item.life_situation] || item.life_situation
+    );
+    const counts = data.by_life_situation.map(item => item.count);
+    
+    if (lifeSituationChart) lifeSituationChart.destroy();
+    
+    lifeSituationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '일상 스트레스 회원 수',
+                data: counts,
+                backgroundColor: [
+                    'rgba(139, 92, 246, 0.8)',
+                    'rgba(236, 72, 153, 0.8)',
+                    'rgba(251, 146, 60, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(244, 63, 94, 0.8)',
+                    'rgba(156, 163, 175, 0.8)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const situation = data.by_life_situation[context.dataIndex].life_situation;
+                            const descriptions = {
+                                'student': '📚 학업 스트레스',
+                                'parent': '👶 육아 스트레스',
+                                'homemaker': '🏠 가사 스트레스',
+                                'job_seeker': '📋 미래 불확실성',
+                                'retiree': '🌅 건강·관계 스트레스',
+                                'caregiver': '💔 정서적 소모'
+                            };
+                            return descriptions[situation] || '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Update loadUserAnalytics to include occupation and life situation charts
+const _originalLoadUserAnalytics = loadUserAnalytics;
+loadUserAnalytics = async function() {
+    console.log('📊 Loading enhanced user analytics...');
+    
+    try {
+        const response = await fetch('/api/user-analytics/stats', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) {
+            console.warn('⚠️ User analytics API failed');
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('✅ User analytics data:', data);
+        
+        // Render all charts including new ones
+        renderUserTypeChart(data);
+        renderStressTypeChart(data);
+        renderB2bCategoryChart(data);
+        renderOccupationChart(data);
+        renderLifeSituationChart(data);
+        renderRegionChart(data);
+        renderGenderChart(data);
+        renderMonthlySignupChart(data);
+        
+    } catch (error) {
+        console.error('❌ Load user analytics error:', error);
+    }
+};
