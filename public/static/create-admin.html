@@ -146,8 +146,13 @@
                     showMessage('✅ 관리자 계정이 생성되었습니다!', 'success');
                     form.reset();
                     
-                    // 토큰 저장
-                    localStorage.setItem('token', data.token);
+                    // 토큰 저장 (모든 키로 저장)
+                    if (data.token) {
+                        localStorage.setItem('adminToken', data.token);
+                        localStorage.setItem('admin_token', data.token);
+                        localStorage.setItem('auth_token', data.token);
+                        localStorage.setItem('token', data.token);
+                    }
                     
                     // 관리자 정보 표시
                     showMessage(
@@ -155,7 +160,7 @@
                         이메일: ${data.admin.email}<br>
                         이름: ${data.admin.name}<br>
                         역할: ${data.admin.role}<br><br>
-                        <a href="/admin-products" class="text-purple-600 hover:underline">
+                        <a href="/admin-products" class="text-purple-600 hover:underline font-bold">
                             관리자 페이지로 이동 →
                         </a>`,
                         'success'
