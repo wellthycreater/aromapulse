@@ -52,8 +52,12 @@
         <!-- 탭 네비게이션 -->
         <div class="mb-6 bg-white rounded-lg shadow-md p-2">
             <div class="flex space-x-2">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" 
+                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg">
+                    <i class="fas fa-chart-line mr-2"></i>대시보드
+                </button>
                 <button onclick="switchTab('products')" id="tab-products" 
-                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition bg-purple-600 text-white">
+                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition text-gray-700 hover:bg-gray-100">
                     <i class="fas fa-box mr-2"></i>제품 관리
                 </button>
                 <button onclick="switchTab('classes')" id="tab-classes"
@@ -63,6 +67,10 @@
                 <button onclick="switchTab('oneday-classes')" id="tab-oneday-classes"
                     class="flex-1 px-6 py-3 rounded-lg font-semibold transition text-gray-700 hover:bg-gray-100">
                     <i class="fas fa-chalkboard-teacher mr-2"></i>원데이 클래스 관리
+                </button>
+                <button onclick="switchTab('blog')" id="tab-blog"
+                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-blog mr-2"></i>블로그 관리
                 </button>
             </div>
         </div>
@@ -292,131 +300,223 @@
             </div>
         </div>
 
-        <!-- 탭 메뉴 -->
-        <div class="mb-6 border-b border-gray-200">
-            <nav class="flex space-x-8">
-                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-button active pb-4 px-1 border-b-2 border-purple-600 font-semibold text-purple-600">
-                    <i class="fas fa-chart-line mr-2"></i>대시보드
-                </button>
-                <button onclick="switchTab('all')" id="tab-all" class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                    <i class="fas fa-box mr-2"></i>전체 (<span id="count-all">0</span>)
-                </button>
-                <button onclick="switchTab('symptom_care')" id="tab-symptom-care" class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                    <i class="fas fa-heart-pulse mr-2"></i>증상 케어 제품 (<span id="count-symptom-care">0</span>)
-                </button>
-                <button onclick="switchTab('refresh')" id="tab-refresh" class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                    <i class="fas fa-spray-can mr-2"></i>리프레시 제품 (<span id="count-refresh">0</span>)
-                </button>
-                <button onclick="switchTab('blog')" id="tab-blog" class="tab-button pb-4 px-1 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                    <i class="fas fa-blog mr-2"></i>블로그 관리 (<span id="count-blog">0</span>)
-                </button>
-            </nav>
+        <!-- 제품 목록 -->
+        <div id="products-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" style="display: none;">
+            <!-- 제품 카드들이 여기에 동적으로 추가됩니다 -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12" style="display: none;">
+            <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
+            <p class="text-gray-600">제품을 불러오는 중...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-12 text-gray-500" style="display: none;">
+            <i class="fas fa-box-open text-6xl mb-4"></i>
+            <p class="text-lg">등록된 제품이 없습니다.</p>
+            <p class="text-sm mt-2">상단의 "제품 등록" 버튼을 클릭하여 첫 제품을 등록하세요.</p>
+        </div>
         </div>
 
         <!-- 대시보드 섹션 -->
-        <div id="dashboard-section" class="hidden">
-            <!-- 기간 필터 -->
-            <div class="mb-6 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-gray-800">
-                    <i class="fas fa-calendar-alt mr-2"></i>기간별 통계
-                </h3>
-                <div class="flex gap-2">
-                    <button onclick="changePeriod('today')" id="period-today" 
-                        class="period-btn px-4 py-2 rounded-lg border-2 border-purple-600 bg-purple-600 text-white font-semibold">
-                        오늘
-                    </button>
-                    <button onclick="changePeriod('week')" id="period-week"
-                        class="period-btn px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:border-purple-600 hover:text-purple-600">
-                        이번 주
-                    </button>
-                    <button onclick="changePeriod('month')" id="period-month"
-                        class="period-btn px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:border-purple-600 hover:text-purple-600">
-                        이번 달
-                    </button>
-                    <button onclick="changePeriod('all')" id="period-all"
-                        class="period-btn px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:border-purple-600 hover:text-purple-600">
-                        전체
-                    </button>
+        <div id="dashboard-section" class="">
+            <!-- 대시보드 헤더 -->
+            <div class="mb-8 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-2xl shadow-2xl p-8 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2 flex items-center">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            비즈니스 대시보드
+                        </h2>
+                        <p class="text-white/80 text-sm">
+                            실시간 통계 및 주요 지표를 한눈에 확인하세요
+                        </p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="changePeriod('today')" id="period-today" 
+                            class="period-btn px-5 py-2.5 rounded-lg bg-white text-purple-600 font-semibold shadow-lg hover:shadow-xl transition-all">
+                            오늘
+                        </button>
+                        <button onclick="changePeriod('week')" id="period-week"
+                            class="period-btn px-5 py-2.5 rounded-lg bg-white/20 backdrop-blur-sm text-white font-semibold hover:bg-white/30 transition-all">
+                            이번 주
+                        </button>
+                        <button onclick="changePeriod('month')" id="period-month"
+                            class="period-btn px-5 py-2.5 rounded-lg bg-white/20 backdrop-blur-sm text-white font-semibold hover:bg-white/30 transition-all">
+                            이번 달
+                        </button>
+                        <button onclick="changePeriod('all')" id="period-all"
+                            class="period-btn px-5 py-2.5 rounded-lg bg-white/20 backdrop-blur-sm text-white font-semibold hover:bg-white/30 transition-all">
+                            전체
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- 통계 카드 그리드 -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <!-- 제품 통계 -->
-                <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl shadow-lg p-6 text-white">
-                    <div class="flex items-center justify-between mb-4">
-                        <i class="fas fa-box-open text-4xl opacity-80"></i>
-                        <span class="text-3xl font-bold" id="stat-total-products">0</span>
+                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-purple-500 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100 to-transparent rounded-full -mr-16 -mt-16"></div>
+                    <div class="relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg">
+                                <i class="fas fa-box-open text-2xl text-white"></i>
+                            </div>
+                            <span class="text-4xl font-bold text-gray-800" id="stat-total-products">0</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">전체 제품</h3>
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
+                                활성 <span id="stat-active-products">0</span>
+                            </span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full font-semibold">
+                                비활성 <span id="stat-inactive-products">0</span>
+                            </span>
+                        </div>
                     </div>
-                    <h3 class="text-lg font-semibold mb-1">전체 제품</h3>
-                    <p class="text-sm opacity-80">활성: <span id="stat-active-products">0</span> | 비활성: <span id="stat-inactive-products">0</span></p>
                 </div>
 
                 <!-- 블로그 통계 -->
-                <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg p-6 text-white">
-                    <div class="flex items-center justify-between mb-4">
-                        <i class="fas fa-blog text-4xl opacity-80"></i>
-                        <span class="text-3xl font-bold" id="stat-total-posts">0</span>
+                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-blue-500 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-transparent rounded-full -mr-16 -mt-16"></div>
+                    <div class="relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                                <i class="fas fa-blog text-2xl text-white"></i>
+                            </div>
+                            <span class="text-4xl font-bold text-gray-800" id="stat-total-posts">0</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">블로그 게시물</h3>
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-comments text-blue-500 mr-1"></i>
+                            댓글 <span class="font-semibold" id="stat-total-comments">0</span>개
+                        </p>
                     </div>
-                    <h3 class="text-lg font-semibold mb-1">블로그 게시물</h3>
-                    <p class="text-sm opacity-80">댓글: <span id="stat-total-comments">0</span>개</p>
                 </div>
 
                 <!-- 댓글 통계 -->
-                <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-xl shadow-lg p-6 text-white">
-                    <div class="flex items-center justify-between mb-4">
-                        <i class="fas fa-comments text-4xl opacity-80"></i>
-                        <span class="text-3xl font-bold" id="stat-purchase-intent">0</span>
+                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-green-500 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-100 to-transparent rounded-full -mr-16 -mt-16"></div>
+                    <div class="relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg">
+                                <i class="fas fa-shopping-cart text-2xl text-white"></i>
+                            </div>
+                            <span class="text-4xl font-bold text-gray-800" id="stat-purchase-intent">0</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">구매 의도 댓글</h3>
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-semibold">
+                                B2B <span id="stat-b2b-comments">0</span>
+                            </span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+                                B2C <span id="stat-b2c-comments">0</span>
+                            </span>
+                        </div>
                     </div>
-                    <h3 class="text-lg font-semibold mb-1">구매 의도 댓글</h3>
-                    <p class="text-sm opacity-80">B2B: <span id="stat-b2b-comments">0</span> | B2C: <span id="stat-b2c-comments">0</span></p>
                 </div>
 
                 <!-- 챗봇 통계 -->
-                <div class="bg-gradient-to-br from-orange-500 to-orange-700 rounded-xl shadow-lg p-6 text-white">
-                    <div class="flex items-center justify-between mb-4">
-                        <i class="fas fa-robot text-4xl opacity-80"></i>
-                        <span class="text-3xl font-bold" id="stat-total-sessions">0</span>
+                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-orange-500 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-transparent rounded-full -mr-16 -mt-16"></div>
+                    <div class="relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                                <i class="fas fa-robot text-2xl text-white"></i>
+                            </div>
+                            <span class="text-4xl font-bold text-gray-800" id="stat-total-sessions">0</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">챗봇 세션</h3>
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
+                                활성 <span id="stat-active-sessions">0</span>
+                            </span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full font-semibold">
+                                완료 <span id="stat-completed-sessions">0</span>
+                            </span>
+                        </div>
                     </div>
-                    <h3 class="text-lg font-semibold mb-1">챗봇 세션</h3>
-                    <p class="text-sm opacity-80">활성: <span id="stat-active-sessions">0</span> | 완료: <span id="stat-completed-sessions">0</span></p>
                 </div>
             </div>
 
             <!-- 방문자 통계 섹션 -->
-            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-                <h3 class="text-xl font-bold text-gray-800 mb-6">
-                    <i class="fas fa-users text-pink-600 mr-2"></i>방문자 통계
-                </h3>
+            <div class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl shadow-xl p-8 mb-8 border border-pink-200">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <div class="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg mr-3">
+                            <i class="fas fa-users text-white text-xl"></i>
+                        </div>
+                        방문자 통계
+                    </h3>
+                    <span class="px-4 py-2 bg-white rounded-full text-sm font-semibold text-gray-700 shadow-md">
+                        <i class="fas fa-sync-alt mr-1"></i>실시간 업데이트
+                    </span>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- 오늘 방문자 -->
-                    <div class="bg-gradient-to-br from-pink-500 to-pink-700 rounded-lg p-6 text-white">
-                        <div class="flex items-center justify-between mb-3">
-                            <i class="fas fa-calendar-day text-3xl opacity-80"></i>
-                            <span class="text-4xl font-bold" id="stat-today-visits">0</span>
+                    <div class="group bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-pink-200 hover:border-pink-400">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl shadow-lg">
+                                <i class="fas fa-calendar-day text-2xl text-white"></i>
+                            </div>
+                            <span class="text-5xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent" id="stat-today-visits">0</span>
                         </div>
-                        <h4 class="text-lg font-semibold mb-1">오늘 방문</h4>
-                        <p class="text-sm opacity-80">고유 방문자: <span id="stat-today-unique">0</span>명</p>
+                        <h4 class="text-lg font-bold text-gray-800 mb-2">오늘 방문</h4>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full" style="width: 75%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-600">
+                                <span id="stat-today-unique">0</span>명
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-user-friends mr-1"></i>고유 방문자
+                        </p>
                     </div>
                     
                     <!-- 전체 방문자 -->
-                    <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-lg p-6 text-white">
-                        <div class="flex items-center justify-between mb-3">
-                            <i class="fas fa-chart-line text-3xl opacity-80"></i>
-                            <span class="text-4xl font-bold" id="stat-total-visits">0</span>
+                    <div class="group bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-indigo-200 hover:border-indigo-400">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg">
+                                <i class="fas fa-chart-line text-2xl text-white"></i>
+                            </div>
+                            <span class="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent" id="stat-total-visits">0</span>
                         </div>
-                        <h4 class="text-lg font-semibold mb-1">전체 방문</h4>
-                        <p class="text-sm opacity-80">고유 방문자: <span id="stat-total-unique">0</span>명</p>
+                        <h4 class="text-lg font-bold text-gray-800 mb-2">전체 방문</h4>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full" style="width: 90%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-600">
+                                <span id="stat-total-unique">0</span>명
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-user-check mr-1"></i>누적 고유 방문자
+                        </p>
                     </div>
                     
                     <!-- 최근 7일 평균 -->
-                    <div class="bg-gradient-to-br from-teal-500 to-teal-700 rounded-lg p-6 text-white">
-                        <div class="flex items-center justify-between mb-3">
-                            <i class="fas fa-calendar-week text-3xl opacity-80"></i>
-                            <span class="text-4xl font-bold" id="stat-week-avg">0</span>
+                    <div class="group bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-teal-200 hover:border-teal-400">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-lg">
+                                <i class="fas fa-calendar-week text-2xl text-white"></i>
+                            </div>
+                            <span class="text-5xl font-bold bg-gradient-to-r from-teal-600 to-green-600 bg-clip-text text-transparent" id="stat-week-avg">0</span>
                         </div>
-                        <h4 class="text-lg font-semibold mb-1">7일 평균</h4>
-                        <p class="text-sm opacity-80">일일 평균 방문 수</p>
+                        <h4 class="text-lg font-bold text-gray-800 mb-2">7일 평균</h4>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-teal-500 to-green-500 rounded-full" style="width: 60%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-600">일일</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-chart-bar mr-1"></i>평균 방문 수
+                        </p>
                     </div>
                 </div>
             </div>
@@ -494,17 +594,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- 제품 목록 -->
-        <div id="products-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- 제품 카드들이 여기에 동적으로 추가됩니다 -->
-        </div>
-
-        <!-- Loading State -->
-        <div id="loading" class="text-center py-12">
-            <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
-            <p class="text-gray-600">제품을 불러오는 중...</p>
         </div>
 
         <!-- Blog Management Section -->
