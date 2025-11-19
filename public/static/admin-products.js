@@ -82,6 +82,7 @@ function switchTab(tab) {
   
   // 모든 섹션 숨기기
   const dashboardSection = document.getElementById('dashboard-section');
+  const contentProducts = document.getElementById('content-products');
   const productsGrid = document.getElementById('products-grid');
   const blogSection = document.getElementById('blog-management-section');
   const loadingEl = document.getElementById('loading');
@@ -91,6 +92,7 @@ function switchTab(tab) {
   const contentOnedayClasses = document.getElementById('content-oneday-classes');
   
   if (dashboardSection) dashboardSection.classList.add('hidden');
+  if (contentProducts) contentProducts.style.display = 'none';
   if (productsGrid) productsGrid.style.display = 'none';
   if (blogSection) blogSection.classList.add('hidden');
   if (loadingEl) loadingEl.style.display = 'none';
@@ -137,6 +139,7 @@ function switchTab(tab) {
     } else {
       currentTab = tab;
     }
+    if (contentProducts) contentProducts.style.display = 'block';
     if (productsGrid) productsGrid.style.display = 'grid';
     if (productSearchFilter) productSearchFilter.style.display = 'block';
     filterAndRenderProducts();
