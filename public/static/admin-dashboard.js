@@ -1508,28 +1508,34 @@ function updateWeeklyChart(weekData) {
 
 // Load Recent Users
 async function loadRecentUsers() {
+    const container = document.getElementById('recent-users');
+    if (!container) return;
+    
     try {
         const response = await fetch('/api/admin/dashboard/recent-users?limit=5', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
-        if (!response.ok) throw new Error('Failed to load recent users');
+        if (!response.ok) {
+            console.warn('Recent users API failed');
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4"><i class="fas fa-info-circle mr-2"></i>회원 목록을 불러올 수 없습니다</p>';
+            return;
+        }
         
         const users = await response.json();
-        const container = document.getElementById('recent-users');
         
         if (!users || users.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">최근 가입 회원이 없습니다</p>';
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4"><i class="fas fa-inbox mr-2"></i>최근 가입 회원이 없습니다</p>';
             return;
         }
         
         container.innerHTML = users.map(user => `
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                <div class="flex-1">
-                    <p class="font-medium text-gray-800">${user.name || '이름 없음'}</p>
-                    <p class="text-xs text-gray-500">${user.email}</p>
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-gray-800 truncate">${user.name || '이름 없음'}</p>
+                    <p class="text-xs text-gray-500 truncate">${user.email}</p>
                 </div>
-                <div class="text-right">
+                <div class="text-right ml-3 flex-shrink-0">
                     <span class="text-xs px-2 py-1 rounded-full ${getUserTypeBadge(user.user_type)}">${getUserTypeLabel(user.user_type)}</span>
                     <p class="text-xs text-gray-400 mt-1">${formatDate(user.created_at)}</p>
                 </div>
@@ -1538,24 +1544,30 @@ async function loadRecentUsers() {
         
     } catch (error) {
         console.error('Load recent users error:', error);
-        document.getElementById('recent-users').innerHTML = '<p class="text-red-500 text-sm text-center py-4">로딩 실패</p>';
+        container.innerHTML = '<p class="text-red-400 text-sm text-center py-4"><i class="fas fa-exclamation-triangle mr-2"></i>로딩 실패</p>';
     }
 }
 
 // Load Recent Activities
 async function loadRecentActivities() {
+    const container = document.getElementById('recent-activity');
+    if (!container) return;
+    
     try {
         const response = await fetch('/api/admin/dashboard/recent-activities?limit=10', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
-        if (!response.ok) throw new Error('Failed to load activities');
+        if (!response.ok) {
+            console.warn('Recent activities API failed');
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4"><i class="fas fa-info-circle mr-2"></i>활동 로그를 불러올 수 없습니다</p>';
+            return;
+        }
         
         const activities = await response.json();
-        const container = document.getElementById('recent-activity');
         
         if (!activities || activities.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">최근 활동이 없습니다</p>';
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4"><i class="fas fa-inbox mr-2"></i>최근 활동이 없습니다</p>';
             return;
         }
         
@@ -1580,26 +1592,42 @@ async function loadRecentActivities() {
         
     } catch (error) {
         console.error('Load recent activities error:', error);
-        document.getElementById('recent-activity').innerHTML = '<p class="text-red-500 text-sm text-center py-4">로딩 실패</p>';
+        container.innerHTML = '<p class="text-red-400 text-sm text-center py-4"><i class="fas fa-exclamation-triangle mr-2"></i>로딩 실패</p>';
     }
 }
 
 // Load Device Stats
 async function loadDeviceStats() {
+    const ctx = document.getElementById('deviceStatsChart');
+    if (!ctx) return;
+    
     try {
         const response = await fetch('/api/admin/dashboard/device-stats', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
-        if (!response.ok) throw new Error('Failed to load device stats');
+        if (!response.ok) {
+            console.warn('Device stats API failed');
+            ctx.parentElement.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-info-circle text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-gray-400 text-sm">디바이스 통계를 불러올 수 없습니다</p>
+                    <p class="text-gray-400 text-xs mt-1">로그인 로그 테이블이 필요합니다</p>
+                </div>
+            `;
+            return;
+        }
         
         const data = await response.json();
-        const ctx = document.getElementById('deviceStatsChart');
-        
-        if (!ctx) return;
         
         if (!data.devices || data.devices.length === 0) {
-            ctx.parentElement.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">디바이스 통계가 없습니다</p>';
+            ctx.parentElement.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-inbox text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-gray-400 text-sm">디바이스 통계가 없습니다</p>
+                    <p class="text-gray-400 text-xs mt-1">로그인 후 데이터가 수집됩니다</p>
+                </div>
+            `;
             return;
         }
         
@@ -1641,6 +1669,14 @@ async function loadDeviceStats() {
         
     } catch (error) {
         console.error('Load device stats error:', error);
+        if (ctx && ctx.parentElement) {
+            ctx.parentElement.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl mb-2"></i>
+                    <p class="text-red-400 text-sm">로딩 실패</p>
+                </div>
+            `;
+        }
     }
 }
 
@@ -1651,15 +1687,21 @@ async function loadDashboardStats() {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
-        if (!response.ok) throw new Error('Failed to load dashboard stats');
+        if (!response.ok) {
+            console.warn('Dashboard stats API failed, using fallback');
+            // Use fallback - keep existing values or set to 0
+            return;
+        }
         
         const data = await response.json();
         
-        // Update stats
-        document.getElementById('stat-users').textContent = data.users?.total || 0;
-        document.getElementById('stat-products').textContent = data.products || 0;
-        document.getElementById('stat-workshops').textContent = data.bookings?.workshops || 0;
-        document.getElementById('stat-classes').textContent = data.bookings?.classes || 0;
+        // Update stats only if we have data
+        if (data && !data.error) {
+            document.getElementById('stat-users').textContent = data.users?.total || 0;
+            document.getElementById('stat-products').textContent = data.products || 0;
+            document.getElementById('stat-workshops').textContent = data.bookings?.workshops || 0;
+            document.getElementById('stat-classes').textContent = data.bookings?.classes || 0;
+        }
         
     } catch (error) {
         console.error('Load dashboard stats error:', error);
@@ -1724,9 +1766,17 @@ function formatDate(dateString) {
     return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-// Override loadDashboard
-const originalLoad = loadDashboard;
+// Enhance existing loadDashboard - store original first
+const _originalLoadDashboard = loadDashboard;
 loadDashboard = async function() {
+    // Call original dashboard loading logic
+    try {
+        await _originalLoadDashboard();
+    } catch (e) {
+        console.warn('Original loadDashboard error:', e);
+    }
+    
+    // Add enhanced features
     await loadEnhancedVisitorStats();
     await loadDashboardStats();
     await loadRecentUsers();
@@ -1734,5 +1784,8 @@ loadDashboard = async function() {
     await loadDeviceStats();
 };
 
-// Override loadVisitorStats to use enhanced version
-loadVisitorStats = loadEnhancedVisitorStats;
+// Enhance loadVisitorStats
+const _originalLoadVisitorStats = loadVisitorStats;
+loadVisitorStats = async function() {
+    await loadEnhancedVisitorStats();
+};
