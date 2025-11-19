@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>아로마펄스 관리자</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script>
+        // 페이지 로드 전 즉시 인증 체크
+        console.log('=== PRE-AUTH CHECK ===');
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('admin_token') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+        console.log('Token exists:', !!token);
+        if (!token) {
+            console.log('No token found, redirecting to login...');
+            alert('로그인이 필요합니다.');
+            window.location.href = '/admin-login';
+        } else {
+            console.log('Token found, proceeding to load page...');
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     <style>
