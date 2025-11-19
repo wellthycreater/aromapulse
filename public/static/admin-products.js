@@ -9,11 +9,26 @@ let authToken = null;
 // Authentication
 // ==========================================
 function checkAuth() {
-    authToken = localStorage.getItem('adminToken') || localStorage.getItem('admin_token') || localStorage.getItem('auth_token');
+    // 여러 토큰 키 확인
+    const tokens = {
+        adminToken: localStorage.getItem('adminToken'),
+        admin_token: localStorage.getItem('admin_token'),
+        auth_token: localStorage.getItem('auth_token'),
+        token: localStorage.getItem('token')
+    };
+    
+    console.log('[checkAuth] 저장된 토큰들:', tokens);
+    
+    authToken = tokens.adminToken || tokens.admin_token || tokens.auth_token || tokens.token;
+    
     if (!authToken) {
+        console.log('[checkAuth] 토큰이 없습니다. 로그인 페이지로 이동합니다.');
+        alert('로그인이 필요합니다.');
         window.location.href = '/admin-login';
         return false;
     }
+    
+    console.log('[checkAuth] 인증 성공');
     return true;
 }
 
