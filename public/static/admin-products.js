@@ -351,7 +351,14 @@ async function toggleUserStatus(userId, currentStatus) {
 // Products Functions
 // ==========================================
 async function loadProducts() {
+    console.log('[loadProducts] 시작');
     const tbody = document.getElementById('products-table-body');
+    
+    if (!tbody) {
+        console.error('[loadProducts] products-table-body 요소를 찾을 수 없습니다!');
+        return;
+    }
+    
     tbody.innerHTML = `
         <tr>
             <td colspan="6" class="px-6 py-8 text-center text-gray-500">
@@ -377,11 +384,16 @@ async function loadProducts() {
             url += '?' + params.toString();
         }
         
+        console.log('[loadProducts] Fetching:', url);
+        console.log('[loadProducts] Auth token:', authToken ? 'exists' : 'missing');
+        
         const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${authToken}`
             }
         });
+        
+        console.log('[loadProducts] Response status:', response.status);
         
         if (response.status === 401 || response.status === 403) {
             console.error('[loadProducts] 인증 실패 - 로그아웃합니다.');
@@ -390,9 +402,14 @@ async function loadProducts() {
             return;
         }
         
-        if (!response.ok) throw new Error('Failed to load products');
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[loadProducts] API 에러:', errorText);
+            throw new Error('Failed to load products');
+        }
         
         const products = await response.json();
+        console.log('[loadProducts] 제품 수:', products.length);
         
         if (products.length === 0) {
             tbody.innerHTML = `
@@ -841,7 +858,19 @@ function formatPrice(price) {
 // Event Listeners & Initialization
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    if (!checkAuth()) return;
+    console.log('=== Admin Products Page Loaded ===');
+    console.log('Current URL:', window.location.href);
+    
+    // Check authentication
+    const authResult = checkAuth();
+    console.log('Auth check result:', authResult);
+    
+    if (!authResult) {
+        console.log('Auth failed, should redirect to login');
+        return;
+    }
+    
+    console.log('Auth successful, loading page...');
     
     // Add event listeners for filters
     const productConceptFilter = document.getElementById('product-concept-filter');
@@ -858,6 +887,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    console.log('Loading initial tab:', currentMainTab);
+    
     // Load initial data for current tab
-    switchMainTab(currentMainTab);
+    try {
+        switchMainTab(currentMainTab);
+    } catch (error) {
+        console.error('Error loading initial tab:', error);
+    }
 });
