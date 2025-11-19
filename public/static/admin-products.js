@@ -9,7 +9,7 @@ let authToken = null;
 // Authentication
 // ==========================================
 function checkAuth() {
-    authToken = localStorage.getItem('admin_token');
+    authToken = localStorage.getItem('adminToken') || localStorage.getItem('admin_token') || localStorage.getItem('auth_token');
     if (!authToken) {
         window.location.href = '/admin-login';
         return false;
@@ -19,7 +19,9 @@ function checkAuth() {
 
 function logout() {
     if (confirm('로그아웃 하시겠습니까?')) {
+        localStorage.removeItem('adminToken');
         localStorage.removeItem('admin_token');
+        localStorage.removeItem('auth_token');
         window.location.href = '/admin-login';
     }
 }
