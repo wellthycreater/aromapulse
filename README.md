@@ -707,6 +707,20 @@ npm run db:migrate:prod
 - `GET /api/blog-reviews/analysis/sentiment` - 감정 분석 통계
 - `GET /api/blog-reviews/analysis/keywords` - 키워드 추출
 
+### 방문자 통계 (Visitors) 📊
+- `POST /api/visitors` - 방문자 기록
+- `GET /api/visitors/stats` - 방문자 통계 조회
+- `GET /api/visitors/daily` - 일별 통계 조회
+- `POST /api/visitors/reset` - 방문자 통계 강제 리셋 (관리자용)
+  - `reset_type: "today"` - 오늘 통계만 리셋
+  - `reset_type: "all"` - 전체 통계 리셋
+
+### 로그인 로그 (Login Logs) 🔐
+- `GET /api/login-logs` - 로그인 로그 조회 (필터링 지원)
+- `GET /api/login-logs/user/:userId` - 특정 사용자 로그인 로그
+- `GET /api/login-logs/stats` - 로그인 통계 (기간별, 디바이스별, 방법별)
+- `DELETE /api/login-logs/cleanup` - 오래된 로그 정리 (관리자용)
+
 ### 관리자 제품 관리 (Admin Products) 🛒
 - `POST /api/admin-products` - 제품 등록 (이미지 업로드 + **로컬 공방 정보** 포함)
 - `GET /api/admin-products` - 제품 목록 조회
@@ -1494,9 +1508,9 @@ curl -X PUT https://your-domain/api/user/change-password \
 
 ---
 
-**마지막 업데이트**: 2025-11-18  
-**버전**: 1.7.1 - Workshop Access Control Enhancement  
-**상태**: ✅ HR팀/조직문화팀/복리후생 담당자 전용 워크샵 접근 제어 완료  
+**마지막 업데이트**: 2025-11-19  
+**버전**: 1.7.3 - Login Tracking & Visitor Reset System  
+**상태**: ✅ 로그인 기록 수집 및 방문자 리셋 기능 완료  
 **회사명**: 웰씨코리아 (Wellthy Korea)  
 **결제 방식**: 토스페이먼츠 라이브 키 (실제 결제 가능)  
 **챗봇 서비스**: 사이드톡 AI (Sidetalk AI)  
@@ -1505,7 +1519,140 @@ curl -X PUT https://your-domain/api/user/change-password \
 **프로덕션 URL**: https://www.aromapulse.kr  
 **최신 배포**: https://1183aa32.aromapulse.pages.dev
 
-## 🆕 최신 업데이트 (v1.7.1) - 워크샵 접근 권한 강화 (2025-11-18)
+## 🆕 최신 업데이트 (v1.7.3) - 로그인 추적 및 방문자 리셋 시스템 (2025-11-19)
+
+### ✅ 완료된 작업
+
+**1. 로그인 기록 수집 시스템** ✅
+- **모든 로그인 방식 추적**:
+  - 이메일/비밀번호 로그인
+  - 네이버 OAuth 로그인
+  - 카카오 OAuth 로그인  
+  - 구글 OAuth 로그인
+  - 관리자 로그인
+- **수집 정보**:
+  - 디바이스 타입 (mobile, tablet, desktop)
+  - 운영체제 (iOS, Android, Windows, macOS, Linux)
+  - 브라우저 및 버전 (Chrome, Safari, Firefox, Edge 등)
+  - IP 주소
+  - User Agent
+  - 로그인 방법 (email, naver, kakao, google)
+  - 로그인 시간
+  - 세션 ID
+
+**2. 로그인 로그 조회 API** ✅
+- `GET /api/login-logs` - 로그인 로그 조회 (필터링, 페이징 지원)
+  - 필터: user_id, device_type, start_date, end_date
+  - 페이징: limit, offset
+- `GET /api/login-logs/user/:userId` - 특정 사용자 로그인 로그
+- `GET /api/login-logs/stats` - 로그인 통계
+  - 일별 로그인 수 및 순 사용자 수
+  - 디바이스 타입별 통계
+  - 로그인 방법별 통계
+  - 운영체제별 통계 (Top 10)
+  - 브라우저별 통계 (Top 10)
+- `DELETE /api/login-logs/cleanup` - 오래된 로그 정리 (기본 90일 보관)
+
+**3. 방문자 통계 리셋 기능** ✅
+- `POST /api/visitors/reset` - 방문자 통계 강제 리셋
+  - `reset_type: "today"` - 오늘 방문자 통계만 리셋
+  - `reset_type: "all"` - 전체 방문자 통계 리셋
+- **사용 사례**:
+  - 개발 및 테스트 과정에서 통계 리셋 필요
+  - 방문자 카운터 오류 수정
+  - 새로운 추적 시스템 도입 시 초기화
+
+**4. 데이터베이스 스키마** ✅
+- `user_login_logs` 테이블:
+  - user_id, email
+  - device_type, os, browser, browser_version
+  - ip_address, user_agent
+  - country, region, city (optional)
+  - login_method, login_status
+  - login_at, session_id
+
+### 📋 사용 방법
+
+**관리자 로그인 통계 확인**:
+```bash
+# 로그인 로그 조회 (최근 50개)
+curl http://localhost:3000/api/login-logs
+
+# 특정 사용자 로그인 로그
+curl http://localhost:3000/api/login-logs/user/1
+
+# 로그인 통계 (최근 7일)
+curl http://localhost:3000/api/login-logs/stats?days=7
+
+# 로그인 로그 필터링
+curl "http://localhost:3000/api/login-logs?device_type=mobile&start_date=2025-11-01"
+```
+
+**방문자 통계 리셋**:
+```bash
+# 오늘 방문자 통계 리셋
+curl -X POST http://localhost:3000/api/visitors/reset \
+  -H "Content-Type: application/json" \
+  -d '{"reset_type":"today"}'
+
+# 전체 방문자 통계 리셋
+curl -X POST http://localhost:3000/api/visitors/reset \
+  -H "Content-Type: application/json" \
+  -d '{"reset_type":"all"}'
+```
+
+### 🎯 비즈니스 가치
+
+**사용자 행동 분석**:
+- ✅ 로그인 패턴 파악 (시간대별, 요일별)
+- ✅ 디바이스 선호도 분석 (모바일 vs 데스크톱)
+- ✅ 브라우저/OS 최적화 우선순위 결정
+- ✅ OAuth 로그인 전환율 추적
+
+**보안 강화**:
+- ✅ 비정상 로그인 패턴 감지
+- ✅ IP 기반 접근 제어
+- ✅ 세션 관리 및 추적
+- ✅ 로그인 시도 기록 보관
+
+**마케팅 인사이트**:
+- ✅ 사용자 접속 시간대 파악
+- ✅ 지역별 사용자 분포 분석
+- ✅ 모바일/데스크톱 전환율 비교
+- ✅ 브라우저별 UX 최적화
+
+**개발 및 테스트**:
+- ✅ 방문자 통계 강제 리셋으로 테스트 용이
+- ✅ 개발 과정에서 자유롭게 데이터 초기화
+- ✅ 운영 데이터와 개발 데이터 분리
+
+### 🔮 향후 개선 계획
+
+1. **관리자 대시보드 통합**:
+   - 로그인 로그 시각화 (차트 및 그래프)
+   - 실시간 접속자 현황
+   - 로그인 성공/실패율 추이
+   - 디바이스별 사용 추세
+
+2. **보안 알림 시스템**:
+   - 비정상 로그인 시도 자동 감지
+   - 다중 디바이스 동시 로그인 알림
+   - 새로운 디바이스 로그인 알림
+   - 특정 국가 IP 차단
+
+3. **위치 기반 분석**:
+   - IP 주소 → 지역 자동 변환 (GeoIP)
+   - 지역별 사용자 분포 지도
+   - 지역 맞춤 마케팅
+
+4. **로그 보관 정책**:
+   - 자동 로그 아카이빙
+   - 주기적 로그 정리 (90일 이상)
+   - GDPR 준수 개인정보 익명화
+
+---
+
+## 🆕 이전 업데이트 (v1.7.1) - 워크샵 접근 권한 강화 (2025-11-18)
 
 ### ✅ 완료된 작업
 

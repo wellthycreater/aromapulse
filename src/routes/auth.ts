@@ -7,6 +7,7 @@ import {
   getKakaoAuthUrl, getKakaoAccessToken, getKakaoUserInfo,
   generateState
 } from '../utils/oauth';
+import { logUserLogin } from '../utils/device-detection';
 
 const auth = new Hono<{ Bindings: Bindings }>();
 
@@ -138,6 +139,9 @@ auth.post('/login', async (c) => {
       'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
     ).bind(user.id).run();
     
+    // 로그인 기록 저장
+    await logUserLogin(c.env.DB, user.id as number, user.email as string, 'email', c.req.raw);
+    
     // JWT 토큰 생성
     const token = await generateToken(user as any, c.env.JWT_SECRET);
     
@@ -258,6 +262,9 @@ auth.get('/naver/callback', async (c) => {
         'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
       ).bind(userId).run();
       
+      // 로그인 기록 저장
+      await logUserLogin(c.env.DB, userId, userInfo.email, 'naver', c.req.raw);
+      
     } else {
       // 이메일로 기존 사용자 확인 (OAuth 연동)
       const emailUser = await c.env.DB.prepare(
@@ -274,6 +281,9 @@ auth.get('/naver/callback', async (c) => {
         user = await c.env.DB.prepare(
           'SELECT * FROM users WHERE id = ?'
         ).bind(userId).first();
+        
+        // 로그인 기록 저장
+        await logUserLogin(c.env.DB, userId, userInfo.email, 'naver', c.req.raw);
         
       } else {
         // 신규 사용자 생성
@@ -294,6 +304,9 @@ auth.get('/naver/callback', async (c) => {
         user = await c.env.DB.prepare(
           'SELECT * FROM users WHERE id = ?'
         ).bind(userId).first();
+        
+        // 로그인 기록 저장 (신규 가입도 기록)
+        await logUserLogin(c.env.DB, userId, userInfo.email, 'naver', c.req.raw);
       }
     }
     
@@ -646,6 +659,9 @@ auth.post('/admin-login', async (c) => {
     await c.env.DB.prepare(
       'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
     ).bind(user.id).run();
+    
+    // 로그인 기록 저장
+    await logUserLogin(c.env.DB, user.id as number, user.email as string, 'email', c.req.raw);
     
     // JWT 토큰 생성
     const token = await generateToken(user as any, c.env.JWT_SECRET);

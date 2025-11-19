@@ -177,4 +177,44 @@ visitors.get('/daily', async (c) => {
   }
 });
 
+// 방문자 통계 강제 리셋 (관리자용)
+visitors.post('/reset', async (c) => {
+  try {
+    const { DB } = c.env;
+    const { reset_type } = await c.req.json();
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (reset_type === 'today') {
+      // 오늘 통계만 리셋
+      await DB.prepare('DELETE FROM visitor_stats WHERE stat_date = ?')
+        .bind(today)
+        .run();
+      
+      await DB.prepare('DELETE FROM visitors WHERE visit_date = ?')
+        .bind(today)
+        .run();
+      
+      return c.json({ 
+        message: '오늘 방문자 통계가 리셋되었습니다',
+        reset_date: today
+      });
+    } else if (reset_type === 'all') {
+      // 전체 통계 리셋
+      await DB.prepare('DELETE FROM visitor_stats').run();
+      await DB.prepare('DELETE FROM visitors').run();
+      
+      return c.json({ 
+        message: '전체 방문자 통계가 리셋되었습니다'
+      });
+    } else {
+      return c.json({ error: 'Invalid reset_type. Use "today" or "all"' }, 400);
+    }
+    
+  } catch (error) {
+    console.error('방문자 리셋 오류:', error);
+    return c.json({ error: '방문자 리셋 실패' }, 500);
+  }
+});
+
 export default visitors;
