@@ -49,10 +49,36 @@
     }
   }
   
+  // 통계 로드
+  async function loadStats() {
+    try {
+      const response = await fetch('/api/visitors/stats');
+      const data = await response.json();
+      
+      // 오늘 방문자
+      const todayEl = document.getElementById('today-visitors');
+      if (todayEl) {
+        todayEl.textContent = data.today.visits || 0;
+      }
+      
+      // 전체 방문자
+      const totalEl = document.getElementById('total-visitors');
+      if (totalEl) {
+        totalEl.textContent = data.total.visits || 0;
+      }
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    }
+  }
+  
   // 페이지 로드 시 실행
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', trackVisit);
+    document.addEventListener('DOMContentLoaded', () => {
+      trackVisit();
+      loadStats();
+    });
   } else {
     trackVisit();
+    loadStats();
   }
 })();
