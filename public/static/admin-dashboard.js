@@ -2209,21 +2209,20 @@ function renderB2bCategoryChartNew(data) {
     const ctx = document.getElementById('b2bCategoryChart');
     if (!ctx) return;
     
-    if (!data.roles || data.roles.length === 0) {
+    if (!data.b2b_categories || data.b2b_categories.length === 0) {
         ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
         return;
     }
     
-    const labels = data.roles.map(item => {
+    const labels = data.b2b_categories.map(item => {
         const map = {
             'perfumer': '조향사',
-            'hr_manager': 'HR 담당자',
-            'culture_team': '조직문화팀',
-            'welfare_manager': '복리후생 담당자'
+            'company': '기업',
+            'shop': '공방/가게'
         };
-        return map[item.company_role] || item.company_role || '기타';
+        return map[item.b2b_category] || item.b2b_category || '기타';
     });
-    const counts = data.roles.map(item => item.count);
+    const counts = data.b2b_categories.map(item => item.count);
     
     if (b2bCategoryChartNew) b2bCategoryChartNew.destroy();
     

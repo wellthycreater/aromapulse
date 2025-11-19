@@ -59,69 +59,44 @@ app.get('/analytics', async (c) => {
       ORDER BY count DESC
     `).all();
     
-    // 2. Stress type breakdown (for B2C users)
+    // 2. B2C category breakdown (stress type)
     const stressTypeStats = await db.prepare(`
       SELECT 
-        stress_type,
+        b2c_category as stress_type,
         COUNT(*) as count
       FROM users
-      WHERE stress_type IS NOT NULL AND stress_type != ''
-      GROUP BY stress_type
+      WHERE user_type = 'B2C' AND b2c_category IS NOT NULL AND b2c_category != ''
+      GROUP BY b2c_category
       ORDER BY count DESC
     `).all();
     
-    // 3. Region breakdown
-    const regionStats = await db.prepare(`
+    // 3. B2B category breakdown  
+    const b2bCategoryStats = await db.prepare(`
       SELECT 
-        region,
+        b2b_category,
         COUNT(*) as count
       FROM users
-      WHERE region IS NOT NULL AND region != ''
-      GROUP BY region
-      ORDER BY count DESC
-      LIMIT 10
-    `).all();
-    
-    // 4. Gender breakdown
-    const genderStats = await db.prepare(`
-      SELECT 
-        gender,
-        COUNT(*) as count
-      FROM users
-      WHERE gender IS NOT NULL AND gender != ''
-      GROUP BY gender
+      WHERE user_type = 'B2B' AND b2b_category IS NOT NULL AND b2b_category != ''
+      GROUP BY b2b_category
       ORDER BY count DESC
     `).all();
     
-    // 5. Role breakdown (for B2B users)
+    // 4. Role breakdown (admin, partner, user)
     const roleStats = await db.prepare(`
       SELECT 
-        company_role,
+        role,
         COUNT(*) as count
       FROM users
-      WHERE company_role IS NOT NULL AND company_role != ''
-      GROUP BY company_role
+      WHERE role IS NOT NULL AND role != ''
+      GROUP BY role
       ORDER BY count DESC
     `).all();
     
-    // 6. Company size breakdown
-    const companySizeStats = await db.prepare(`
-      SELECT 
-        company_size,
-        COUNT(*) as count
-      FROM users
-      WHERE company_size IS NOT NULL AND company_size != ''
-      GROUP BY company_size
-      ORDER BY 
-        CASE company_size
-          WHEN '20인 미만' THEN 1
-          WHEN '20-50인' THEN 2
-          WHEN '50-100인' THEN 3
-          WHEN '100-300인' THEN 4
-          WHEN '300인 이상' THEN 5
-          ELSE 6
-        END
-    `).all();
+    // Note: region, gender, company_size columns don't exist in current schema
+    // Return empty arrays for these
+    const regionStats = { results: [] };
+    const genderStats = { results: [] };
+    const companySizeStats = { results: [] };
     
     // 7. Monthly signup trend (last 6 months)
     const signupTrend = await db.prepare(`
@@ -148,6 +123,7 @@ app.get('/analytics', async (c) => {
     return c.json({
       user_types: userTypeStats.results || [],
       stress_types: stressTypeStats.results || [],
+      b2b_categories: b2bCategoryStats.results || [],
       regions: regionStats.results || [],
       genders: genderStats.results || [],
       roles: roleStats.results || [],
