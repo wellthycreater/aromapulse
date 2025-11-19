@@ -1195,3 +1195,66 @@ async function loadBlog() {
     await loadBlogStats();
     await loadBlogHighLeads();
 }
+
+// Crawl All Blog Comments (Bulk Crawling)
+async function crawlAllBlogComments() {
+    const btn = document.getElementById('crawl-all-btn');
+    const progressContainer = document.getElementById('crawl-progress-container');
+    const resultsContainer = document.getElementById('crawl-results-container');
+    
+    // Confirm action
+    if (!confirm('모든 블로그 포스트의 댓글을 수집하시겠습니까?\n이 작업은 몇 분 정도 소요될 수 있습니다.')) {
+        return;
+    }
+    
+    // Disable button and show progress
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i><span>수집 중...</span>';
+    
+    progressContainer.classList.remove('hidden');
+    resultsContainer.classList.add('hidden');
+    
+    try {
+        // Start crawling
+        const response = await fetch('/api/blog-reviews/crawl-all-posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Crawl failed');
+        }
+        
+        const result = await response.json();
+        
+        // Hide progress, show results
+        progressContainer.classList.add('hidden');
+        resultsContainer.classList.remove('hidden');
+        
+        // Update result summary
+        document.getElementById('crawl-result-total').textContent = result.summary.total_comments_collected;
+        document.getElementById('crawl-result-success').textContent = result.summary.success_count;
+        document.getElementById('crawl-result-fail').textContent = result.summary.fail_count;
+        
+        // Show success message
+        alert(`댓글 수집 완료!\n총 ${result.summary.total_comments_collected}개의 댓글이 수집되었습니다.`);
+        
+        // Reload blog stats and posts
+        await loadBlogStats();
+        await loadBlogPostsList();
+        
+    } catch (error) {
+        console.error('Bulk crawl error:', error);
+        alert('댓글 일괄 수집에 실패했습니다.\n네트워크 연결을 확인하고 다시 시도해주세요.');
+        progressContainer.classList.add('hidden');
+    } finally {
+        // Re-enable button
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i><span>모든 댓글 수집</span>';
+    }
+}
