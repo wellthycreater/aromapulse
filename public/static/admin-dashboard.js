@@ -143,46 +143,135 @@ async function loadDashboard() {
     }
 }
 
-// Load Users
+// Load Users - Enhanced with full member information
 async function loadUsers() {
+    console.log('👥 Loading users...');
     try {
         const response = await fetch('/api/admin/users', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
-        const users = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(`API failed with status ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const users = data.users || data || [];
+        
+        console.log(`✅ Loaded ${users.length} users`);
         
         const tbody = document.getElementById('users-table-body');
         document.getElementById('users-total').textContent = users.length;
         
         if (users.length === 0) {
             tbody.innerHTML = `
-                <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                    회원이 없습니다.
+                <tr><td colspan="11" class="px-6 py-8 text-center text-gray-500">
+                    <i class="fas fa-inbox text-gray-300 text-4xl mb-3"></i>
+                    <p>회원이 없습니다.</p>
                 </td></tr>
             `;
             return;
         }
         
-        tbody.innerHTML = users.map(user => `
+        tbody.innerHTML = users.map(user => {
+            // OAuth provider formatting
+            const providerLabels = {
+                'email': '이메일',
+                'naver': '네이버',
+                'kakao': '카카오',
+                'google': '구글'
+            };
+            const providerColors = {
+                'email': 'gray',
+                'naver': 'green',
+                'kakao': 'yellow',
+                'google': 'red'
+            };
+            const provider = user.oauth_provider || 'email';
+            const providerLabel = providerLabels[provider] || provider;
+            const providerColor = providerColors[provider] || 'gray';
+            
+            // User type details
+            let userTypeDisplay = '';
+            if (user.user_type === 'B2C') {
+                userTypeDisplay = '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold"><i class="fas fa-user mr-1"></i>개인 (B2C)</span>';
+            } else if (user.user_type === 'B2B') {
+                userTypeDisplay = '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold"><i class="fas fa-briefcase mr-1"></i>기업 (B2B)</span>';
+            } else {
+                userTypeDisplay = '<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">미분류</span>';
+            }
+            
+            // Sub-category details
+            let subCategory = '-';
+            if (user.user_type === 'B2C') {
+                if (user.b2c_category === 'daily_stress') {
+                    subCategory = '<span class="text-xs text-purple-600">일상 스트레스</span>';
+                } else if (user.b2c_category === 'work_stress') {
+                    subCategory = '<span class="text-xs text-blue-600">직무 스트레스</span>';
+                }
+            } else if (user.user_type === 'B2B') {
+                if (user.b2b_business_type === 'perfumer') {
+                    subCategory = '<span class="text-xs text-pink-600"><i class="fas fa-flask mr-1"></i>조향사</span>';
+                } else if (user.b2b_business_type === 'company') {
+                    subCategory = '<span class="text-xs text-green-600"><i class="fas fa-building mr-1"></i>기업</span>';
+                } else if (user.b2b_business_type === 'shop') {
+                    subCategory = '<span class="text-xs text-purple-600"><i class="fas fa-store mr-1"></i>공방</span>';
+                }
+                // Add company name if available
+                if (user.b2b_company_name) {
+                    subCategory += `<br><span class="text-xs text-gray-600">${user.b2b_company_name}</span>`;
+                }
+            }
+            
+            // Address formatting (B2B uses b2b_address, general address field)
+            const address = user.address || user.b2b_address || '-';
+            const shortAddress = address.length > 25 ? address.substring(0, 25) + '...' : address;
+            
+            // Role badge
+            const roleLabel = user.role === 'admin' ? '관리자' : '일반';
+            const roleBadge = user.role === 'admin' ? 
+                '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold"><i class="fas fa-user-shield mr-1"></i>관리자</span>' :
+                '<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">일반</span>';
+            
+            // Date formatting
+            const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR', {month: '2-digit', day: '2-digit'}) : '-';
+            
+            return `
             <tr class="border-b hover:bg-gray-50 transition">
-                <td class="px-6 py-4 text-sm font-medium text-gray-900">${user.name || '-'}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">${user.email}</td>
-                <td class="px-6 py-4 text-sm">
-                    <span class="px-2 py-1 bg-${user.user_type === 'B2C' ? 'blue' : 'purple'}-100 text-${user.user_type === 'B2C' ? 'blue' : 'purple'}-800 rounded-full text-xs">
-                        ${user.user_type === 'B2C' ? '개인' : '기업'}
+                <td class="px-4 py-3 text-sm font-mono text-gray-600">#${user.id}</td>
+                <td class="px-4 py-3 text-sm">
+                    <span class="px-2 py-1 bg-${providerColor}-100 text-${providerColor}-800 rounded-full text-xs font-semibold">
+                        ${providerLabel}
                     </span>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-600">${user.role || 'user'}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">${formatDate(user.created_at)}</td>
-                <td class="px-6 py-4 text-sm">
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">${user.name || '-'}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${user.email}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${user.phone || '-'}</td>
+                <td class="px-4 py-3 text-sm">${userTypeDisplay}</td>
+                <td class="px-4 py-3 text-sm">${subCategory}</td>
+                <td class="px-4 py-3 text-sm text-gray-500" title="${address}">${shortAddress}</td>
+                <td class="px-4 py-3 text-sm">${roleBadge}</td>
+                <td class="px-4 py-3 text-sm text-gray-500">${createdDate}</td>
+                <td class="px-4 py-3 text-sm">
                     <span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">
                         ${user.is_active ? '활성' : '비활성'}
                     </span>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
+        
+        console.log('✅ User table rendered');
     } catch (error) {
-        console.error('Users load error:', error);
+        console.error('❌ Users load error:', error);
+        const tbody = document.getElementById('users-table-body');
+        tbody.innerHTML = `
+            <tr><td colspan="11" class="px-6 py-8 text-center text-red-500">
+                <i class="fas fa-exclamation-triangle text-4xl mb-3"></i>
+                <p>회원 목록을 불러오는데 실패했습니다.</p>
+                <p class="text-xs text-gray-500 mt-2">${error.message}</p>
+            </td></tr>
+        `;
     }
 }
 
@@ -206,17 +295,46 @@ async function searchUsers() {
         
         if (users.length === 0) {
             tbody.innerHTML = `
-                <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                <tr><td colspan="11" class="px-6 py-8 text-center text-gray-500">
                     검색 결과가 없습니다.
                 </td></tr>
             `;
             return;
         }
         
-        tbody.innerHTML = users.map(user => `
+        tbody.innerHTML = users.map(user => {
+            // OAuth provider formatting
+            const providerLabels = {
+                'email': '이메일',
+                'naver': '네이버',
+                'kakao': '카카오',
+                'google': '구글'
+            };
+            const providerColors = {
+                'email': 'gray',
+                'naver': 'green',
+                'kakao': 'yellow',
+                'google': 'red'
+            };
+            const provider = user.oauth_provider || 'email';
+            const providerLabel = providerLabels[provider] || provider;
+            const providerColor = providerColors[provider] || 'gray';
+            
+            // Address formatting (B2B uses b2b_address, B2C might not have address)
+            const address = user.b2b_address || '-';
+            const shortAddress = address.length > 30 ? address.substring(0, 30) + '...' : address;
+            
+            return `
             <tr class="border-b hover:bg-gray-50 transition">
+                <td class="px-6 py-4 text-sm">
+                    <span class="px-2 py-1 bg-${providerColor}-100 text-${providerColor}-800 rounded-full text-xs font-semibold">
+                        ${providerLabel}
+                    </span>
+                </td>
                 <td class="px-6 py-4 text-sm font-medium text-gray-900">${user.name || '-'}</td>
                 <td class="px-6 py-4 text-sm text-gray-600">${user.email}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${user.phone || '-'}</td>
+                <td class="px-6 py-4 text-sm text-gray-600" title="${address}">${shortAddress}</td>
                 <td class="px-6 py-4 text-sm">
                     <span class="px-2 py-1 bg-${user.user_type === 'B2C' ? 'blue' : 'purple'}-100 text-${user.user_type === 'B2C' ? 'blue' : 'purple'}-800 rounded-full text-xs">
                         ${user.user_type === 'B2C' ? '개인' : '기업'}
@@ -230,7 +348,8 @@ async function searchUsers() {
                     </span>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     } catch (error) {
         console.error('Search users error:', error);
     }
@@ -2146,12 +2265,10 @@ function renderMonthlySignupChart(data) {
     });
 }
 
-// Enhance loadUsers to include analytics
+// Enhance loadUsers - ONLY load user list, NO analytics
 const _originalLoadUsers2 = loadUsers;
 loadUsers = async function() {
-    console.log('📊 Enhanced loadUsers called');
-    await loadUserStats();
-    await loadUserAnalytics();
+    console.log('👥 loadUsers called - loading member list only');
     if (_originalLoadUsers2) {
         try {
             await _originalLoadUsers2();

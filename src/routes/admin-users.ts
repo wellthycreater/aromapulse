@@ -147,7 +147,13 @@ app.get('/', async (c) => {
     const db = c.env.DB;
     const { user_type, role, search, is_active } = c.req.query();
     
-    let query = 'SELECT * FROM users WHERE 1=1';
+    let query = `SELECT 
+      id, email, name, phone, 
+      user_type, b2c_category, b2c_subcategory,
+      b2b_category, b2b_business_name, b2b_address,
+      oauth_provider, role,
+      created_at, updated_at, last_login_at, is_active
+    FROM users WHERE 1=1`;
     const params: any[] = [];
     
     // Filter by user type (b2c/b2b)
@@ -179,13 +185,7 @@ app.get('/', async (c) => {
     const stmt = db.prepare(query);
     const result = await stmt.bind(...params).all();
     
-    // Remove sensitive fields
-    const users = result.results?.map((user: any) => {
-      const { password_hash, ...safeUser } = user;
-      return safeUser;
-    });
-    
-    return c.json(users || []);
+    return c.json(result.results || []);
   } catch (error) {
     console.error('Users load error:', error);
     return c.json({ error: 'Failed to load users' }, 500);
