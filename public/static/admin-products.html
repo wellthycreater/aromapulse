@@ -3,44 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 페이지 - 웰씨코리아 관리자</title>
+    <title>아로마펄스 관리자</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Colors */
+        :root {
+            --sage-green: #7AA992;
+            --lavender: #BCA6E0;
+            --cream: #F3EDEA;
+            --dark-slate: #263238;
+            --medium-gray: #55606A;
+            --light-gray: #E6ECEB;
+        }
+        
+        .bg-sage { background-color: var(--sage-green); }
+        .bg-lavender { background-color: var(--lavender); }
+        .bg-cream { background-color: var(--cream); }
+        .text-sage { color: var(--sage-green); }
+        .text-lavender { color: var(--lavender); }
+        .border-sage { border-color: var(--sage-green); }
+        .hover\:bg-sage:hover { background-color: var(--sage-green); }
+        .hover\:bg-lavender:hover { background-color: var(--lavender); }
+        
+        /* Tab Styling */
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: var(--sage-green);
+            color: white;
+            border-bottom: 3px solid var(--sage-green);
+        }
+        
+        /* Sub-tab Styling */
+        .sub-tab-button {
+            transition: all 0.3s ease;
+        }
+        .sub-tab-button.active {
+            background-color: var(--lavender);
+            color: white;
+        }
+        
+        /* Smooth transitions */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--light-gray);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--sage-green);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6A9882;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-cream min-h-screen">
     <!-- Header -->
-    <header class="bg-white shadow-md">
-        <nav class="container mx-auto px-4 py-4">
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">
-                        <i class="fas fa-box text-purple-600 mr-2"></i>
-                        관리자 페이지
-                    </h1>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <span class="font-semibold">브랜드:</span> 아로마펄스(AromaPulse) | 
-                        <span class="font-semibold">운영사:</span> 웰씨코리아(Wellthy Korea)
-                    </p>
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-sage">
+                            <i class="fas fa-spa mr-2"></i>
+                            아로마펄스 관리자
+                        </h1>
+                        <p class="text-xs text-gray-500 mt-1">AromaPulse Admin Dashboard</p>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-gray-700">
-                        <i class="fas fa-building text-blue-600 mr-1"></i>
-                        <span class="font-semibold">Wellthy Korea</span>
-                        <span class="text-gray-500 mx-2">|</span>
-                        <i class="fas fa-user-shield mr-1"></i>
-                        <span id="user-name">관리자</span>
-                    </span>
-                    <a href="/static/admin-users" class="text-gray-700 hover:text-purple-600">
-                        <i class="fas fa-users mr-2"></i>회원 관리
-                    </a>
-                    <a href="/static/admin-orders.html" class="text-gray-700 hover:text-purple-600">
-                        <i class="fas fa-shopping-bag mr-2"></i>주문 관리
-                    </a>
-                    <a href="/dashboard" class="text-gray-700 hover:text-purple-600">
-                        <i class="fas fa-arrow-left mr-2"></i>대시보드로
-                    </a>
-                    <button onclick="logout()" class="text-red-600 hover:text-red-700">
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-user-circle mr-1"></i>
+                        <span id="admin-name">관리자</span>
+                    </div>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-700 transition">
                         <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
                     </button>
                 </div>
@@ -48,1464 +100,413 @@
         </nav>
     </header>
 
-    <div class="container mx-auto px-4 py-8">
-        <!-- 탭 네비게이션 -->
-        <div class="mb-6 bg-white rounded-lg shadow-md p-2">
-            <div class="flex space-x-2">
-                <button onclick="switchTab('dashboard')" id="tab-dashboard" 
-                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg">
+    <!-- Main Navigation Tabs -->
+    <div class="bg-white border-b shadow-sm">
+        <div class="container mx-auto px-6">
+            <div class="flex space-x-1 overflow-x-auto">
+                <button onclick="switchMainTab('dashboard')" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    data-tab="dashboard">
                     <i class="fas fa-chart-line mr-2"></i>대시보드
                 </button>
-                <button onclick="switchTab('products')" id="tab-products" 
-                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition text-gray-700 hover:bg-gray-100">
+                <button onclick="switchMainTab('users')" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    data-tab="users">
+                    <i class="fas fa-users mr-2"></i>회원 관리
+                </button>
+                <button onclick="switchMainTab('products')" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100 active" 
+                    data-tab="products">
                     <i class="fas fa-box mr-2"></i>제품 관리
                 </button>
-                <button onclick="switchTab('classes')" id="tab-classes"
-                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition text-gray-700 hover:bg-gray-100">
-                    <i class="fas fa-users-class mr-2"></i>워크샵 관리
-                </button>
-                <button onclick="switchTab('oneday-classes')" id="tab-oneday-classes"
-                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition text-gray-700 hover:bg-gray-100">
-                    <i class="fas fa-chalkboard-teacher mr-2"></i>원데이 클래스 관리
-                </button>
-                <button onclick="switchTab('blog')" id="tab-blog"
-                    class="flex-1 px-6 py-3 rounded-lg font-semibold transition text-gray-700 hover:bg-gray-100">
+                <button onclick="switchMainTab('blog')" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    data-tab="blog">
                     <i class="fas fa-blog mr-2"></i>블로그 관리
                 </button>
-            </div>
-        </div>
-
-        <!-- 클래스 관리 탭 -->
-        <div id="content-classes" style="display: none;">
-            <!-- 액션 버튼 -->
-            <div class="mb-6 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-800">클래스 관리</h2>
-                <button onclick="openNewClassModal()" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
-                    <i class="fas fa-plus mr-2"></i>클래스 등록
+                <button onclick="switchMainTab('workshops')" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    data-tab="workshops">
+                    <i class="fas fa-hands-helping mr-2"></i>워크샵 관리
                 </button>
-            </div>
-
-            <!-- 클래스 검색/필터 섹션 -->
-            <div id="class-search-filter" class="mb-6 bg-white rounded-xl shadow-md p-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <!-- 검색 -->
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-search mr-1"></i>클래스 검색
-                        </label>
-                        <input type="text" id="class-search-input" placeholder="클래스명으로 검색..." 
-                            oninput="applyClassFilter()"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    
-                    <!-- 가격 범위 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-won-sign mr-1"></i>가격 범위
-                        </label>
-                        <select id="class-price-filter" onchange="applyClassFilter()"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <option value="">전체</option>
-                            <option value="0-50000">5만원 이하</option>
-                            <option value="50000-100000">5만원 ~ 10만원</option>
-                            <option value="100000-200000">10만원 ~ 20만원</option>
-                            <option value="200000-999999">20만원 이상</option>
-                        </select>
-                    </div>
-
-                    <!-- 정렬 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-sort mr-1"></i>정렬
-                        </label>
-                        <select id="class-sort-filter" onchange="applyClassFilter()"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <option value="newest">최신순</option>
-                            <option value="oldest">오래된순</option>
-                            <option value="price-low">가격 낮은순</option>
-                            <option value="price-high">가격 높은순</option>
-                            <option value="name">이름순</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- 검색 결과 카운트 -->
-                <div class="mt-4 text-sm text-gray-600">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    <span id="class-filter-result-count">0</span>개의 클래스가 검색되었습니다.
-                </div>
-            </div>
-
-            <!-- 클래스 목록 -->
-            <div id="classes-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- 클래스 카드들이 여기에 동적으로 추가됩니다 -->
-            </div>
-
-            <!-- Loading State -->
-            <div id="class-loading" class="text-center py-12">
-                <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
-                <p class="text-gray-600">클래스를 불러오는 중...</p>
-            </div>
-
-            <!-- Empty State -->
-            <div id="class-empty-state" class="text-center py-12" style="display: none;">
-                <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
-                <p class="text-gray-600 text-lg mb-4">등록된 클래스가 없습니다</p>
-                <button onclick="openNewClassModal()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
-                    첫 클래스 등록하기
+                <button onclick="switchMainTab('classes')" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    data-tab="classes">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i>원데이 클래스
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- 원데이 클래스 관리 탭 -->
-        <div id="content-oneday-classes" style="display: none;">
-            <!-- 액션 버튼 -->
-            <div class="mb-6 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-800">원데이 클래스 관리</h2>
-                <button onclick="openNewOnedayClassModal()" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
-                    <i class="fas fa-plus mr-2"></i>원데이 클래스 등록
-                </button>
-            </div>
-
-            <!-- 원데이 클래스 검색/필터 섹션 -->
-            <div id="oneday-class-search-filter" class="mb-6 bg-white rounded-xl shadow-md p-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <!-- 검색 -->
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-search mr-1"></i>클래스 검색
-                        </label>
-                        <input type="text" id="oneday-class-search-input" placeholder="클래스명으로 검색..." 
-                            oninput="applyOnedayClassFilter()"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    
-                    <!-- 가격 범위 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-won-sign mr-1"></i>가격 범위
-                        </label>
-                        <select id="oneday-class-price-filter" onchange="applyOnedayClassFilter()"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <option value="">전체</option>
-                            <option value="0-50000">5만원 이하</option>
-                            <option value="50000-100000">5만원 ~ 10만원</option>
-                            <option value="100000-200000">10만원 ~ 20만원</option>
-                            <option value="200000-999999">20만원 이상</option>
-                        </select>
-                    </div>
-
-                    <!-- 정렬 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-sort mr-1"></i>정렬
-                        </label>
-                        <select id="oneday-class-sort-filter" onchange="applyOnedayClassFilter()"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <option value="newest">최신순</option>
-                            <option value="oldest">오래된순</option>
-                            <option value="price-low">가격 낮은순</option>
-                            <option value="price-high">가격 높은순</option>
-                            <option value="name">이름순</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- 검색 결과 카운트 -->
-                <div class="mt-4 text-sm text-gray-600">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    <span id="oneday-class-filter-result-count">0</span>개의 원데이 클래스가 검색되었습니다.
-                </div>
-            </div>
-
-            <!-- 원데이 클래스 목록 -->
-            <div id="oneday-classes-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- 원데이 클래스 카드들이 여기에 동적으로 추가됩니다 -->
-            </div>
-
-            <!-- Loading State -->
-            <div id="oneday-class-loading" class="text-center py-12">
-                <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
-                <p class="text-gray-600">원데이 클래스를 불러오는 중...</p>
-            </div>
-
-            <!-- Empty State -->
-            <div id="oneday-class-empty-state" class="text-center py-12" style="display: none;">
-                <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
-                <p class="text-gray-600 text-lg mb-4">등록된 원데이 클래스가 없습니다</p>
-                <button onclick="openNewOnedayClassModal()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
-                    첫 원데이 클래스 등록하기
-                </button>
-            </div>
-        </div>
-
-        <!-- 제품 관리 탭 -->
-        <div id="content-products" style="display: none;">
-            <!-- 액션 버튼 -->
-            <div class="mb-6 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-800">제품 관리</h2>
-                <button onclick="openNewProductModal()" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
-                    <i class="fas fa-plus mr-2"></i>제품 등록
-                </button>
-            </div>
-
-        <!-- 제품 검색/필터 섹션 -->
-        <div id="product-search-filter" class="mb-6 bg-white rounded-xl shadow-md p-6" style="display: none;">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <!-- 검색 -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-search mr-1"></i>제품 검색
-                    </label>
-                    <input type="text" id="search-input" placeholder="제품명으로 검색..." 
-                        oninput="applySearchAndFilter()"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                </div>
+    <!-- Main Content Area -->
+    <div class="container mx-auto px-6 py-8">
+        
+        <!-- Dashboard Section -->
+        <div id="section-dashboard" class="content-section hidden">
+            <div class="fade-in">
+                <h2 class="text-3xl font-bold text-dark-slate mb-6">
+                    <i class="fas fa-chart-line text-sage mr-3"></i>대시보드
+                </h2>
                 
-                <!-- 가격 범위 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-won-sign mr-1"></i>가격 범위
-                    </label>
-                    <select id="price-filter" onchange="applySearchAndFilter()"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">전체</option>
-                        <option value="0-30000">3만원 이하</option>
-                        <option value="30000-50000">3만원 ~ 5만원</option>
-                        <option value="50000-100000">5만원 ~ 10만원</option>
-                        <option value="100000-999999">10만원 이상</option>
-                    </select>
-                </div>
-
-                <!-- 정렬 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-sort mr-1"></i>정렬
-                    </label>
-                    <select id="sort-filter" onchange="applySearchAndFilter()"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="newest">최신순</option>
-                        <option value="oldest">오래된순</option>
-                        <option value="price-low">가격 낮은순</option>
-                        <option value="price-high">가격 높은순</option>
-                        <option value="name">이름순</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- 검색 결과 카운트 -->
-            <div class="mt-4 text-sm text-gray-600">
-                <i class="fas fa-info-circle mr-1"></i>
-                <span id="filter-result-count">0</span>개의 제품이 검색되었습니다.
-            </div>
-        </div>
-
-        <!-- 제품 목록 -->
-        <div id="products-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" style="display: none;">
-            <!-- 제품 카드들이 여기에 동적으로 추가됩니다 -->
-        </div>
-
-        <!-- Loading State -->
-        <div id="loading" class="text-center py-12" style="display: none;">
-            <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
-            <p class="text-gray-600">제품을 불러오는 중...</p>
-        </div>
-
-        <!-- Empty State -->
-        <div id="empty-state" class="text-center py-12 text-gray-500" style="display: none;">
-            <i class="fas fa-box-open text-6xl mb-4"></i>
-            <p class="text-lg">등록된 제품이 없습니다.</p>
-            <p class="text-sm mt-2">상단의 "제품 등록" 버튼을 클릭하여 첫 제품을 등록하세요.</p>
-        </div>
-        </div>
-
-        <!-- 대시보드 섹션 -->
-        <div id="dashboard-section" class="hidden">
-            <!-- 대시보드 헤더 -->
-            <div class="mb-8 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-2xl shadow-2xl p-8 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-3xl font-bold mb-2 flex items-center">
-                            <i class="fas fa-chart-line mr-3"></i>
-                            비즈니스 대시보드
-                        </h2>
-                        <p class="text-white/80 text-sm">
-                            실시간 통계 및 주요 지표를 한눈에 확인하세요
-                        </p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="changePeriod('today')" id="period-today" 
-                            class="period-btn px-5 py-2.5 rounded-lg bg-white text-purple-600 font-semibold shadow-lg hover:shadow-xl transition-all">
-                            오늘
-                        </button>
-                        <button onclick="changePeriod('week')" id="period-week"
-                            class="period-btn px-5 py-2.5 rounded-lg bg-white/20 backdrop-blur-sm text-white font-semibold hover:bg-white/30 transition-all">
-                            이번 주
-                        </button>
-                        <button onclick="changePeriod('month')" id="period-month"
-                            class="period-btn px-5 py-2.5 rounded-lg bg-white/20 backdrop-blur-sm text-white font-semibold hover:bg-white/30 transition-all">
-                            이번 달
-                        </button>
-                        <button onclick="changePeriod('all')" id="period-all"
-                            class="period-btn px-5 py-2.5 rounded-lg bg-white/20 backdrop-blur-sm text-white font-semibold hover:bg-white/30 transition-all">
-                            전체
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 통계 카드 그리드 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- 제품 통계 -->
-                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-purple-500 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100 to-transparent rounded-full -mr-16 -mt-16"></div>
-                    <div class="relative">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg">
-                                <i class="fas fa-box-open text-2xl text-white"></i>
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-sage">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">전체 회원</p>
+                                <p class="text-3xl font-bold text-sage" id="stat-users">0</p>
                             </div>
-                            <span class="text-4xl font-bold text-gray-800" id="stat-total-products">0</span>
+                            <i class="fas fa-users text-4xl text-sage opacity-20"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">전체 제품</h3>
-                        <div class="flex items-center gap-3 text-sm">
-                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
-                                활성 <span id="stat-active-products">0</span>
-                            </span>
-                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full font-semibold">
-                                비활성 <span id="stat-inactive-products">0</span>
-                            </span>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-lavender">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">전체 제품</p>
+                                <p class="text-3xl font-bold text-lavender" id="stat-products">0</p>
+                            </div>
+                            <i class="fas fa-box text-4xl text-lavender opacity-20"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">진행중 워크샵</p>
+                                <p class="text-3xl font-bold text-blue-600" id="stat-workshops">0</p>
+                            </div>
+                            <i class="fas fa-hands-helping text-4xl text-blue-500 opacity-20"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">원데이 클래스</p>
+                                <p class="text-3xl font-bold text-green-600" id="stat-classes">0</p>
+                            </div>
+                            <i class="fas fa-chalkboard-teacher text-4xl text-green-500 opacity-20"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- 블로그 통계 -->
-                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-blue-500 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-transparent rounded-full -mr-16 -mt-16"></div>
-                    <div class="relative">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                                <i class="fas fa-blog text-2xl text-white"></i>
-                            </div>
-                            <span class="text-4xl font-bold text-gray-800" id="stat-total-posts">0</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">블로그 게시물</h3>
-                        <p class="text-sm text-gray-600">
-                            <i class="fas fa-comments text-blue-500 mr-1"></i>
-                            댓글 <span class="font-semibold" id="stat-total-comments">0</span>개
-                        </p>
-                    </div>
-                </div>
-
-                <!-- 댓글 통계 -->
-                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-green-500 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-100 to-transparent rounded-full -mr-16 -mt-16"></div>
-                    <div class="relative">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg">
-                                <i class="fas fa-shopping-cart text-2xl text-white"></i>
-                            </div>
-                            <span class="text-4xl font-bold text-gray-800" id="stat-purchase-intent">0</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">구매 의도 댓글</h3>
-                        <div class="flex items-center gap-3 text-sm">
-                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-semibold">
-                                B2B <span id="stat-b2b-comments">0</span>
-                            </span>
-                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
-                                B2C <span id="stat-b2c-comments">0</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 챗봇 통계 -->
-                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-orange-500 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-transparent rounded-full -mr-16 -mt-16"></div>
-                    <div class="relative">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
-                                <i class="fas fa-robot text-2xl text-white"></i>
-                            </div>
-                            <span class="text-4xl font-bold text-gray-800" id="stat-total-sessions">0</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">챗봇 세션</h3>
-                        <div class="flex items-center gap-3 text-sm">
-                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
-                                활성 <span id="stat-active-sessions">0</span>
-                            </span>
-                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full font-semibold">
-                                완료 <span id="stat-completed-sessions">0</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 방문자 통계 섹션 -->
-            <div class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl shadow-xl p-8 mb-8 border border-pink-200">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold text-gray-800 flex items-center">
-                        <div class="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg mr-3">
-                            <i class="fas fa-users text-white text-xl"></i>
-                        </div>
-                        방문자 통계
-                    </h3>
-                    <span class="px-4 py-2 bg-white rounded-full text-sm font-semibold text-gray-700 shadow-md">
-                        <i class="fas fa-sync-alt mr-1"></i>실시간 업데이트
-                    </span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- 오늘 방문자 -->
-                    <div class="group bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-pink-200 hover:border-pink-400">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl shadow-lg">
-                                <i class="fas fa-calendar-day text-2xl text-white"></i>
-                            </div>
-                            <span class="text-5xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent" id="stat-today-visits">0</span>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-800 mb-2">오늘 방문</h4>
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full" style="width: 75%"></div>
-                            </div>
-                            <span class="text-sm font-semibold text-gray-600">
-                                <span id="stat-today-unique">0</span>명
-                            </span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            <i class="fas fa-user-friends mr-1"></i>고유 방문자
-                        </p>
-                    </div>
-                    
-                    <!-- 전체 방문자 -->
-                    <div class="group bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-indigo-200 hover:border-indigo-400">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg">
-                                <i class="fas fa-chart-line text-2xl text-white"></i>
-                            </div>
-                            <span class="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent" id="stat-total-visits">0</span>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-800 mb-2">전체 방문</h4>
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full" style="width: 90%"></div>
-                            </div>
-                            <span class="text-sm font-semibold text-gray-600">
-                                <span id="stat-total-unique">0</span>명
-                            </span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            <i class="fas fa-user-check mr-1"></i>누적 고유 방문자
-                        </p>
-                    </div>
-                    
-                    <!-- 최근 7일 평균 -->
-                    <div class="group bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-teal-200 hover:border-teal-400">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-lg">
-                                <i class="fas fa-calendar-week text-2xl text-white"></i>
-                            </div>
-                            <span class="text-5xl font-bold bg-gradient-to-r from-teal-600 to-green-600 bg-clip-text text-transparent" id="stat-week-avg">0</span>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-800 mb-2">7일 평균</h4>
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-teal-500 to-green-500 rounded-full" style="width: 60%"></div>
-                            </div>
-                            <span class="text-sm font-semibold text-gray-600">일일</span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            <i class="fas fa-chart-bar mr-1"></i>평균 방문 수
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 제품 타입별 차트 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <!-- 제품 컨셉별 분포 -->
+                <!-- Recent Activity -->
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-4">
-                        <i class="fas fa-chart-pie text-purple-600 mr-2"></i>제품 컨셉별 분포
+                        <i class="fas fa-clock text-sage mr-2"></i>최근 활동
                     </h3>
-                    <div class="flex items-center justify-around py-6">
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600" id="stat-symptom-care">0</div>
-                            <div class="text-sm text-gray-600 mt-2">증상 케어</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-purple-600" id="stat-refresh">0</div>
-                            <div class="text-sm text-gray-600 mt-2">리프레시</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 댓글 감정 분석 -->
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">
-                        <i class="fas fa-smile text-green-600 mr-2"></i>댓글 감정 분석
-                    </h3>
-                    <div class="flex items-center justify-around py-6">
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-green-600" id="stat-positive-comments">0</div>
-                            <div class="text-sm text-gray-600 mt-2">😊 긍정</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-gray-600" id="stat-neutral-comments">0</div>
-                            <div class="text-sm text-gray-600 mt-2">😐 중립</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-red-600" id="stat-negative-comments">0</div>
-                            <div class="text-sm text-gray-600 mt-2">😔 부정</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 최근 활동 -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- 최근 등록 제품 -->
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">
-                        <i class="fas fa-clock text-purple-600 mr-2"></i>최근 등록 제품
-                    </h3>
-                    <div id="recent-products-list" class="space-y-3">
-                        <!-- 동적으로 추가됩니다 -->
-                    </div>
-                </div>
-
-                <!-- 최근 블로그 포스트 -->
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">
-                        <i class="fas fa-blog text-blue-600 mr-2"></i>최근 블로그 포스트
-                    </h3>
-                    <div id="recent-posts-list" class="space-y-3">
-                        <!-- 동적으로 추가됩니다 -->
-                    </div>
-                </div>
-
-                <!-- 최근 댓글 -->
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">
-                        <i class="fas fa-comments text-green-600 mr-2"></i>최근 댓글
-                    </h3>
-                    <div id="recent-comments-list" class="space-y-3">
-                        <!-- 동적으로 추가됩니다 -->
+                    <div id="recent-activity" class="space-y-3">
+                        <p class="text-gray-500 text-center py-8">로딩 중...</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Blog Management Section -->
-        <div id="blog-management-section" class="hidden">
-            <!-- 블로그 게시물 추가 카드 -->
-            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl shadow-md p-6 mb-6 border-2 border-purple-200">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-plus-circle text-purple-600 mr-2"></i>새 블로그 게시물 추가
-                </h3>
-                <p class="text-sm text-gray-600 mb-4">
-                    <strong>Step 1:</strong> 먼저 네이버 블로그 게시물 URL을 입력하여 게시물을 등록하세요.
-                </p>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-link mr-1"></i>블로그 게시물 URL
-                            </label>
-                            <input type="text" id="new-post-url-input" 
-                                placeholder="예: https://blog.naver.com/aromapulse/223871244762"
-                                class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                작성 날짜 (선택)
-                            </label>
-                            <input type="text" id="new-post-date-input" 
-                                placeholder="예: 2025-04-29 09:00 (날짜와 시간을 수동 작성)"
-                                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <p class="text-xs text-gray-500 mt-1">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                비워두면 현재 시간으로 설정됩니다. 
-                                <strong>형식</strong>: 
-                                <code class="bg-gray-100 px-1 py-0.5 rounded">2025-04-29 09:00</code> 또는 
-                                <code class="bg-gray-100 px-1 py-0.5 rounded">2025-04-29</code> (시간 생략 시 현재 시각) 또는
-                                <code class="bg-gray-100 px-1 py-0.5 rounded">09:00</code> (오늘 날짜)
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex justify-end">
-                        <button onclick="addNewBlogPost()" 
-                            class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 font-semibold shadow-lg transition">
-                            <i class="fas fa-plus mr-2"></i>게시물 추가
-                        </button>
-                    </div>
-                    <div class="bg-white rounded-lg p-4 border border-purple-200">
-                        <p class="text-xs text-gray-600">
-                            <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
-                            <strong>게시물 추가 후</strong> 아래 "수동 댓글 추가"에서 댓글을 입력할 수 있습니다.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 기존 댓글 수집 카드는 제거하고 수동 댓글 추가만 유지 -->
+        <!-- Users Section -->
+        <div id="section-users" class="content-section hidden">
+            <div class="fade-in">
+                <h2 class="text-3xl font-bold text-dark-slate mb-6">
+                    <i class="fas fa-users text-sage mr-3"></i>회원 관리
+                </h2>
 
-            <!-- 수동 댓글 추가 카드 -->
-            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-comment-medical text-purple-600 mr-2"></i>수동 댓글 추가
-                </h3>
-                <p class="text-sm text-gray-600 mb-4">
-                    중요한 댓글을 직접 입력하여 분석하고 관리할 수 있습니다.
-                </p>
-                
-                <div class="space-y-4">
-                    <!-- 블로그 포스트 선택 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            블로그 게시물 <span class="text-red-500">*</span>
-                        </label>
-                        <select id="manual-comment-post-select" 
-                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <option value="">게시물을 선택하세요</option>
+                <!-- Sub-tabs for Users -->
+                <div class="mb-6 flex flex-wrap gap-2">
+                    <button onclick="switchUserTab('all')" 
+                        class="sub-tab-button px-4 py-2 rounded-lg font-medium hover:bg-gray-200 active" 
+                        data-user-tab="all">
+                        <i class="fas fa-list mr-2"></i>전체 회원
+                    </button>
+                    <button onclick="switchUserTab('individual')" 
+                        class="sub-tab-button px-4 py-2 rounded-lg font-medium hover:bg-gray-200" 
+                        data-user-tab="individual">
+                        <i class="fas fa-user mr-2"></i>개인 회원
+                    </button>
+                    <button onclick="switchUserTab('business')" 
+                        class="sub-tab-button px-4 py-2 rounded-lg font-medium hover:bg-gray-200" 
+                        data-user-tab="business">
+                        <i class="fas fa-building mr-2"></i>기업 회원
+                    </button>
+                    <button onclick="switchUserTab('partner')" 
+                        class="sub-tab-button px-4 py-2 rounded-lg font-medium hover:bg-gray-200" 
+                        data-user-tab="partner">
+                        <i class="fas fa-handshake mr-2"></i>공방 파트너
+                    </button>
+                    <button onclick="switchUserTab('admin')" 
+                        class="sub-tab-button px-4 py-2 rounded-lg font-medium hover:bg-gray-200" 
+                        data-user-tab="admin">
+                        <i class="fas fa-user-shield mr-2"></i>관리자
+                    </button>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="user-search" placeholder="이름, 이메일 검색..." 
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage focus:border-transparent">
+                        <select id="user-status-filter" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage focus:border-transparent">
+                            <option value="">전체 상태</option>
+                            <option value="1">활성</option>
+                            <option value="0">비활성</option>
                         </select>
-                    </div>
-
-                    <!-- 작성자명 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            작성자명 <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" id="manual-comment-author" 
-                            placeholder="예: 홍길동"
-                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                    </div>
-
-                    <!-- 댓글 내용 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            댓글 내용 <span class="text-red-500">*</span>
-                        </label>
-                        <textarea id="manual-comment-content" 
-                            rows="4"
-                            placeholder="댓글 내용을 입력하세요..."
-                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
-                        <p class="text-xs text-gray-500 mt-1">
-                            <i class="fas fa-magic mr-1"></i>
-                            입력된 댓글은 자동으로 AI 분석됩니다 (감정, 의도, 사용자 타입, 키워드)
-                        </p>
-                    </div>
-
-                    <!-- 작성 날짜 (선택) -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            작성 날짜 (선택)
-                        </label>
-                        <input type="text" id="manual-comment-date"
-                            placeholder="예: 2025-04-29 09:00 (날짜와 시간을 수동 작성)"
-                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <p class="text-xs text-gray-500 mt-1">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            비워두면 현재 시간으로 설정됩니다. 
-                            <strong>형식</strong>: 
-                            <code class="bg-gray-100 px-1 py-0.5 rounded">2025-04-29 09:00</code> 또는 
-                            <code class="bg-gray-100 px-1 py-0.5 rounded">2025-04-29</code> (시간 생략 시 현재 시각) 또는
-                            <code class="bg-gray-100 px-1 py-0.5 rounded">09:00</code> (오늘 날짜)
-                        </p>
-                    </div>
-
-                    <!-- 버튼 -->
-                    <div class="flex gap-3">
-                        <button onclick="addManualComment()" 
-                            class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 font-semibold">
-                            <i class="fas fa-plus mr-2"></i>댓글 추가 및 분석
-                        </button>
-                        <button onclick="clearManualCommentForm()" 
-                            class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold">
-                            <i class="fas fa-redo mr-2"></i>초기화
+                        <button onclick="searchUsers()" 
+                            class="bg-sage text-white px-6 py-2 rounded-lg hover:opacity-90 transition font-semibold">
+                            <i class="fas fa-search mr-2"></i>검색
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- 등록된 블로그 게시물 목록 -->
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-list text-purple-600 mr-2"></i>등록된 블로그 게시물
-                </h3>
-                <div id="blog-posts-list">
-                    <!-- 블로그 게시물 목록이 동적으로 추가됩니다 -->
+                <!-- Users Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">이름</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">이메일</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">회원유형</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">가입일</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">상태</th>
+                                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p>데이터를 불러오는 중...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-gray-600">총 <span id="users-total">0</span>명</p>
+                            <div id="users-pagination"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="text-center py-12" style="display: none;">
-            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
-            <p class="text-gray-600 text-lg mb-4">등록된 제품이 없습니다</p>
-            <button onclick="openNewProductModal()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
-                첫 제품 등록하기
-            </button>
-        </div>
-    </div>
-
-    <!-- 제품 등록/수정 모달 -->
-    <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
-        <div class="bg-white rounded-lg p-8 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-800" id="modal-title">제품 등록</h3>
-                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-
-            <form id="product-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 제품 컨셉 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        제품 컨셉 <span class="text-red-500">*</span>
-                    </label>
-                    <select id="product-concept" required onchange="toggleProductFields()"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">선택하세요</option>
-                        <option value="symptom_care">증상 케어 제품 (타사 공방)</option>
-                        <option value="refresh">리프레시 제품 (자사 브랜드)</option>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        증상 케어: 불면/우울/불안 증상 개선 전문 제품 | 리프레시: 일상 향기 제품
-                    </p>
+        <!-- Products Section -->
+        <div id="section-products" class="content-section">
+            <div class="fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-dark-slate">
+                        <i class="fas fa-box text-sage mr-3"></i>제품 관리
+                    </h2>
+                    <button onclick="openProductModal()" 
+                        class="bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                        <i class="fas fa-plus mr-2"></i>제품 등록
+                    </button>
                 </div>
 
-                <!-- 제품명 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        제품명 <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="product-name" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 라벤더 수면 롤온">
-                </div>
-
-                <!-- 증상 케어 카테고리 (증상 케어 제품일 때만 표시) -->
-                <div id="symptom-category-field" style="display: none;">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        증상 카테고리 <span class="text-red-500">*</span>
-                    </label>
-                    <select id="product-category"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">선택하세요</option>
-                        <option value="insomnia">불면</option>
-                        <option value="depression">우울</option>
-                        <option value="anxiety">불안</option>
-                        <option value="stress">스트레스</option>
-                    </select>
-                </div>
-
-                <!-- 리프레시 제품 유형 (리프레시 제품일 때만 표시) -->
-                <div id="refresh-type-field" style="display: none;">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        리프레시 제품 유형 <span class="text-red-500">*</span>
-                    </label>
-                    <select id="refresh-type"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">선택하세요</option>
-                        <option value="fabric_perfume">섬유 향수 ✅ (현재 제조 중 - 등록 가능)</option>
-                        <option value="room_spray">룸 스프레이 ✅ (현재 제조 중 - 등록 가능)</option>
-                        <option value="fabric_deodorizer">섬유 탈취제 ⏳ (준비 중)</option>
-                        <option value="diffuser">디퓨저 ⏳ (준비 중)</option>
-                        <option value="candle">캔들 ⏳ (준비 중)</option>
-                        <option value="perfume">향수 ⏳ (준비 중)</option>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        리프레시 제품은 아로마펄스 자체 브랜드 제품입니다. 현재 섬유 향수와 룸 스프레이 등록 가능합니다.
-                    </p>
-                </div>
-
-                <!-- 용량 선택 (리프레시 제품일 때만 표시) -->
-                <div id="volume-field" style="display: none;">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        용량 <span class="text-red-500">*</span>
-                    </label>
-                    <select id="product-volume"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">선택하세요</option>
-                        <option value="30ml">30ml ✅ (현재 제조 중 - 등록 가능)</option>
-                        <option value="50ml">50ml ⏳ (준비 중)</option>
-                        <option value="100ml">100ml ⏳ (준비 중)</option>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        현재 30ml 용량부터 시작합니다. 50ml, 100ml은 순차적으로 출시 예정입니다.
-                    </p>
-                </div>
-
-                <!-- 박스 구성 (리프레시 제품일 때만 표시) -->
-                <div id="items-per-box-field" style="display: none;">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        박스 구성
-                    </label>
-                    <div class="w-full px-4 py-3 border rounded-lg bg-gray-50">
-                        <span class="text-lg font-semibold text-purple-600">
-                            <i class="fas fa-box mr-2"></i>2개입 (고정)
-                        </span>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        리프레시 제품은 1박스에 2개씩 포장됩니다
-                    </p>
-                    <input type="hidden" id="items-per-box" value="2">
-                </div>
-
-                <!-- 제품 설명 -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        제품 설명
-                    </label>
-                    <textarea id="product-description" rows="3"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="제품에 대한 상세 설명을 입력하세요"></textarea>
-                </div>
-
-                <!-- 가격 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        가격 (원) <span class="text-red-500">*</span>
-                    </label>
-                    <input type="number" id="product-price" required min="0"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 35000">
-                </div>
-
-                <!-- 재고 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <span id="stock-label">재고 수량</span>
-                    </label>
-                    <input type="number" id="product-stock" min="0" value="0"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 100">
-                    <p class="text-xs text-gray-500 mt-1" id="stock-helper" style="display: none;">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        <span id="stock-helper-text"></span>
-                    </p>
-                </div>
-
-                <!-- 활성 상태 -->
-                <div>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="product-active" checked
-                            class="w-5 h-5 text-purple-600 focus:ring-purple-500 rounded">
-                        <span class="text-sm font-semibold text-gray-700">제품 활성화</span>
-                    </label>
-                </div>
-
-                <!-- 로컬 공방 정보 섹션 (증상 케어 제품일 때만 표시) -->
-                <div id="workshop-info-section" class="md:col-span-2 border-t pt-4 mt-4" style="display: none;">
-                    <h4 class="text-lg font-bold text-gray-800 mb-4">
-                        <i class="fas fa-store text-purple-600 mr-2"></i>로컬 공방 정보
-                    </h4>
-                    <p class="text-xs text-gray-500 mb-4">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        증상 케어 제품의 경우 제작 공방 정보를 입력할 수 있습니다
-                    </p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- 공방명 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            공방명
-                        </label>
-                        <input type="text" id="workshop-name"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                            placeholder="예: 향기로운 하루 공방">
-                    </div>
-
-                    <!-- 지역 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            지역
-                        </label>
-                        <select id="workshop-location"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <option value="">선택하세요</option>
-                            <option value="서울">서울</option>
-                            <option value="경기">경기</option>
-                            <option value="인천">인천</option>
-                            <option value="부산">부산</option>
-                            <option value="대구">대구</option>
-                            <option value="대전">대전</option>
-                            <option value="광주">광주</option>
-                            <option value="울산">울산</option>
-                            <option value="세종">세종</option>
-                            <option value="강원">강원</option>
-                            <option value="충북">충북</option>
-                            <option value="충남">충남</option>
-                            <option value="전북">전북</option>
-                            <option value="전남">전남</option>
-                            <option value="경북">경북</option>
-                            <option value="경남">경남</option>
-                            <option value="제주">제주</option>
+                <!-- Filters -->
+                <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <select id="product-concept-filter" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage focus:border-transparent">
+                            <option value="">전체 컨셉</option>
+                            <option value="symptom_care">증상 케어</option>
+                            <option value="refresh">리프레시</option>
                         </select>
-                    </div>
-
-                    <!-- 상세 주소 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            상세 주소
-                        </label>
-                        <input type="text" id="workshop-address"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                            placeholder="예: 강남구 테헤란로 123">
-                    </div>
-
-                    <!-- 연락처 -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            연락처
-                        </label>
-                        <input type="tel" id="workshop-contact"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                            placeholder="예: 02-1234-5678">
-                    </div>
+                        <select id="product-status-filter" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage focus:border-transparent">
+                            <option value="">전체 상태</option>
+                            <option value="1">판매중</option>
+                            <option value="0">판매중지</option>
+                        </select>
+                        <input type="text" id="product-search" placeholder="제품명 검색..." 
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage focus:border-transparent md:col-span-2">
                     </div>
                 </div>
 
-                <!-- 이미지 업로드 섹션 -->
-                <div class="md:col-span-2">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">
-                        <i class="fas fa-image text-purple-600 mr-2"></i>제품 이미지
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- 대표 이미지 -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                대표 이미지 (썸네일) <span class="text-red-500">*</span>
-                            </label>
-                            <p class="text-xs text-gray-600 mb-2">
-                                <i class="fas fa-info-circle text-blue-500 mr-1"></i>
-                                <strong>권장 사이즈:</strong> 1000×1000px (정사각형) 또는 1200×1200px (고해상도)<br>
-                                <span class="text-green-600"><i class="fas fa-magic mr-1"></i><strong>자동 압축:</strong> 큰 이미지는 자동으로 500KB 이하로 압축됩니다 ✨</span>
-                            </p>
-                            <div class="flex items-center space-x-2">
-                                <input type="file" id="thumbnail-upload" accept="image/*"
-                                    class="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500">
-                                <button type="button" onclick="uploadImage('thumbnail')"
-                                    class="bg-blue-500 text-white px-3 py-2 text-sm rounded-lg hover:bg-blue-600 whitespace-nowrap">
-                                    <i class="fas fa-upload mr-1"></i>업로드
-                                </button>
-                            </div>
-                            <div id="thumbnail-preview" class="mt-2" style="display: none;">
-                                <img id="thumbnail-preview-img" src="" alt="Thumbnail Preview" class="w-24 h-24 object-cover rounded-lg">
-                                <p class="text-xs text-gray-500 mt-1" id="thumbnail-url"></p>
-                            </div>
-                            <input type="hidden" id="thumbnail-image-url">
-                        </div>
-
-                        <!-- 상세 이미지 -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                상세 이미지 (일체형) <span class="text-red-500">*</span>
-                            </label>
-                            <p class="text-xs text-gray-600 mb-2">
-                                <i class="fas fa-info-circle text-blue-500 mr-1"></i>
-                                <strong>권장 사이즈:</strong> 750px × 무제한 (모바일 최적) | 최대 높이: 20,000px<br>
-                                <span class="text-green-600"><i class="fas fa-magic mr-1"></i><strong>자동 압축:</strong> 큰 이미지는 자동으로 500KB 이하로 압축됩니다 ✨</span>
-                            </p>
-                            <div class="flex items-center space-x-2">
-                                <input type="file" id="detail-upload" accept="image/*"
-                                    class="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500">
-                                <button type="button" onclick="uploadImage('detail')"
-                                    class="bg-blue-500 text-white px-3 py-2 text-sm rounded-lg hover:bg-blue-600 whitespace-nowrap">
-                                    <i class="fas fa-upload mr-1"></i>업로드
-                                </button>
-                            </div>
-                            <div id="detail-preview" class="mt-2" style="display: none;">
-                                <img id="detail-preview-img" src="" alt="Detail Preview" class="w-full max-w-xs rounded-lg">
-                                <p class="text-xs text-gray-500 mt-1" id="detail-url"></p>
-                            </div>
-                            <input type="hidden" id="detail-image-url">
+                <!-- Products Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">제품명</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">컨셉</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">가격</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">재고</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">상태</th>
+                                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p>데이터를 불러오는 중...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-gray-600">총 <span id="products-total">0</span>개</p>
+                            <div id="products-pagination"></div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- 제출 버튼 -->
-                <div class="md:col-span-2 flex space-x-4 pt-4">
-                    <button type="submit" id="submit-btn"
-                        class="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-semibold">
-                        <i class="fas fa-save mr-2"></i>저장
-                    </button>
-                    <button type="button" id="cancel-btn" onclick="closeModal()"
-                        class="px-8 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300">
-                        취소
+        <!-- Blog Section -->
+        <div id="section-blog" class="content-section hidden">
+            <div class="fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-dark-slate">
+                        <i class="fas fa-blog text-sage mr-3"></i>블로그 관리
+                    </h2>
+                    <button onclick="openBlogModal()" 
+                        class="bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                        <i class="fas fa-plus mr-2"></i>포스트 작성
                     </button>
                 </div>
-            </form>
+
+                <!-- Blog Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">제목</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">카테고리</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">조회수</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">작성일</th>
+                                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blog-table-body">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p>데이터를 불러오는 중...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t bg-gray-50">
+                        <p class="text-sm text-gray-600">총 <span id="blog-total">0</span>개</p>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- Workshops Section -->
+        <div id="section-workshops" class="content-section hidden">
+            <div class="fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-dark-slate">
+                        <i class="fas fa-hands-helping text-sage mr-3"></i>워크샵 관리
+                    </h2>
+                    <button onclick="openWorkshopModal()" 
+                        class="bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                        <i class="fas fa-plus mr-2"></i>워크샵 등록
+                    </button>
+                </div>
+
+                <!-- Workshops Grid -->
+                <div id="workshops-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="col-span-full text-center py-12 text-gray-500">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                        <p>데이터를 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Classes Section -->
+        <div id="section-classes" class="content-section hidden">
+            <div class="fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-dark-slate">
+                        <i class="fas fa-chalkboard-teacher text-sage mr-3"></i>원데이 클래스 관리
+                    </h2>
+                    <button onclick="openClassModal()" 
+                        class="bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                        <i class="fas fa-plus mr-2"></i>클래스 등록
+                    </button>
+                </div>
+
+                <!-- Classes Grid -->
+                <div id="classes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="col-span-full text-center py-12 text-gray-500">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                        <p>데이터를 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- 댓글 수동 추가 모달 -->
-    <div id="add-comment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-800">
-                    <i class="fas fa-comment-medical text-green-600 mr-2"></i>
-                    댓글 추가
-                </h3>
-                <button onclick="closeAddCommentModal()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-
-            <div id="add-comment-post-info" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <!-- 포스트 정보가 동적으로 채워집니다 -->
-            </div>
-
-            <form id="add-comment-form" class="space-y-4">
-                <!-- 작성자명 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        작성자명 <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="comment-author" required
-                        placeholder="예: 홍길동"
-                        class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-
-                <!-- 댓글 내용 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        댓글 내용 <span class="text-red-500">*</span>
-                    </label>
-                    <textarea id="comment-content" rows="6" required
-                        placeholder="실제 블로그 댓글 내용을 입력하세요..."
-                        class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <i class="fas fa-magic mr-1"></i>
-                        입력된 댓글은 자동으로 AI 분석됩니다 (감정, 의도, 사용자 타입, 키워드)
-                    </p>
-                </div>
-
-                <!-- 작성 날짜 (선택) -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        작성 날짜 (선택)
-                    </label>
-                    <input type="text" id="comment-date"
-                        placeholder="예: 2025-04-29 09:00 (날짜와 시간을 수동 작성)"
-                        class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500">
-                    <p class="text-xs text-gray-500 mt-1">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        비워두면 현재 시간으로 설정됩니다. 
-                        <strong>형식</strong>: 
-                        <code class="bg-gray-100 px-1 py-0.5 rounded">2025-04-29 09:00</code> 또는 
-                        <code class="bg-gray-100 px-1 py-0.5 rounded">2025-04-29</code> (시간 생략 시 현재 시각) 또는
-                        <code class="bg-gray-100 px-1 py-0.5 rounded">09:00</code> (오늘 날짜)
-                    </p>
-                </div>
-
-                <!-- 버튼 -->
-                <div class="flex justify-end space-x-4 mt-6">
-                    <button type="button" onclick="closeAddCommentModal()"
-                        class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                        취소
-                    </button>
-                    <button type="submit"
-                        class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                        <i class="fas fa-plus mr-2"></i>
-                        댓글 추가
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 댓글 보기 모달 -->
-    <div id="view-comments-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[85vh] overflow-hidden">
-            <!-- 모달 헤더 -->
-            <div class="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-5 flex justify-between items-center">
-                <div>
-                    <h3 class="text-2xl font-bold text-white flex items-center">
-                        <i class="fas fa-comments mr-3"></i>
-                        댓글 목록
+    <!-- Product Modal -->
+    <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-box mr-2"></i><span id="product-modal-title">제품 등록</span>
                     </h3>
-                    <p id="comment-modal-post-info" class="text-purple-100 text-sm mt-1"></p>
-                </div>
-                <button onclick="closeViewCommentsModal()" class="text-white hover:text-purple-200 transition">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-
-            <!-- 모달 바디 -->
-            <div id="comments-container" class="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
-                <!-- 댓글 카드들이 동적으로 추가됩니다 -->
-            </div>
-        </div>
-    </div>
-
-    <!-- 클래스 등록/수정 모달 -->
-    <div id="class-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
-        <div class="bg-white rounded-lg p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-800" id="class-modal-title">클래스 등록</h3>
-                <button onclick="closeClassModal()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-
-            <form id="class-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 클래스명 -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        클래스명 <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="class-title" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 라벤더 향 캔들 만들기">
-                </div>
-
-                <!-- 클래스 설명 -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        클래스 설명
-                    </label>
-                    <textarea id="class-description" rows="4"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="클래스에 대한 상세 설명을 입력하세요"></textarea>
-                </div>
-
-                <!-- 카테고리 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        카테고리
-                    </label>
-                    <select id="class-category"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">선택하세요</option>
-                        <option value="캔들 만들기">캔들 만들기</option>
-                        <option value="디퓨저 만들기">디퓨저 만들기</option>
-                        <option value="향수 만들기">향수 만들기</option>
-                        <option value="룸스프레이 만들기">룸스프레이 만들기</option>
-                        <option value="섬유향수 만들기">섬유향수 만들기</option>
-                        <option value="섬유 탈취제 만들기">섬유 탈취제 만들기</option>
-                        <option value="아로마테라피 기초">아로마테라피 기초</option>
-                        <option value="기타">기타</option>
-                    </select>
-                </div>
-
-                <!-- 지역 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        지역 <span class="text-red-500">*</span>
-                    </label>
-                    <select id="class-location" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">선택하세요</option>
-                        <option value="서울">서울</option>
-                        <option value="경기">경기</option>
-                        <option value="인천">인천</option>
-                        <option value="부산">부산</option>
-                        <option value="대구">대구</option>
-                        <option value="대전">대전</option>
-                        <option value="광주">광주</option>
-                        <option value="울산">울산</option>
-                        <option value="세종">세종</option>
-                        <option value="강원">강원</option>
-                        <option value="충북">충북</option>
-                        <option value="충남">충남</option>
-                        <option value="전북">전북</option>
-                        <option value="전남">전남</option>
-                        <option value="경북">경북</option>
-                        <option value="경남">경남</option>
-                        <option value="제주">제주</option>
-                    </select>
-                </div>
-
-                <!-- 상세 주소 -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        상세 주소
-                    </label>
-                    <input type="text" id="class-address"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 강남구 테헤란로 123">
-                </div>
-
-                <!-- 가격 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        가격 (원) <span class="text-red-500">*</span>
-                    </label>
-                    <input type="number" id="class-price" required min="0"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 50000">
-                </div>
-
-                <!-- 소요 시간 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        소요 시간 (분)
-                    </label>
-                    <input type="number" id="class-duration" min="0"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 120">
-                </div>
-
-                <!-- 최대 인원 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        최대 참가 인원
-                    </label>
-                    <input type="number" id="class-max-participants" min="1"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 10">
-                </div>
-
-                <!-- 활성 상태 -->
-                <div>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="class-active" checked
-                            class="w-5 h-5 text-purple-600 focus:ring-purple-500 rounded">
-                        <span class="text-sm font-semibold text-gray-700">클래스 활성화</span>
-                    </label>
-                </div>
-
-                <!-- 이미지 업로드 섹션 -->
-                <div class="md:col-span-2">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">
-                        <i class="fas fa-image text-purple-600 mr-2"></i>클래스 이미지
-                    </h4>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            대표 이미지
-                        </label>
-                        <p class="text-xs text-gray-600 mb-2">
-                            <i class="fas fa-info-circle text-blue-500 mr-1"></i>
-                            <strong>권장 사이즈:</strong> 1000×1000px (정사각형) 또는 1200×1200px (고해상도)
-                        </p>
-                        <div class="flex items-center space-x-2">
-                            <input type="file" id="class-image-upload" accept="image/*"
-                                class="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <button type="button" onclick="uploadClassImage()"
-                                class="bg-blue-500 text-white px-3 py-2 text-sm rounded-lg hover:bg-blue-600 whitespace-nowrap">
-                                <i class="fas fa-upload mr-1"></i>업로드
-                            </button>
-                        </div>
-                        <div id="class-image-preview" class="mt-2" style="display: none;">
-                            <img id="class-image-preview-img" src="" alt="Class Image Preview" class="w-24 h-24 object-cover rounded-lg">
-                            <p class="text-xs text-gray-500 mt-1" id="class-image-url"></p>
-                        </div>
-                        <input type="hidden" id="class-image-url-hidden">
-                    </div>
-                </div>
-
-                <!-- 제출 버튼 -->
-                <div class="md:col-span-2 flex space-x-4 pt-4">
-                    <button type="submit" id="class-submit-btn"
-                        class="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-semibold">
-                        <i class="fas fa-save mr-2"></i>저장
-                    </button>
-                    <button type="button" onclick="closeClassModal()"
-                        class="px-8 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300">
-                        취소
+                    <button onclick="closeProductModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-2xl"></i>
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 원데이 클래스 등록/수정 모달 -->
-    <div id="oneday-class-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
-        <div class="bg-white rounded-lg p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-800" id="oneday-class-modal-title">원데이 클래스 등록</h3>
-                <button onclick="closeOnedayClassModal()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-
-            <form id="oneday-class-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 클래스명 -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        클래스명 <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="oneday-class-title" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 라벤더 향 캔들 만들기">
-                </div>
-
-                <!-- 클래스 설명 -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        클래스 설명
-                    </label>
-                    <textarea id="oneday-class-description" rows="4"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="클래스에 대한 상세 설명을 입력하세요"></textarea>
-                </div>
-
-                <!-- 카테고리 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        카테고리
-                    </label>
-                    <select id="oneday-class-category"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">선택하세요</option>
-                        <option value="캔들 만들기">캔들 만들기</option>
-                        <option value="디퓨저 만들기">디퓨저 만들기</option>
-                        <option value="향수 만들기">향수 만들기</option>
-                        <option value="룸스프레이 만들기">룸스프레이 만들기</option>
-                        <option value="섬유향수 만들기">섬유향수 만들기</option>
-                        <option value="섬유 탈취제 만들기">섬유 탈취제 만들기</option>
-                        <option value="아로마테라피 기초">아로마테라피 기초</option>
-                        <option value="기타">기타</option>
-                    </select>
-                </div>
-
-                <!-- 공방명 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        공방명
-                    </label>
-                    <input type="text" id="oneday-class-studio-name"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 아로마 향기 공방">
-                </div>
-
-                <!-- 강사명 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        강사명
-                    </label>
-                    <input type="text" id="oneday-class-instructor-name"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 김향기">
-                </div>
-
-                <!-- 지역 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        지역 <span class="text-red-500">*</span>
-                    </label>
-                    <select id="oneday-class-location" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">선택하세요</option>
-                        <option value="서울">서울</option>
-                        <option value="경기">경기</option>
-                        <option value="인천">인천</option>
-                        <option value="부산">부산</option>
-                        <option value="대구">대구</option>
-                        <option value="대전">대전</option>
-                        <option value="광주">광주</option>
-                        <option value="울산">울산</option>
-                        <option value="세종">세종</option>
-                        <option value="강원">강원</option>
-                        <option value="충북">충북</option>
-                        <option value="충남">충남</option>
-                        <option value="전북">전북</option>
-                        <option value="전남">전남</option>
-                        <option value="경북">경북</option>
-                        <option value="경남">경남</option>
-                        <option value="제주">제주</option>
-                    </select>
-                </div>
-
-                <!-- 상세 주소 -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        상세 주소
-                    </label>
-                    <input type="text" id="oneday-class-address"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 강남구 테헤란로 123">
-                </div>
-
-                <!-- 가격 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        가격 (원) <span class="text-red-500">*</span>
-                    </label>
-                    <input type="number" id="oneday-class-price" required min="0"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 50000">
-                </div>
-
-                <!-- 소요 시간 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        소요 시간 (분)
-                    </label>
-                    <input type="number" id="oneday-class-duration" min="0"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 120">
-                </div>
-
-                <!-- 최대 인원 -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        최대 참가 인원
-                    </label>
-                    <input type="number" id="oneday-class-max-participants" min="1"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                        placeholder="예: 10">
-                </div>
-
-                <!-- 활성 상태 -->
-                <div>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="oneday-class-active" checked
-                            class="w-5 h-5 text-purple-600 focus:ring-purple-500 rounded">
-                        <span class="text-sm font-semibold text-gray-700">클래스 활성화</span>
-                    </label>
-                </div>
-
-                <!-- 이미지 업로드 섹션 -->
-                <div class="md:col-span-2">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">
-                        <i class="fas fa-image text-purple-600 mr-2"></i>클래스 이미지
-                    </h4>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            대표 이미지
-                        </label>
-                        <p class="text-xs text-gray-600 mb-2">
-                            <i class="fas fa-info-circle text-blue-500 mr-1"></i>
-                            <strong>권장 사이즈:</strong> 1000×1000px (정사각형) 또는 1200×1200px (고해상도)
-                        </p>
-                        <div class="flex items-center space-x-2">
-                            <input type="file" id="oneday-class-image-upload" accept="image/*"
-                                class="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500">
-                            <button type="button" onclick="uploadOnedayClassImage()"
-                                class="bg-blue-500 text-white px-3 py-2 text-sm rounded-lg hover:bg-blue-600 whitespace-nowrap">
-                                <i class="fas fa-upload mr-1"></i>업로드
-                            </button>
+                <form id="product-form" class="p-6" onsubmit="saveProduct(event)">
+                    <input type="hidden" id="product-id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">제품명 <span class="text-red-500">*</span></label>
+                            <input type="text" id="product-name" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sage">
                         </div>
-                        <div id="oneday-class-image-preview" class="mt-2" style="display: none;">
-                            <img id="oneday-class-image-preview-img" src="" alt="Class Image Preview" class="w-24 h-24 object-cover rounded-lg">
-                            <p class="text-xs text-gray-500 mt-1" id="oneday-class-image-url"></p>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">컨셉 <span class="text-red-500">*</span></label>
+                            <select id="product-concept" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sage">
+                                <option value="">선택</option>
+                                <option value="symptom_care">증상 케어</option>
+                                <option value="refresh">리프레시</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">가격 (원) <span class="text-red-500">*</span></label>
+                                <input type="number" id="product-price" required min="0" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sage">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">재고 <span class="text-red-500">*</span></label>
+                                <input type="number" id="product-stock" required min="0" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sage">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">설명</label>
+                            <textarea id="product-description" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sage"></textarea>
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="product-is-active" checked class="w-5 h-5 text-sage rounded">
+                                <span class="text-sm font-semibold text-gray-700">판매중</span>
+                            </label>
                         </div>
                     </div>
-                </div>
-
-                <!-- 제출 버튼 -->
-                <div class="md:col-span-2 flex gap-3">
-                    <button type="submit"
-                        class="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-semibold">
-                        <i class="fas fa-save mr-2"></i>저장
-                    </button>
-                    <button type="button" onclick="closeOnedayClassModal()"
-                        class="px-8 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300">
-                        취소
-                    </button>
-                </div>
-            </form>
+                    <div class="mt-6 flex space-x-3">
+                        <button type="submit" class="flex-1 bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 font-semibold">
+                            <i class="fas fa-save mr-2"></i>저장
+                        </button>
+                        <button type="button" onclick="closeProductModal()" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-semibold">
+                            <i class="fas fa-times mr-2"></i>취소
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <script src="/static/admin-products.js?v=20251119001"></script>
+    <script src="/static/admin-products.js?v=20251119002"></script>
 </body>
 </html>

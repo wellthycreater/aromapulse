@@ -24,6 +24,11 @@ import usersRoutes from './routes/users';
 import visitorsRoutes from './routes/visitors';
 import onedayClassesRoutes from './routes/oneday-classes';
 import workshopQuotesRoutes from './routes/workshop-quotes';
+import adminDashboardRoutes from './routes/admin-dashboard';
+import adminUsersRoutes from './routes/admin-users';
+import adminBlogRoutes from './routes/admin-blog';
+import adminWorkshopsRoutes from './routes/admin-workshops';
+import adminClassesRoutes from './routes/admin-classes';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -54,6 +59,11 @@ app.route('/api/users', usersRoutes);
 app.route('/api/visitors', visitorsRoutes);
 app.route('/api/oneday-classes', onedayClassesRoutes);
 app.route('/api/workshop-quotes', workshopQuotesRoutes);
+app.route('/api/admin/dashboard', adminDashboardRoutes);
+app.route('/api/admin/users', adminUsersRoutes);
+app.route('/api/admin/blog', adminBlogRoutes);
+app.route('/api/admin/workshops', adminWorkshopsRoutes);
+app.route('/api/admin/classes', adminClassesRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
