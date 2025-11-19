@@ -1325,3 +1325,74 @@ async function loadUsers() {
     await loadUserStats();
     if (originalLoadUsers) await originalLoadUsers();
 }
+
+// Reset Visitor Statistics
+async function resetVisitorStats(resetType) {
+    try {
+        // Confirmation message
+        let confirmMessage = '';
+        if (resetType === 'today') {
+            confirmMessage = '오늘 방문자 통계를 리셋하시겠습니까?\n\n리셋되는 데이터:\n- 오늘 날짜의 방문자 기록\n- 오늘 날짜의 통계\n\n전체 방문자 수는 유지됩니다.';
+        } else if (resetType === 'all') {
+            confirmMessage = '⚠️ 경고: 전체 방문자 통계를 리셋하시겠습니까?\n\n리셋되는 데이터:\n- 모든 날짜의 방문자 기록\n- 모든 통계\n\n이 작업은 되돌릴 수 없습니다!';
+        }
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        // Show loading indicator
+        const todayBtn = document.querySelector('button[onclick="resetVisitorStats(\'today\')"]');
+        const allBtn = document.querySelector('button[onclick="resetVisitorStats(\'all\')"]');
+        const targetBtn = resetType === 'today' ? todayBtn : allBtn;
+        const originalText = targetBtn.innerHTML;
+        targetBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>리셋 중...';
+        targetBtn.disabled = true;
+        
+        // Call reset API
+        const response = await fetch('/api/visitors/reset', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reset_type: resetType })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Success message
+            let successMessage = '';
+            if (resetType === 'today') {
+                successMessage = `✅ 오늘 방문자 통계가 리셋되었습니다.\n\n리셋 날짜: ${data.reset_date}`;
+            } else {
+                successMessage = '✅ 전체 방문자 통계가 리셋되었습니다.\n\n모든 기록이 삭제되었습니다.';
+            }
+            alert(successMessage);
+            
+            // Reload visitor stats
+            await loadVisitorStats();
+        } else {
+            throw new Error(data.error || '방문자 통계 리셋 실패');
+        }
+        
+        // Restore button
+        targetBtn.innerHTML = originalText;
+        targetBtn.disabled = false;
+        
+    } catch (error) {
+        console.error('Reset visitor stats error:', error);
+        alert('❌ 오류: ' + error.message);
+        
+        // Restore button on error
+        const todayBtn = document.querySelector('button[onclick="resetVisitorStats(\'today\')"]');
+        const allBtn = document.querySelector('button[onclick="resetVisitorStats(\'all\')"]');
+        const targetBtn = resetType === 'today' ? todayBtn : allBtn;
+        if (targetBtn) {
+            targetBtn.innerHTML = resetType === 'today' 
+                ? '<i class="fas fa-redo mr-1"></i>오늘 통계 리셋'
+                : '<i class="fas fa-trash-alt mr-1"></i>전체 통계 리셋';
+            targetBtn.disabled = false;
+        }
+    }
+}
