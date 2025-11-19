@@ -233,9 +233,11 @@ admin.get('/dashboard/stats', async (c) => {
 admin.get('/users', async (c) => {
   try {
     const users = await c.env.DB.prepare(`
-      SELECT id, email, name, user_type, phone, gender, age_group, 
+      SELECT id, email, name, user_type, phone, 
              is_active, created_at, last_login_at, role,
-             b2b_company_name, b2b_business_type
+             oauth_provider,
+             b2c_category, b2c_subcategory,
+             b2b_category, b2b_business_name, b2b_business_number, b2b_address
       FROM users 
       ORDER BY created_at DESC
     `).all();
