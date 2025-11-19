@@ -391,6 +391,63 @@
                     </div>
                 </div>
 
+                <!-- Detailed User Analytics -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- User Type Breakdown -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-chart-pie text-sage mr-2"></i>회원 유형별
+                        </h3>
+                        <canvas id="userTypeChart" style="max-height: 200px;"></canvas>
+                    </div>
+                    
+                    <!-- B2C Stress Type -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-heartbeat text-blue-500 mr-2"></i>B2C 스트레스 유형
+                        </h3>
+                        <canvas id="stressTypeChart" style="max-height: 200px;"></canvas>
+                    </div>
+                    
+                    <!-- B2B Category -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-building text-green-500 mr-2"></i>B2B 업종별
+                        </h3>
+                        <canvas id="b2bCategoryChart" style="max-height: 200px;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Region and Demographics -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Region Distribution -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-map-marked-alt text-sage mr-2"></i>지역별 분포
+                        </h3>
+                        <canvas id="regionChart" style="max-height: 300px;"></canvas>
+                    </div>
+                    
+                    <!-- Gender and Signup Trend -->
+                    <div class="grid grid-rows-2 gap-6">
+                        <!-- Gender Distribution -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">
+                                <i class="fas fa-venus-mars text-sage mr-2"></i>성별 분포
+                            </h3>
+                            <canvas id="genderChart" style="max-height: 120px;"></canvas>
+                        </div>
+                        
+                        <!-- Monthly Signup Trend (Mini) -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-line text-sage mr-2"></i>월별 가입 추이
+                            </h3>
+                            <canvas id="monthlySignupChart" style="max-height: 120px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Search and Filter -->
                 <div class="bg-white rounded-xl shadow-md p-4 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

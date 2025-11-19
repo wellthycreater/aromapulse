@@ -44,6 +44,127 @@ app.get('/stats', async (c) => {
   }
 });
 
+// Get detailed user analytics
+app.get('/analytics', async (c) => {
+  try {
+    const db = c.env.DB;
+    
+    // 1. User type breakdown (detailed)
+    const userTypeStats = await db.prepare(`
+      SELECT 
+        user_type,
+        COUNT(*) as count
+      FROM users
+      GROUP BY user_type
+      ORDER BY count DESC
+    `).all();
+    
+    // 2. Stress type breakdown (for B2C users)
+    const stressTypeStats = await db.prepare(`
+      SELECT 
+        stress_type,
+        COUNT(*) as count
+      FROM users
+      WHERE stress_type IS NOT NULL AND stress_type != ''
+      GROUP BY stress_type
+      ORDER BY count DESC
+    `).all();
+    
+    // 3. Region breakdown
+    const regionStats = await db.prepare(`
+      SELECT 
+        region,
+        COUNT(*) as count
+      FROM users
+      WHERE region IS NOT NULL AND region != ''
+      GROUP BY region
+      ORDER BY count DESC
+      LIMIT 10
+    `).all();
+    
+    // 4. Gender breakdown
+    const genderStats = await db.prepare(`
+      SELECT 
+        gender,
+        COUNT(*) as count
+      FROM users
+      WHERE gender IS NOT NULL AND gender != ''
+      GROUP BY gender
+      ORDER BY count DESC
+    `).all();
+    
+    // 5. Role breakdown (for B2B users)
+    const roleStats = await db.prepare(`
+      SELECT 
+        company_role,
+        COUNT(*) as count
+      FROM users
+      WHERE company_role IS NOT NULL AND company_role != ''
+      GROUP BY company_role
+      ORDER BY count DESC
+    `).all();
+    
+    // 6. Company size breakdown
+    const companySizeStats = await db.prepare(`
+      SELECT 
+        company_size,
+        COUNT(*) as count
+      FROM users
+      WHERE company_size IS NOT NULL AND company_size != ''
+      GROUP BY company_size
+      ORDER BY 
+        CASE company_size
+          WHEN '20인 미만' THEN 1
+          WHEN '20-50인' THEN 2
+          WHEN '50-100인' THEN 3
+          WHEN '100-300인' THEN 4
+          WHEN '300인 이상' THEN 5
+          ELSE 6
+        END
+    `).all();
+    
+    // 7. Monthly signup trend (last 6 months)
+    const signupTrend = await db.prepare(`
+      SELECT 
+        strftime('%Y-%m', created_at) as month,
+        COUNT(*) as count
+      FROM users
+      WHERE created_at >= datetime('now', '-6 months')
+      GROUP BY month
+      ORDER BY month ASC
+    `).all();
+    
+    // 8. Weekly signup trend (last 4 weeks)
+    const weeklySignupTrend = await db.prepare(`
+      SELECT 
+        date(created_at, 'weekday 0', '-6 days') as week_start,
+        COUNT(*) as count
+      FROM users
+      WHERE created_at >= datetime('now', '-28 days')
+      GROUP BY week_start
+      ORDER BY week_start ASC
+    `).all();
+    
+    return c.json({
+      user_types: userTypeStats.results || [],
+      stress_types: stressTypeStats.results || [],
+      regions: regionStats.results || [],
+      genders: genderStats.results || [],
+      roles: roleStats.results || [],
+      company_sizes: companySizeStats.results || [],
+      signup_trend: signupTrend.results || [],
+      weekly_signup: weeklySignupTrend.results || []
+    });
+    
+  } catch (error: any) {
+    console.error('Get user analytics error:', error);
+    return c.json({ 
+      error: '사용자 분석 데이터 조회 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 // Get all users with filters
 app.get('/', async (c) => {
   try {

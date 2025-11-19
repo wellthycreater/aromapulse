@@ -15,14 +15,14 @@ adminDashboard.get('/stats', async (c) => {
     // 전체 회원 수
     const totalUsers = await DB.prepare('SELECT COUNT(*) as count FROM users').first();
     
-    // B2C 회원 수
+    // B2C 회원 수 (both old and new format)
     const b2cUsers = await DB.prepare(
-      "SELECT COUNT(*) as count FROM users WHERE user_type IN ('general_stress', 'work_stress')"
+      "SELECT COUNT(*) as count FROM users WHERE user_type IN ('general_stress', 'work_stress', 'B2C')"
     ).first();
     
-    // B2B 회원 수
+    // B2B 회원 수 (both old and new format)
     const b2bUsers = await DB.prepare(
-      "SELECT COUNT(*) as count FROM users WHERE user_type IN ('perfumer', 'company', 'shop')"
+      "SELECT COUNT(*) as count FROM users WHERE user_type IN ('perfumer', 'company', 'shop', 'B2B')"
     ).first();
     
     // 최근 7일 신규 가입

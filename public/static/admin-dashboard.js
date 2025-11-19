@@ -1436,6 +1436,18 @@ async function loadEnhancedVisitorStats() {
         // Update weekly chart
         if (data.week && data.week.length > 0) {
             updateWeeklyChart(data.week);
+        } else {
+            // Show message when no data
+            const ctx = document.getElementById('weeklyVisitorsChart');
+            if (ctx && ctx.parentElement) {
+                ctx.parentElement.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-chart-line text-gray-300 text-4xl mb-3"></i>
+                        <p class="text-gray-400 text-sm">주간 데이터가 부족합니다</p>
+                        <p class="text-gray-400 text-xs mt-1">며칠 후 차트가 표시됩니다</p>
+                    </div>
+                `;
+            }
         }
         
     } catch (error) {
@@ -1805,4 +1817,304 @@ loadDashboard = async function() {
 const _originalLoadVisitorStats = loadVisitorStats;
 loadVisitorStats = async function() {
     await loadEnhancedVisitorStats();
+};
+
+// ==================== User Analytics Functions ====================
+
+// Chart instances for user analytics
+let userTypeChart = null;
+let stressTypeChart = null;
+let b2bCategoryChart = null;
+let regionChart = null;
+let genderChart = null;
+let monthlySignupChart = null;
+
+// Load User Analytics
+async function loadUserAnalytics() {
+    console.log('📊 Loading user analytics...');
+    
+    try {
+        const response = await fetch('/api/user-analytics/stats', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) {
+            console.warn('⚠️ User analytics API failed');
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('✅ User analytics data:', data);
+        
+        // Render all charts
+        renderUserTypeChart(data);
+        renderStressTypeChart(data);
+        renderB2bCategoryChart(data);
+        renderRegionChart(data);
+        renderGenderChart(data);
+        renderMonthlySignupChart(data);
+        
+    } catch (error) {
+        console.error('❌ Load user analytics error:', error);
+    }
+}
+
+// 1. User Type Chart (B2C vs B2B)
+function renderUserTypeChart(data) {
+    const ctx = document.getElementById('userTypeChart');
+    if (!ctx || !data.by_user_type) return;
+    
+    const labels = data.by_user_type.map(item => item.user_type);
+    const counts = data.by_user_type.map(item => item.count);
+    
+    if (userTypeChart) userTypeChart.destroy();
+    
+    userTypeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: true, position: 'bottom' }
+            }
+        }
+    });
+}
+
+// 2. Stress Type Chart (B2C categories)
+function renderStressTypeChart(data) {
+    const ctx = document.getElementById('stressTypeChart');
+    if (!ctx) return;
+    
+    if (!data.by_b2c_category || data.by_b2c_category.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.by_b2c_category.map(item => {
+        const map = {
+            'daily_stress': '일상 스트레스',
+            'work_stress': '직무 스트레스'
+        };
+        return map[item.b2c_category] || item.b2c_category;
+    });
+    const counts = data.by_b2c_category.map(item => item.count);
+    
+    if (stressTypeChart) stressTypeChart.destroy();
+    
+    stressTypeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: ['rgba(147, 51, 234, 0.8)', 'rgba(59, 130, 246, 0.8)'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// 3. B2B Category Chart
+function renderB2bCategoryChart(data) {
+    const ctx = document.getElementById('b2bCategoryChart');
+    if (!ctx) return;
+    
+    if (!data.by_b2b_category || data.by_b2b_category.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.by_b2b_category.map(item => {
+        const map = {
+            'independent': '개인 조향사',
+            'company': '기업',
+            'workshop': '로컬 공방'
+        };
+        return map[item.b2b_category] || item.b2b_category;
+    });
+    const counts = data.by_b2b_category.map(item => item.count);
+    
+    if (b2bCategoryChart) b2bCategoryChart.destroy();
+    
+    b2bCategoryChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(5, 150, 105, 0.8)', 'rgba(4, 120, 87, 0.8)'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// 4. Region Chart
+function renderRegionChart(data) {
+    const ctx = document.getElementById('regionChart');
+    if (!ctx) return;
+    
+    if (!data.by_region || data.by_region.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">지역 정보 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.by_region.map(item => item.region);
+    const counts = data.by_region.map(item => item.count);
+    
+    if (regionChart) regionChart.destroy();
+    
+    regionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: 'rgba(147, 51, 234, 0.8)',
+                borderWidth: 0
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// 5. Gender Chart
+function renderGenderChart(data) {
+    const ctx = document.getElementById('genderChart');
+    if (!ctx) return;
+    
+    if (!data.by_gender || data.by_gender.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-4"><i class="fas fa-inbox text-gray-300 text-2xl mb-1"></i><p class="text-gray-400 text-xs">성별 정보 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.by_gender.map(item => {
+        const map = { 'male': '남성', 'female': '여성', 'other': '기타' };
+        return map[item.gender] || item.gender;
+    });
+    const counts = data.by_gender.map(item => item.count);
+    
+    if (genderChart) genderChart.destroy();
+    
+    genderChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(168, 85, 247, 0.8)'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: true, position: 'bottom' }
+            }
+        }
+    });
+}
+
+// 6. Monthly Signup Chart
+function renderMonthlySignupChart(data) {
+    const ctx = document.getElementById('monthlySignupChart');
+    if (!ctx) return;
+    
+    if (!data.monthly_signups || data.monthly_signups.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-4"><i class="fas fa-inbox text-gray-300 text-2xl mb-1"></i><p class="text-gray-400 text-xs">가입 데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.monthly_signups.map(item => {
+        const [year, month] = item.month.split('-');
+        return `${month}월`;
+    });
+    const counts = data.monthly_signups.map(item => item.count);
+    
+    if (monthlySignupChart) monthlySignupChart.destroy();
+    
+    monthlySignupChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '신규 가입',
+                data: counts,
+                borderColor: 'rgba(147, 51, 234, 0.8)',
+                backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// Enhance loadUsers to include analytics
+const _originalLoadUsers2 = loadUsers;
+loadUsers = async function() {
+    console.log('📊 Enhanced loadUsers called');
+    await loadUserStats();
+    await loadUserAnalytics();
+    if (_originalLoadUsers2) {
+        try {
+            await _originalLoadUsers2();
+        } catch (e) {
+            console.warn('Original loadUsers error:', e);
+        }
+    }
 };
