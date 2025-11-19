@@ -323,4 +323,59 @@ admin.get('/users/stats', async (c) => {
   }
 });
 
+// Get user analytics for dashboard charts
+admin.get('/users/analytics', async (c) => {
+  try {
+    console.log('📊 Fetching user analytics...');
+    
+    // 1. User types (B2C vs B2B)
+    const userTypes = await c.env.DB.prepare(
+      'SELECT user_type, COUNT(*) as count FROM users GROUP BY user_type'
+    ).all();
+    
+    // 2. Stress types (B2C categories)
+    const stressTypes = await c.env.DB.prepare(
+      "SELECT b2c_category as stress_type, COUNT(*) as count FROM users WHERE user_type = 'B2C' AND b2c_category IS NOT NULL GROUP BY b2c_category"
+    ).all();
+    
+    // 3. B2B categories
+    const b2bCategories = await c.env.DB.prepare(
+      "SELECT b2b_business_type as b2b_category, COUNT(*) as count FROM users WHERE user_type = 'B2B' AND b2b_business_type IS NOT NULL GROUP BY b2b_business_type"
+    ).all();
+    
+    // 4. Region distribution (if region field exists)
+    const regions = await c.env.DB.prepare(
+      "SELECT region, COUNT(*) as count FROM users WHERE region IS NOT NULL GROUP BY region ORDER BY count DESC LIMIT 10"
+    ).all();
+    
+    // 5. Gender distribution
+    const genders = await c.env.DB.prepare(
+      "SELECT gender, COUNT(*) as count FROM users WHERE gender IS NOT NULL GROUP BY gender"
+    ).all();
+    
+    // 6. Monthly signup trend (last 12 months)
+    const signupTrend = await c.env.DB.prepare(
+      "SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count FROM users WHERE created_at >= datetime('now', '-12 months') GROUP BY month ORDER BY month ASC"
+    ).all();
+    
+    console.log('✅ User analytics fetched');
+    
+    return c.json({
+      user_types: userTypes.results || [],
+      stress_types: stressTypes.results || [],
+      b2b_categories: b2bCategories.results || [],
+      regions: regions.results || [],
+      genders: genders.results || [],
+      signup_trend: signupTrend.results || []
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Get user analytics error:', error);
+    return c.json({ 
+      error: '사용자 분석 데이터 조회 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 export default admin;

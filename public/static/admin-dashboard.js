@@ -1929,6 +1929,11 @@ loadDashboard = async function() {
     await loadRecentUsers();
     await loadRecentActivities();
     await loadDeviceStats();
+    
+    // ✅ CRITICAL: Load user analytics ONLY in Dashboard
+    console.log('📊 Loading user analytics charts for Dashboard...');
+    await loadUserAnalytics();
+    
     console.log('✅ Enhanced features loaded');
 };
 
