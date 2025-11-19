@@ -11,7 +11,7 @@ let authToken = null;
 function checkAuth() {
     authToken = localStorage.getItem('admin_token');
     if (!authToken) {
-        window.location.href = '/login';
+        window.location.href = '/admin-login';
         return false;
     }
     return true;
@@ -20,7 +20,7 @@ function checkAuth() {
 function logout() {
     if (confirm('로그아웃 하시겠습니까?')) {
         localStorage.removeItem('admin_token');
-        window.location.href = '/login';
+        window.location.href = '/admin-login';
     }
 }
 
