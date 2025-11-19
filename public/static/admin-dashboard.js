@@ -839,3 +839,359 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load initial tab
     loadTabData('dashboard');
 });
+
+// ==================== BLOG FUNCTIONS ====================
+
+// Blog Sub Tab Switching
+let currentBlogSubTab = 'high-leads';
+
+function switchBlogSubTab(tabName) {
+    currentBlogSubTab = tabName;
+    
+    // Update tab buttons
+    document.querySelectorAll('.blog-sub-tab-btn').forEach(btn => {
+        btn.classList.remove('border-lavender', 'text-lavender');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Highlight active tab
+    event.target.closest('button').classList.remove('border-transparent', 'text-gray-500');
+    event.target.closest('button').classList.add('border-lavender', 'text-lavender');
+    
+    // Hide all sub tabs
+    document.querySelectorAll('.blog-sub-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Show selected sub tab
+    document.getElementById(`blog-${tabName}-tab`).classList.remove('hidden');
+    
+    // Load data for selected tab
+    if (tabName === 'high-leads') {
+        loadBlogHighLeads();
+    } else if (tabName === 'posts') {
+        loadBlogPostsList();
+    } else if (tabName === 'add-comment') {
+        loadBlogPostsForCommentSelect();
+    }
+}
+
+// Load Blog Stats
+async function loadBlogStats() {
+    try {
+        const response = await fetch('/api/blog-analysis/stats/user-types', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) throw new Error('Stats load failed');
+        
+        const data = await response.json();
+        const stats = data.stats || [];
+        
+        let totalComments = 0;
+        let b2cCount = 0;
+        let b2bCount = 0;
+        let totalConversion = 0;
+        
+        stats.forEach(stat => {
+            totalComments += stat.count;
+            if (stat.user_type_prediction === 'B2C') b2cCount = stat.count;
+            if (stat.user_type_prediction === 'B2B') b2bCount = stat.count;
+            totalConversion += stat.avg_conversion_rate * stat.count;
+        });
+        
+        const avgConversion = totalComments > 0 ? (totalConversion / totalComments * 100).toFixed(1) : 0;
+        
+        document.getElementById('blog-stat-comments').textContent = totalComments;
+        document.getElementById('blog-stat-b2c').textContent = b2cCount;
+        document.getElementById('blog-stat-b2b').textContent = b2bCount;
+        document.getElementById('blog-stat-conversion').textContent = avgConversion + '%';
+    } catch (error) {
+        console.error('Blog stats load error:', error);
+    }
+}
+
+// Load High Conversion Leads
+async function loadBlogHighLeads() {
+    const minConversion = document.getElementById('blog-min-conversion-filter').value;
+    const container = document.getElementById('blog-high-leads-list');
+    
+    container.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i></div>';
+    
+    try {
+        const response = await fetch(`/api/blog-analysis/high-conversion-leads?min_probability=${minConversion}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) throw new Error('High leads load failed');
+        
+        const data = await response.json();
+        const leads = data.leads || [];
+        
+        if (leads.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12 text-gray-500">
+                    <i class="fas fa-inbox text-6xl mb-4"></i>
+                    <p class="text-lg">전환율 ${(minConversion * 100).toFixed(0)}% 이상의 리드가 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = leads.map(lead => createBlogLeadCard(lead)).join('');
+    } catch (error) {
+        console.error('High leads load error:', error);
+        container.innerHTML = `
+            <div class="text-center py-12 text-red-500">
+                <i class="fas fa-exclamation-circle text-6xl mb-4"></i>
+                <p>리드를 불러오는 중 오류가 발생했습니다.</p>
+            </div>
+        `;
+    }
+}
+
+// Create Blog Lead Card
+function createBlogLeadCard(lead) {
+    const conversionPercent = (lead.conversion_probability * 100).toFixed(0);
+    
+    let userTypeBadge = '';
+    if (lead.user_type_prediction === 'B2C') {
+        userTypeBadge = '<span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"><i class="fas fa-user mr-1"></i>B2C</span>';
+    } else if (lead.user_type_prediction === 'B2B') {
+        userTypeBadge = '<span class="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full"><i class="fas fa-briefcase mr-1"></i>B2B</span>';
+    }
+    
+    let sentimentIcon = '';
+    if (lead.sentiment === 'positive') {
+        sentimentIcon = '<i class="fas fa-smile text-green-500"></i>';
+    } else if (lead.sentiment === 'negative') {
+        sentimentIcon = '<i class="fas fa-frown text-red-500"></i>';
+    } else {
+        sentimentIcon = '<i class="fas fa-meh text-gray-500"></i>';
+    }
+    
+    const contextTags = lead.context_tags ? JSON.parse(lead.context_tags) : [];
+    const tagsHtml = contextTags.slice(0, 3).map(tag => 
+        `<span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">${tag}</span>`
+    ).join('');
+    
+    return `
+        <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center space-x-3">
+                    ${userTypeBadge}
+                    <span class="text-sm text-gray-600">
+                        <i class="fas fa-user-circle mr-1"></i>${lead.author_name || '익명'}
+                    </span>
+                    ${sentimentIcon}
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold text-orange-600">${conversionPercent}%</div>
+                    <div class="text-xs text-gray-500">전환 가능성</div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                <p class="text-gray-800 leading-relaxed">${lead.content}</p>
+            </div>
+            
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex flex-wrap gap-2">
+                    ${tagsHtml}
+                </div>
+                <a href="${lead.post_url}" target="_blank" class="text-sm text-purple-600 hover:text-purple-700">
+                    <i class="fas fa-external-link-alt mr-1"></i>원문 보기
+                </a>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="viewBlogLeadDetail(${lead.id})" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-eye mr-2"></i>상세보기
+                </button>
+                <button onclick="inviteBlogSignup(${lead.id})" class="px-4 py-2 bg-lavender text-white rounded-lg hover:opacity-90">
+                    <i class="fas fa-user-plus mr-2"></i>가입 유도
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// View Blog Lead Detail
+function viewBlogLeadDetail(commentId) {
+    alert(`댓글 ID ${commentId}의 상세 분석 기능은 추후 구현 예정입니다.`);
+}
+
+// Invite Blog Signup
+function inviteBlogSignup(commentId) {
+    alert(`댓글 ID ${commentId}에 대한 회원가입 초대 기능은 추후 구현 예정입니다.`);
+}
+
+// Load Blog Posts List
+async function loadBlogPostsList() {
+    const container = document.getElementById('blog-posts-list');
+    container.innerHTML = '<div class="col-span-full text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i></div>';
+    
+    try {
+        const response = await fetch('/api/blog/posts');
+        
+        if (!response.ok) throw new Error('Blog posts load failed');
+        
+        const data = await response.json();
+        const posts = data.posts || [];
+        
+        if (posts.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-12 text-gray-500">
+                    <i class="fas fa-inbox text-6xl mb-4"></i>
+                    <p class="text-lg">블로그 포스트가 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = posts.map(post => `
+            <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2">${post.title}</h4>
+                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <span><i class="fas fa-calendar mr-1"></i>${formatDate(post.published_at)}</span>
+                            <span><i class="fas fa-eye mr-1"></i>${post.view_count || 0}</span>
+                            <span><i class="fas fa-comment mr-1"></i>${post.comment_count || 0}</span>
+                        </div>
+                    </div>
+                    <a href="${post.url}" target="_blank" class="ml-4 px-4 py-2 bg-lavender text-white rounded-lg hover:opacity-90 transition flex items-center">
+                        <i class="fas fa-external-link-alt mr-2"></i>
+                        보기
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Blog posts load error:', error);
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12 text-red-500">
+                <i class="fas fa-exclamation-circle text-6xl mb-4"></i>
+                <p class="text-lg">블로그 포스트를 불러오는데 실패했습니다.</p>
+            </div>
+        `;
+    }
+}
+
+// Load Blog Posts for Comment Select
+async function loadBlogPostsForCommentSelect() {
+    try {
+        const response = await fetch('/api/blog/posts');
+        const data = await response.json();
+        const posts = data.posts || [];
+        
+        const select = document.getElementById('comment-post-id');
+        select.innerHTML = '<option value="">게시물을 선택하세요</option>' + 
+            posts.map(post => `<option value="${post.id}">${post.title}</option>`).join('');
+    } catch (error) {
+        console.error('Blog posts load for select error:', error);
+    }
+}
+
+// Add Blog Post
+async function addBlogPost() {
+    const url = document.getElementById('blog-post-url').value.trim();
+    const date = document.getElementById('blog-post-date').value.trim();
+    
+    if (!url) {
+        alert('블로그 게시물 URL을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/blog-reviews/add-post', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ url, published_at: date || null })
+        });
+        
+        if (response.ok) {
+            alert('블로그 게시물이 추가되었습니다.');
+            resetBlogPostForm();
+            switchBlogSubTab('posts');
+        } else {
+            throw new Error('Add post failed');
+        }
+    } catch (error) {
+        console.error('Add blog post error:', error);
+        alert('블로그 게시물 추가에 실패했습니다.');
+    }
+}
+
+// Reset Blog Post Form
+function resetBlogPostForm() {
+    document.getElementById('blog-post-url').value = '';
+    document.getElementById('blog-post-date').value = '';
+}
+
+// Add Blog Comment
+async function addBlogComment() {
+    const postId = document.getElementById('comment-post-id').value;
+    const author = document.getElementById('comment-author').value.trim();
+    const content = document.getElementById('comment-content').value.trim();
+    const date = document.getElementById('comment-date').value.trim();
+    
+    if (!postId) {
+        alert('블로그 게시물을 선택해주세요.');
+        return;
+    }
+    
+    if (!author || !content) {
+        alert('작성자명과 댓글 내용을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/blog-reviews/add-comment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                post_id: postId,
+                author_name: author,
+                content: content,
+                created_at: date || null
+            })
+        });
+        
+        if (response.ok) {
+            alert('댓글이 추가되고 AI 분석이 완료되었습니다.');
+            resetBlogCommentForm();
+            // Reload stats and high leads
+            loadBlogStats();
+            if (currentBlogSubTab === 'high-leads') {
+                loadBlogHighLeads();
+            }
+        } else {
+            throw new Error('Add comment failed');
+        }
+    } catch (error) {
+        console.error('Add blog comment error:', error);
+        alert('댓글 추가에 실패했습니다.');
+    }
+}
+
+// Reset Blog Comment Form
+function resetBlogCommentForm() {
+    document.getElementById('comment-post-id').value = '';
+    document.getElementById('comment-author').value = '';
+    document.getElementById('comment-content').value = '';
+    document.getElementById('comment-date').value = '';
+}
+
+// Update loadBlog function to include stats
+const originalLoadBlog = loadBlog;
+async function loadBlog() {
+    await loadBlogStats();
+    await loadBlogHighLeads();
+}

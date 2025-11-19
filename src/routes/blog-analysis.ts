@@ -179,7 +179,7 @@ blogAnalysis.get('/posts/:id', async (c) => {
       LEFT JOIN product_recommendations pr ON bc.id = pr.comment_id
       WHERE bc.post_id = ?
       GROUP BY bc.id
-      ORDER BY bc.published_at DESC
+      ORDER BY bc.created_at DESC
     `).bind(postId).all();
     
     return c.json({
@@ -209,21 +209,20 @@ blogAnalysis.post('/comments/analyze', async (c) => {
     // 댓글 저장
     const result = await env.DB.prepare(`
       INSERT INTO blog_comments (
-        comment_id, post_id, author_name, author_id, content, published_at,
-        user_type_prediction, user_type_confidence,
+        comment_id, post_id, author_name, author_id, content,
+        predicted_user_type, confidence,
         b2c_stress_type, b2c_detail_category, b2b_business_type,
         sentiment, sentiment_score,
-        intent, intent_keywords,
+        intent, keywords,
         context_tags, mentioned_products, pain_points,
-        next_action_prediction, recommended_products, conversion_probability
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        next_action, recommended_products, conversion_probability
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      comment_id,
+      comment_id || null,
       post_id,
-      author_name,
-      author_id,
+      author_name || null,
+      author_id || null,
       content,
-      published_at || new Date().toISOString(),
       analysis.userType,
       analysis.confidence,
       analysis.b2cStressType || null,
@@ -243,29 +242,20 @@ blogAnalysis.post('/comments/analyze', async (c) => {
     
     const commentDbId = result.meta.last_row_id;
     
-    // 제품 추천 저장
-    for (const productId of analysis.recommendedProducts) {
+    // 행동 예측 저장 (user_behavior_predictions 테이블에만 저장)
+    try {
       await env.DB.prepare(`
-        INSERT INTO product_recommendations (comment_id, product_id, reason, relevance_score)
+        INSERT INTO user_behavior_predictions (comment_id, predicted_action, confidence, reasoning)
         VALUES (?, ?, ?, ?)
       `).bind(
         commentDbId,
-        productId,
-        'mentioned_symptom',
-        0.8
+        analysis.nextAction,
+        analysis.conversionProbability,
+        `Intent: ${analysis.intent}, Sentiment: ${analysis.sentiment}, Context: ${analysis.contextTags.join(', ')}`
       ).run();
+    } catch (predictionError) {
+      console.log('행동 예측 저장 건너뜀:', predictionError);
     }
-    
-    // 행동 예측 저장
-    await env.DB.prepare(`
-      INSERT INTO user_behavior_predictions (comment_id, predicted_action, confidence, reasoning)
-      VALUES (?, ?, ?, ?)
-    `).bind(
-      commentDbId,
-      analysis.nextAction,
-      analysis.conversionProbability,
-      `Intent: ${analysis.intent}, Sentiment: ${analysis.sentiment}, Context: ${analysis.contextTags.join(', ')}`
-    ).run();
     
     return c.json({
       success: true,
@@ -285,13 +275,13 @@ blogAnalysis.get('/stats/user-types', async (c) => {
   try {
     const { results } = await env.DB.prepare(`
       SELECT 
-        user_type_prediction,
+        predicted_user_type,
         COUNT(*) as count,
         AVG(conversion_probability) as avg_conversion_rate,
-        AVG(user_type_confidence) as avg_confidence
+        AVG(confidence) as avg_confidence
       FROM blog_comments
-      WHERE user_type_prediction IS NOT NULL
-      GROUP BY user_type_prediction
+      WHERE predicted_user_type IS NOT NULL
+      GROUP BY predicted_user_type
     `).all();
     
     return c.json({ stats: results });
