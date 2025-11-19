@@ -435,13 +435,61 @@ async function loadClasses() {
 
 // Load Blog
 async function loadBlog() {
-    const tbody = document.getElementById('blog-table-body');
-    tbody.innerHTML = `
-        <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
-            블로그 기능은 준비 중입니다.
-        </td></tr>
-    `;
-    document.getElementById('blog-total').textContent = '0';
+    try {
+        console.log('Loading blog posts...');
+        const response = await fetch('/api/blog/posts');
+        console.log('Blog response status:', response.status);
+        
+        const data = await response.json();
+        console.log('Blog data:', data);
+        
+        const posts = data.posts || [];
+        console.log('Blog posts array length:', posts.length);
+        
+        const tbody = document.getElementById('blog-table-body');
+        document.getElementById('blog-total').textContent = posts.length;
+        
+        if (posts.length === 0) {
+            tbody.innerHTML = `
+                <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                    블로그 포스트가 없습니다.
+                </td></tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = posts.map(post => `
+            <tr class="border-b hover:bg-gray-50 transition">
+                <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">${post.title}</div>
+                    <div class="text-xs text-gray-500 mt-1">${(post.content || '').substring(0, 50)}...</div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600">${post.category || '-'}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${post.view_count || 0}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${formatDate(post.published_at)}</td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex items-center justify-center space-x-2">
+                        <button onclick="editBlog(${post.id})" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteBlog(${post.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        
+        console.log('Blog posts loaded successfully');
+    } catch (error) {
+        console.error('Blog load error:', error);
+        const tbody = document.getElementById('blog-table-body');
+        tbody.innerHTML = `
+            <tr><td colspan="5" class="px-6 py-8 text-center text-red-500">
+                블로그 포스트를 불러오는데 실패했습니다. 콘솔을 확인하세요.
+            </td></tr>
+        `;
+    }
 }
 
 // Modal Functions
