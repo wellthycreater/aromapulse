@@ -278,9 +278,6 @@ app.get('/', (c) => {
                         <a href="/workshops" id="workshop-menu" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center" style="display: none;">
                             <i class="fas fa-spa mr-2"></i>워크샵
                         </a>
-                        <a href="/dashboard" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
-                            <i class="fas fa-chart-line mr-2"></i>대시보드
-                        </a>
                     </div>
                     <div class="flex items-center space-x-4">
                         <!-- 방문자 통계 -->
@@ -327,9 +324,6 @@ app.get('/', (c) => {
                                 <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
                                     <a href="/static/profile" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
                                         <i class="fas fa-user mr-2"></i>프로필
-                                    </a>
-                                    <a href="/dashboard" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
-                                        <i class="fas fa-chart-line mr-2"></i>대시보드
                                     </a>
                                     <hr class="my-2">
                                     <button onclick="logout()" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition">
@@ -658,7 +652,6 @@ app.get('/', (c) => {
                         <h4 class="text-lg font-bold mb-4">서비스</h4>
                         <ul class="space-y-2 text-gray-400">
                             <li><a href="/workshops" class="hover:text-white transition">워크샵</a></li>
-                            <li><a href="/dashboard" class="hover:text-white transition">대시보드</a></li>
                             <li><a href="/patch-apply" class="hover:text-white transition">패치 체험</a></li>
                         </ul>
                     </div>
