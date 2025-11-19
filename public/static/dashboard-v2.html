@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AromaPulse 관리자 대시보드 V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-8">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-chart-line text-sage mr-3"></i>AromaPulse 관리자 대시보드 V2
+            </h1>
+            <p class="text-gray-600 mb-8">회원 분석 및 SNS/O2O 전환 통계</p>
+
+            <!-- B2C 세부 분류 -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-users text-blue-500 mr-2"></i>B2C 회원 세부 분류
+                </h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-briefcase text-indigo-500 mr-2"></i>직무 스트레스 업종별 분포
+                        </h4>
+                        <canvas id="workStressChart" style="max-height: 300px;"></canvas>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-home text-teal-500 mr-2"></i>일상 스트레스 상황별 분포
+                        </h4>
+                        <canvas id="dailyStressChart" style="max-height: 300px;"></canvas>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-building text-orange-500 mr-2"></i>기업 규모 (B2B 복지)
+                        </h4>
+                        <canvas id="companySizeChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SNS & O2O 분석 -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-share-alt text-sage mr-2"></i>SNS 채널 유입 및 O2O 전환 분석
+                </h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-chart-bar text-blue-500 mr-2"></i>SNS 채널별 유입
+                        </h4>
+                        <canvas id="snsChannelChart" style="max-height: 250px;"></canvas>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-mouse-pointer text-green-500 mr-2"></i>SNS 클릭률 (CTR)
+                        </h4>
+                        <canvas id="snsCTRChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-store-alt text-orange-500 mr-2"></i>온라인→오프라인 전환 (공방별)
+                        </h4>
+                        <canvas id="o2oLocationChart" style="max-height: 250px;"></canvas>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-funnel-dollar text-purple-500 mr-2"></i>SNS별 O2O 전환율
+                        </h4>
+                        <canvas id="o2oConversionChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-chart-line text-blue-500 mr-2"></i>일별 SNS 유입 추이
+                    </h4>
+                    <canvas id="dailySNSTrendChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/dashboard-v2.js"></script>
+</body>
+</html>
