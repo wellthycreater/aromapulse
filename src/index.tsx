@@ -20,6 +20,7 @@ import chatbotRoutes from './routes/chatbot';
 import blogReviewsRoutes from './routes/blog-reviews';
 import ordersRoutes from './routes/orders';
 import userRoutes from './routes/user';
+import usersRoutes from './routes/users';
 import onedayClassesRoutes from './routes/oneday-classes';
 import workshopQuotesRoutes from './routes/workshop-quotes';
 
@@ -48,6 +49,7 @@ app.route('/api/chatbot', chatbotRoutes);
 app.route('/api/blog-reviews', blogReviewsRoutes);
 app.route('/api/orders', ordersRoutes);
 app.route('/api/user', userRoutes);
+app.route('/api/users', usersRoutes);
 app.route('/api/oneday-classes', onedayClassesRoutes);
 app.route('/api/workshop-quotes', workshopQuotesRoutes);
 
