@@ -238,9 +238,15 @@ async function searchUsers() {
 // Load Products
 async function loadProducts() {
     try {
+        console.log('Loading products...');
         const response = await fetch('/api/products');
+        console.log('Products response status:', response.status);
+        
         const data = await response.json();
+        console.log('Products data:', data);
+        
         const products = data.products || [];
+        console.log('Products array length:', products.length);
         
         const grid = document.getElementById('products-grid');
         
@@ -249,19 +255,27 @@ async function loadProducts() {
             return;
         }
         
-        grid.innerHTML = products.map(product => `
+        grid.innerHTML = products.map(product => {
+            // Handle thumbnail image
+            let imageHtml = '';
+            if (product.thumbnail_image && product.thumbnail_image.startsWith('data:image')) {
+                imageHtml = `<img src="${product.thumbnail_image}" alt="${product.name}" class="w-full h-full object-cover">`;
+            } else if (product.thumbnail_image) {
+                imageHtml = `<img src="${product.thumbnail_image}" alt="${product.name}" class="w-full h-full object-cover">`;
+            } else {
+                imageHtml = `<i class="fas fa-box text-white text-6xl"></i>`;
+            }
+            
+            return `
             <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift">
-                <div class="h-48 bg-gradient-to-br from-sage to-lavender flex items-center justify-center">
-                    ${product.thumbnail_image ? 
-                        `<img src="${product.thumbnail_image}" alt="${product.name}" class="w-full h-full object-cover">` :
-                        `<i class="fas fa-box text-white text-6xl"></i>`
-                    }
+                <div class="h-48 flex items-center justify-center" style="background: linear-gradient(to bottom right, #7AA992, #BCA6E0);">
+                    ${imageHtml}
                 </div>
                 <div class="p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-2">${product.name}</h3>
-                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">${product.description || '설명 없음'}</p>
+                    <p class="text-sm text-gray-600 mb-4" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${product.description || '설명 없음'}</p>
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-2xl font-bold text-sage">${(product.price || 0).toLocaleString()}원</span>
+                        <span class="text-2xl font-bold" style="color: #7AA992;">${(product.price || 0).toLocaleString()}원</span>
                         <span class="text-sm text-gray-500">재고: ${product.stock || 0}</span>
                     </div>
                     <div class="flex items-center justify-between">
@@ -279,18 +293,29 @@ async function loadProducts() {
                     </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
+        
+        console.log('Products grid updated successfully');
     } catch (error) {
         console.error('Products load error:', error);
+        const grid = document.getElementById('products-grid');
+        grid.innerHTML = '<div class="col-span-full text-center py-12 text-red-500">제품을 불러오는데 실패했습니다. 콘솔을 확인하세요.</div>';
     }
 }
 
 // Load Workshops
 async function loadWorkshops() {
     try {
+        console.log('Loading workshops...');
         const response = await fetch('/api/workshops');
+        console.log('Workshops response status:', response.status);
+        
         const workshops = await response.json();
+        console.log('All workshops:', workshops);
+        
         const workshopList = workshops.filter(w => w.type === 'workshop');
+        console.log('Filtered workshops:', workshopList);
         
         const grid = document.getElementById('workshops-grid');
         
@@ -301,7 +326,7 @@ async function loadWorkshops() {
         
         grid.innerHTML = workshopList.map(workshop => `
             <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift">
-                <div class="h-48 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                <div class="h-48 flex items-center justify-center" style="background: linear-gradient(to bottom right, #60a5fa, #6366f1);">
                     ${workshop.image_url ? 
                         `<img src="${workshop.image_url}" alt="${workshop.title}" class="w-full h-full object-cover">` :
                         `<i class="fas fa-hands-helping text-white text-6xl"></i>`
@@ -309,11 +334,11 @@ async function loadWorkshops() {
                 </div>
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">${workshop.category || '워크샵'}</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold" style="background-color: #dbeafe; color: #1e3a8a;">${workshop.category || '워크샵'}</span>
                         <span class="text-sm text-gray-500">${workshop.location || '-'}</span>
                     </div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">${workshop.title}</h3>
-                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">${workshop.description || '설명 없음'}</p>
+                    <p class="text-sm text-gray-600 mb-4" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${workshop.description || '설명 없음'}</p>
                     <div class="flex items-center justify-between mb-4 text-sm text-gray-600">
                         <div class="flex items-center space-x-4">
                             <span><i class="fas fa-clock mr-1"></i>${workshop.duration || 0}분</span>
@@ -321,7 +346,7 @@ async function loadWorkshops() {
                         </div>
                     </div>
                     <div class="flex items-center justify-between">
-                        <span class="text-2xl font-bold text-blue-600">${(workshop.price || 0).toLocaleString()}원</span>
+                        <span class="text-2xl font-bold" style="color: #2563eb;">${(workshop.price || 0).toLocaleString()}원</span>
                         <div class="flex space-x-2">
                             <button onclick="editWorkshop(${workshop.id})" class="text-blue-600 hover:text-blue-800">
                                 <i class="fas fa-edit"></i>
@@ -334,17 +359,27 @@ async function loadWorkshops() {
                 </div>
             </div>
         `).join('');
+        
+        console.log('Workshops grid updated successfully');
     } catch (error) {
         console.error('Workshops load error:', error);
+        const grid = document.getElementById('workshops-grid');
+        grid.innerHTML = '<div class="col-span-full text-center py-12 text-red-500">워크샵을 불러오는데 실패했습니다. 콘솔을 확인하세요.</div>';
     }
 }
 
 // Load Classes
 async function loadClasses() {
     try {
+        console.log('Loading classes...');
         const response = await fetch('/api/workshops');
+        console.log('Classes response status:', response.status);
+        
         const workshops = await response.json();
+        console.log('All workshops:', workshops);
+        
         const classList = workshops.filter(w => w.type === 'class');
+        console.log('Filtered classes:', classList);
         
         const grid = document.getElementById('classes-grid');
         
@@ -355,7 +390,7 @@ async function loadClasses() {
         
         grid.innerHTML = classList.map(cls => `
             <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift">
-                <div class="h-48 bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center">
+                <div class="h-48 flex items-center justify-center" style="background: linear-gradient(to bottom right, #10b981, #14b8a6);">
                     ${cls.image_url ? 
                         `<img src="${cls.image_url}" alt="${cls.title}" class="w-full h-full object-cover">` :
                         `<i class="fas fa-chalkboard-teacher text-white text-6xl"></i>`
@@ -363,11 +398,11 @@ async function loadClasses() {
                 </div>
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">${cls.category || '클래스'}</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold" style="background-color: #d1fae5; color: #065f46;">${cls.category || '클래스'}</span>
                         <span class="text-sm text-gray-500">${cls.location || '-'}</span>
                     </div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">${cls.title}</h3>
-                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">${cls.description || '설명 없음'}</p>
+                    <p class="text-sm text-gray-600 mb-4" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${cls.description || '설명 없음'}</p>
                     <div class="flex items-center justify-between mb-4 text-sm text-gray-600">
                         <div class="flex items-center space-x-4">
                             <span><i class="fas fa-clock mr-1"></i>${cls.duration || 0}분</span>
@@ -375,7 +410,7 @@ async function loadClasses() {
                         </div>
                     </div>
                     <div class="flex items-center justify-between">
-                        <span class="text-2xl font-bold text-green-600">${(cls.price || 0).toLocaleString()}원</span>
+                        <span class="text-2xl font-bold" style="color: #10b981;">${(cls.price || 0).toLocaleString()}원</span>
                         <div class="flex space-x-2">
                             <button onclick="editClass(${cls.id})" class="text-blue-600 hover:text-blue-800">
                                 <i class="fas fa-edit"></i>
@@ -388,8 +423,12 @@ async function loadClasses() {
                 </div>
             </div>
         `).join('');
+        
+        console.log('Classes grid updated successfully');
     } catch (error) {
         console.error('Classes load error:', error);
+        const grid = document.getElementById('classes-grid');
+        grid.innerHTML = '<div class="col-span-full text-center py-12 text-red-500">원데이 클래스를 불러오는데 실패했습니다. 콘솔을 확인하세요.</div>';
     }
 }
 
