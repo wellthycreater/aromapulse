@@ -458,27 +458,36 @@ async function loadBlog() {
             return;
         }
         
-        tbody.innerHTML = posts.map(post => `
+        tbody.innerHTML = posts.map(post => {
+            // Handle null string values
+            const category = (post.category === 'null' || !post.category) ? '-' : post.category;
+            const contentPreview = (post.content === 'null' || !post.content) ? '내용 없음' : post.content.substring(0, 50);
+            
+            return `
             <tr class="border-b hover:bg-gray-50 transition">
                 <td class="px-6 py-4">
                     <div class="text-sm font-medium text-gray-900">${post.title}</div>
-                    <div class="text-xs text-gray-500 mt-1">${(post.content || '').substring(0, 50)}...</div>
+                    <div class="text-xs text-gray-500 mt-1">${contentPreview}...</div>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-600">${post.category || '-'}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${category}</td>
                 <td class="px-6 py-4 text-sm text-gray-600">${post.view_count || 0}</td>
                 <td class="px-6 py-4 text-sm text-gray-600">${formatDate(post.published_at)}</td>
                 <td class="px-6 py-4 text-center">
                     <div class="flex items-center justify-center space-x-2">
-                        <button onclick="editBlog(${post.id})" class="text-blue-600 hover:text-blue-800">
+                        <a href="${post.url}" target="_blank" class="text-green-600 hover:text-green-800" title="블로그 보기">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        <button onclick="editBlog(${post.id})" class="text-blue-600 hover:text-blue-800" title="수정">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="deleteBlog(${post.id})" class="text-red-600 hover:text-red-800">
+                        <button onclick="deleteBlog(${post.id})" class="text-red-600 hover:text-red-800" title="삭제">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
         
         console.log('Blog posts loaded successfully');
     } catch (error) {
