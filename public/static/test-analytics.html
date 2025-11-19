@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics API Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold mb-6">Analytics API Test</h1>
+        
+        <div class="mb-6">
+            <button onclick="testAPI()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                Test User Analytics API
+            </button>
+            <button onclick="testSNS()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 ml-2">
+                Test SNS API
+            </button>
+            <button onclick="testO2O()" class="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 ml-2">
+                Test O2O API
+            </button>
+        </div>
+        
+        <div id="result" class="bg-gray-50 p-4 rounded border border-gray-300 overflow-auto" style="max-height: 600px;">
+            <p class="text-gray-500">Click a button to test API...</p>
+        </div>
+    </div>
+    
+    <script>
+        async function testAPI() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p class="text-blue-600">Testing /api/admin/users/analytics...</p>';
+            
+            try {
+                const response = await fetch('/api/admin/users/analytics', {
+                    headers: { 'Authorization': 'Bearer test-token' }
+                });
+                
+                if (!response.ok) {
+                    result.innerHTML = `<p class="text-red-600">Error: ${response.status} ${response.statusText}</p>`;
+                    return;
+                }
+                
+                const data = await response.json();
+                result.innerHTML = `
+                    <p class="text-green-600 font-bold mb-2">✅ Success!</p>
+                    <pre class="text-xs">${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testSNS() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p class="text-blue-600">Testing /api/admin/sns/stats...</p>';
+            
+            try {
+                const response = await fetch('/api/admin/sns/stats', {
+                    headers: { 'Authorization': 'Bearer test-token' }
+                });
+                
+                if (!response.ok) {
+                    result.innerHTML = `<p class="text-red-600">Error: ${response.status} ${response.statusText}</p>`;
+                    return;
+                }
+                
+                const data = await response.json();
+                result.innerHTML = `
+                    <p class="text-green-600 font-bold mb-2">✅ Success!</p>
+                    <pre class="text-xs">${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testO2O() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p class="text-blue-600">Testing /api/admin/o2o/stats...</p>';
+            
+            try {
+                const response = await fetch('/api/admin/o2o/stats', {
+                    headers: { 'Authorization': 'Bearer test-token' }
+                });
+                
+                if (!response.ok) {
+                    result.innerHTML = `<p class="text-red-600">Error: ${response.status} ${response.statusText}</p>`;
+                    return;
+                }
+                
+                const data = await response.json();
+                result.innerHTML = `
+                    <p class="text-green-600 font-bold mb-2">✅ Success!</p>
+                    <pre class="text-xs">${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

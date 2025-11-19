@@ -392,7 +392,7 @@ admin.get('/sns/stats', async (c) => {
   try {
     console.log('📊 Fetching SNS channel stats...');
     
-    // 1. Daily SNS visits (last 30 days)
+    // 1. Daily SNS visits (all available data or last 30 days)
     const dailyVisits = await c.env.DB.prepare(`
       SELECT 
         visit_date,
@@ -401,11 +401,10 @@ admin.get('/sns/stats', async (c) => {
         unique_visitors,
         click_through
       FROM sns_visits
-      WHERE visit_date >= date('now', '-30 days')
       ORDER BY visit_date ASC, channel ASC
     `).all();
     
-    // 2. Total visitors by channel
+    // 2. Total visitors by channel (all time)
     const channelTotals = await c.env.DB.prepare(`
       SELECT 
         channel,
@@ -414,19 +413,20 @@ admin.get('/sns/stats', async (c) => {
         SUM(click_through) as total_clicks,
         ROUND(CAST(SUM(click_through) AS REAL) / SUM(visitor_count) * 100, 2) as ctr
       FROM sns_visits
-      WHERE visit_date >= date('now', '-30 days')
       GROUP BY channel
       ORDER BY total_visitors DESC
     `).all();
     
-    // 3. Recent trends (last 7 days vs previous 7 days)
+    // 3. Recent trends (compare latest 7 days with previous 7 days based on available data)
     const recentTrends = await c.env.DB.prepare(`
       SELECT 
         channel,
-        SUM(CASE WHEN visit_date >= date('now', '-7 days') THEN visitor_count ELSE 0 END) as recent_week,
-        SUM(CASE WHEN visit_date >= date('now', '-14 days') AND visit_date < date('now', '-7 days') THEN visitor_count ELSE 0 END) as previous_week
+        SUM(CASE WHEN visit_date >= date((SELECT MAX(visit_date) FROM sns_visits), '-7 days') THEN visitor_count ELSE 0 END) as recent_week,
+        SUM(CASE WHEN visit_date >= date((SELECT MAX(visit_date) FROM sns_visits), '-14 days') 
+                 AND visit_date < date((SELECT MAX(visit_date) FROM sns_visits), '-7 days') 
+            THEN visitor_count ELSE 0 END) as previous_week
       FROM sns_visits
-      WHERE visit_date >= date('now', '-14 days')
+      WHERE visit_date >= date((SELECT MAX(visit_date) FROM sns_visits), '-14 days')
       GROUP BY channel
     `).all();
     
@@ -498,7 +498,7 @@ admin.get('/o2o/stats', async (c) => {
       ORDER BY conversion_count DESC
     `).all();
     
-    // 4. Daily conversion trend (last 30 days)
+    // 4. Daily conversion trend (all available data)
     const dailyConversions = await c.env.DB.prepare(`
       SELECT 
         DATE(conversion_date) as conversion_day,
@@ -506,7 +506,6 @@ admin.get('/o2o/stats', async (c) => {
         COUNT(*) as conversions,
         SUM(amount) as revenue
       FROM o2o_conversions
-      WHERE conversion_date >= datetime('now', '-30 days')
       GROUP BY conversion_day, referral_source
       ORDER BY conversion_day ASC
     `).all();
@@ -525,7 +524,7 @@ admin.get('/o2o/stats', async (c) => {
       GROUP BY o.referral_source
     `).all();
     
-    // 6. SNS visit-to-conversion rate
+    // 6. SNS visit-to-conversion rate (all time)
     const snsConversionRate = await c.env.DB.prepare(`
       SELECT 
         s.channel,
@@ -535,7 +534,6 @@ admin.get('/o2o/stats', async (c) => {
       FROM sns_visits s
       LEFT JOIN o2o_conversions o ON o.referral_source = s.channel
         AND DATE(o.conversion_date) = s.visit_date
-      WHERE s.visit_date >= date('now', '-30 days')
       GROUP BY s.channel
     `).all();
     

@@ -138,6 +138,16 @@ async function loadDashboard() {
         } else {
             activityContainer.innerHTML = '<p class="text-center text-gray-500 py-4">최근 활동이 없습니다.</p>';
         }
+        
+        // Load user analytics charts
+        console.log('🔄 Loading user analytics charts...');
+        await loadUserAnalytics();
+        
+        // Load SNS and O2O analytics charts
+        console.log('🔄 Loading SNS and O2O analytics...');
+        await loadSNSStats();
+        await loadO2OStats();
+        
     } catch (error) {
         console.error('Dashboard load error:', error);
     }
