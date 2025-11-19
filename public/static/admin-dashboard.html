@@ -220,6 +220,34 @@
                     <i class="fas fa-chart-line text-sage mr-3"></i>대시보드
                 </h2>
                 
+                <!-- Visitor Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white hover-lift">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-purple-100 mb-1">오늘 방문자</p>
+                                <p class="text-4xl font-bold" id="stat-visitors-today">-</p>
+                                <p class="text-xs text-purple-200 mt-2">
+                                    <i class="fas fa-clock mr-1"></i>자정에 자동 리셋
+                                </p>
+                            </div>
+                            <i class="fas fa-users text-5xl opacity-20"></i>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg p-6 text-white hover-lift">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-blue-100 mb-1">전체 방문자</p>
+                                <p class="text-4xl font-bold" id="stat-visitors-total">-</p>
+                                <p class="text-xs text-blue-200 mt-2">
+                                    <i class="fas fa-chart-line mr-1"></i>누적 방문 수
+                                </p>
+                            </div>
+                            <i class="fas fa-globe text-5xl opacity-20"></i>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-sage hover-lift">
@@ -278,6 +306,46 @@
                 <h2 class="text-3xl font-bold text-dark-slate mb-6">
                     <i class="fas fa-users text-sage mr-3"></i>회원 관리
                 </h2>
+
+                <!-- User Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-sage hover-lift">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">전체 회원</p>
+                                <p class="text-3xl font-bold text-sage" id="user-stat-total">0</p>
+                            </div>
+                            <i class="fas fa-users text-4xl text-sage opacity-20"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover-lift">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">B2C 회원</p>
+                                <p class="text-3xl font-bold text-blue-600" id="user-stat-b2c">0</p>
+                            </div>
+                            <i class="fas fa-user text-4xl text-blue-500 opacity-20"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 hover-lift">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">B2B 회원</p>
+                                <p class="text-3xl font-bold text-green-600" id="user-stat-b2b">0</p>
+                            </div>
+                            <i class="fas fa-briefcase text-4xl text-green-500 opacity-20"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500 hover-lift">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">신규 가입 (7일)</p>
+                                <p class="text-3xl font-bold text-orange-600" id="user-stat-new">0</p>
+                            </div>
+                            <i class="fas fa-user-plus text-4xl text-orange-500 opacity-20"></i>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Search and Filter -->
                 <div class="bg-white rounded-xl shadow-md p-4 mb-6">
@@ -798,6 +866,6 @@
     </div>
 
     <!-- Main JavaScript -->
-    <script src="/static/admin-dashboard.js?v=20251119077"></script>
+    <script src="/static/admin-dashboard.js?v=20251119078"></script>
 </body>
 </html>

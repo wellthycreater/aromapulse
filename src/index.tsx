@@ -43,13 +43,20 @@ app.route('/api/auth', authRoutes);
 app.route('/api/products', productRoutes);
 app.route('/api/reviews', reviewRoutes);
 app.route('/api/patch', patchRoutes);
+// Admin specific routes must come BEFORE /api/admin to avoid conflicts
+app.route('/api/admin/dashboard', adminDashboardRoutes);
+app.route('/api/admin/users', adminUsersRoutes);
+app.route('/api/admin/blog', adminBlogRoutes);
+app.route('/api/admin/workshops', adminWorkshopsRoutes);
+app.route('/api/admin/classes', adminClassesRoutes);
+app.route('/api/admin-products', adminProductsRoutes);
+// General admin route (should be after specific admin routes)
 app.route('/api/admin', adminRoutes);
 app.route('/api/blog', blogRoutes);
 app.route('/api/workshops', workshopsRoutes);
 app.route('/api/bookings', bookingsRoutes);
 app.route('/api/reviews-api', reviewsApiRoutes);
 app.route('/api/activity', activityRoutes);
-app.route('/api/admin-products', adminProductsRoutes);
 app.route('/api/blog-analysis', blogAnalysisRoutes);
 app.route('/api/chatbot', chatbotRoutes);
 app.route('/api/blog-reviews', blogReviewsRoutes);
@@ -59,11 +66,6 @@ app.route('/api/users', usersRoutes);
 app.route('/api/visitors', visitorsRoutes);
 app.route('/api/oneday-classes', onedayClassesRoutes);
 app.route('/api/workshop-quotes', workshopQuotesRoutes);
-app.route('/api/admin/dashboard', adminDashboardRoutes);
-app.route('/api/admin/users', adminUsersRoutes);
-app.route('/api/admin/blog', adminBlogRoutes);
-app.route('/api/admin/workshops', adminWorkshopsRoutes);
-app.route('/api/admin/classes', adminClassesRoutes);
 
 // Health check
 app.get('/api/health', (c) => {

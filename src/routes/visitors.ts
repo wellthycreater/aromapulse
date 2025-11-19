@@ -128,14 +128,16 @@ visitors.get('/stats', async (c) => {
     `).bind(sevenDaysAgoStr).all();
     
     return c.json({
+      today_visitors: (todayStats as any)?.unique_visitors || 0,
+      total_visitors: (totalStats as any)?.total_unique_visitors || 0,
       today: {
-        visits: todayStats?.total_visits || 0,
-        unique_visitors: todayStats?.unique_visitors || 0,
+        visits: (todayStats as any)?.total_visits || 0,
+        unique_visitors: (todayStats as any)?.unique_visitors || 0,
         date: today
       },
       total: {
-        visits: totalStats?.total_visits || 0,
-        unique_visitors: totalStats?.total_unique_visitors || 0
+        visits: (totalStats as any)?.total_visits || 0,
+        unique_visitors: (totalStats as any)?.total_unique_visitors || 0
       },
       week: weekStats.results || []
     });

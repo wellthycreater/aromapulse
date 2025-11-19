@@ -1258,3 +1258,70 @@ async function crawlAllBlogComments() {
         btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i><span>모든 댓글 수집</span>';
     }
 }
+
+// ==================== Visitor Statistics ====================
+
+// Load Visitor Stats
+async function loadVisitorStats() {
+    try {
+        const response = await fetch('/api/visitors/stats');
+        const data = await response.json();
+        
+        // Update today visitors
+        document.getElementById('stat-visitors-today').textContent = data.today_visitors || 0;
+        
+        // Update total visitors
+        document.getElementById('stat-visitors-total').textContent = data.total_visitors || 0;
+        
+    } catch (error) {
+        console.error('Visitor stats load error:', error);
+        document.getElementById('stat-visitors-today').textContent = '0';
+        document.getElementById('stat-visitors-total').textContent = '0';
+    }
+}
+
+// ==================== User Management Statistics ====================
+
+// Load User Stats
+async function loadUserStats() {
+    try {
+        const response = await fetch('/api/admin/users/stats', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load user stats');
+        
+        const data = await response.json();
+        
+        // Update user stats cards in users section
+        document.getElementById('user-stat-total').textContent = data.total_users || 0;
+        document.getElementById('user-stat-b2c').textContent = data.b2c_users || 0;
+        document.getElementById('user-stat-b2b').textContent = data.b2b_users || 0;
+        document.getElementById('user-stat-new').textContent = data.new_users_7days || 0;
+        
+        // Also update dashboard total users
+        document.getElementById('stat-users').textContent = data.total_users || 0;
+        
+    } catch (error) {
+        console.error('User stats load error:', error);
+        document.getElementById('user-stat-total').textContent = '0';
+        document.getElementById('user-stat-b2c').textContent = '0';
+        document.getElementById('user-stat-b2b').textContent = '0';
+        document.getElementById('user-stat-new').textContent = '0';
+    }
+}
+
+// Update loadDashboard to include visitor stats
+const originalLoadDashboard = loadDashboard;
+async function loadDashboard() {
+    if (originalLoadDashboard) await originalLoadDashboard();
+    await loadVisitorStats();
+    await loadUserStats();
+}
+
+// Update loadUsers to include user stats
+const originalLoadUsers = loadUsers;
+async function loadUsers() {
+    await loadUserStats();
+    if (originalLoadUsers) await originalLoadUsers();
+}

@@ -3,6 +3,47 @@ import type { CloudflareBindings } from '../types';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
+// Get user statistics (must be before /:id route)
+app.get('/stats', async (c) => {
+  try {
+    const db = c.env.DB;
+    
+    // Total users
+    const totalResult = await db.prepare(
+      'SELECT COUNT(*) as count FROM users'
+    ).first();
+    
+    // B2C users
+    const b2cResult = await db.prepare(
+      "SELECT COUNT(*) as count FROM users WHERE user_type = 'B2C'"
+    ).first();
+    
+    // B2B users
+    const b2bResult = await db.prepare(
+      "SELECT COUNT(*) as count FROM users WHERE user_type = 'B2B'"
+    ).first();
+    
+    // New users in last 7 days
+    const newUsersResult = await db.prepare(
+      "SELECT COUNT(*) as count FROM users WHERE created_at >= datetime('now', '-7 days')"
+    ).first();
+    
+    return c.json({
+      total_users: (totalResult as any)?.count || 0,
+      b2c_users: (b2cResult as any)?.count || 0,
+      b2b_users: (b2bResult as any)?.count || 0,
+      new_users_7days: (newUsersResult as any)?.count || 0
+    });
+    
+  } catch (error: any) {
+    console.error('Get user stats error:', error);
+    return c.json({ 
+      error: '사용자 통계 조회 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 // Get all users with filters
 app.get('/', async (c) => {
   try {
