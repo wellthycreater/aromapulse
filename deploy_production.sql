@@ -42,7 +42,6 @@ CREATE TABLE users (
   life_situation TEXT,
   referral_source TEXT CHECK(referral_source IN ('direct', 'blog', 'instagram', 'youtube', 'kakao', 'naver', 'google', 'other', NULL)),
   is_active INTEGER DEFAULT 1,
-  email_verified INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_login_at DATETIME
@@ -53,7 +52,7 @@ INSERT INTO users SELECT
   b2c_category, b2c_subcategory, b2b_category, b2b_business_name, b2b_business_number, b2b_address,
   company_size, department, position, gender, age_group, region, address, occupation, life_situation,
   COALESCE(referral_source, NULL) as referral_source,
-  is_active, email_verified, created_at, updated_at, last_login_at
+  is_active, created_at, updated_at, last_login_at
 FROM users_backup;
 
 DROP TABLE users_backup;
