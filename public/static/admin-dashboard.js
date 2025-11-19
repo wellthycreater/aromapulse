@@ -1976,6 +1976,8 @@ loadVisitorStats = async function() {
 // Chart instances for user analytics
 let userTypeChart = null;
 let stressTypeChart = null;
+let b2cWorkStressChart = null;
+let b2cDailyStressChart = null;
 let b2bCategoryChart = null;
 let companySizeChart = null;
 let regionChart = null;
@@ -1994,6 +1996,7 @@ async function loadUserAnalytics() {
     console.log('📊 Loading user analytics...');
     
     try {
+        // Fetch main analytics
         const response = await fetch('/api/admin/users/analytics', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
@@ -2006,9 +2009,28 @@ async function loadUserAnalytics() {
         const data = await response.json();
         console.log('✅ User analytics data:', data);
         
-        // Render all charts with new data structure
+        // Fetch detailed B2C/B2B analytics from V2 endpoint
+        const v2Response = await fetch('/api/admin/users/analytics-v2', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (v2Response.ok) {
+            const v2Data = await v2Response.json();
+            console.log('✅ V2 analytics data:', v2Data);
+            
+            // Merge V2 data into main data
+            data.b2c_work_stress_occupations = v2Data.b2c_work_stress_occupations || [];
+            data.b2c_daily_stress_life_situations = v2Data.b2c_daily_stress_life_situations || [];
+            data.company_sizes = v2Data.company_sizes || [];
+        } else {
+            console.warn('⚠️ V2 analytics API failed:', v2Response.status);
+        }
+        
+        // Render all charts with merged data
         renderUserTypeChartNew(data);
         renderStressTypeChartNew(data);
+        renderB2cWorkStressChart(data);
+        renderB2cDailyStressChart(data);
         renderB2bCategoryChartNew(data);
         renderCompanySizeChartNew(data);
         renderRegionChartNew(data);
@@ -2397,6 +2419,110 @@ function renderStressTypeChartNew(data) {
             maintainAspectRatio: true,
             scales: {
                 y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// 2.5. B2C Work Stress Occupation Chart
+function renderB2cWorkStressChart(data) {
+    const ctx = document.getElementById('b2cWorkStressChart');
+    if (!ctx) return;
+    
+    if (!data.b2c_work_stress_occupations || data.b2c_work_stress_occupations.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const occupationMap = {
+        'office_it': '사무직/IT',
+        'service_retail': '서비스/판매직',
+        'medical_care': '의료/돌봄',
+        'education': '교육',
+        'manufacturing_logistics': '제조/물류',
+        'freelancer': '프리랜서',
+        'finance': '금융',
+        'manager': '관리직'
+    };
+    
+    const labels = data.b2c_work_stress_occupations.map(item => 
+        occupationMap[item.occupation] || item.occupation
+    );
+    const counts = data.b2c_work_stress_occupations.map(item => item.count);
+    
+    if (b2cWorkStressChart) b2cWorkStressChart.destroy();
+    
+    b2cWorkStressChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// 2.6. B2C Daily Stress Life Situation Chart
+function renderB2cDailyStressChart(data) {
+    const ctx = document.getElementById('b2cDailyStressChart');
+    if (!ctx) return;
+    
+    if (!data.b2c_daily_stress_life_situations || data.b2c_daily_stress_life_situations.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const lifeSituationMap = {
+        'student': '학생',
+        'parent': '육아맘/대디',
+        'homemaker': '주부/주부',
+        'job_seeker': '구직자',
+        'retiree': '은퇴자',
+        'caregiver': '간병인'
+    };
+    
+    const labels = data.b2c_daily_stress_life_situations.map(item => 
+        lifeSituationMap[item.life_situation] || item.life_situation
+    );
+    const counts = data.b2c_daily_stress_life_situations.map(item => item.count);
+    
+    if (b2cDailyStressChart) b2cDailyStressChart.destroy();
+    
+    b2cDailyStressChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: 'rgba(20, 184, 166, 0.8)',
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
             },
             plugins: {
                 legend: { display: false }

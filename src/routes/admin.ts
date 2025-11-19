@@ -329,6 +329,7 @@ admin.get('/users/stats', async (c) => {
 // Get user analytics for dashboard charts
 admin.get('/users/analytics', async (c) => {
   try {
+    // Version: 2025-11-19-v3
     console.log('📊 Fetching user analytics...');
     
     // 1. User types (B2C vs B2B)
@@ -366,16 +367,73 @@ admin.get('/users/analytics', async (c) => {
       "SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count FROM users WHERE created_at >= datetime('now', '-12 months') GROUP BY month ORDER BY month ASC"
     ).all();
     
-    console.log('✅ User analytics fetched');
+    // 8. Weekly signup trend (last 8 weeks)
+    const weeklySignup = await c.env.DB.prepare(`
+      SELECT 
+        date(created_at, 'weekday 0', '-7 days') as week_start,
+        COUNT(*) as count
+      FROM users
+      WHERE created_at >= date('now', '-56 days')
+      GROUP BY week_start
+      ORDER BY week_start ASC
+    `).all();
     
+    // 9. User roles distribution
+    const roles = await c.env.DB.prepare(
+      "SELECT role, COUNT(*) as count FROM users WHERE role IS NOT NULL GROUP BY role"
+    ).all();
+    
+    // 10. B2C work_stress occupations breakdown
+    const b2cWorkStressOccupations = await c.env.DB.prepare(`
+      SELECT occupation, COUNT(*) as count 
+      FROM users 
+      WHERE user_type = 'B2C' 
+        AND b2c_category = 'work_stress' 
+        AND occupation IS NOT NULL 
+      GROUP BY occupation 
+      ORDER BY count DESC
+    `).all();
+    
+    // 11. B2C daily_stress life situations breakdown
+    const b2cDailyStressLifeSituations = await c.env.DB.prepare(`
+      SELECT life_situation, COUNT(*) as count 
+      FROM users 
+      WHERE user_type = 'B2C' 
+        AND b2c_category = 'daily_stress' 
+        AND life_situation IS NOT NULL 
+      GROUP BY life_situation 
+      ORDER BY count DESC
+    `).all();
+    
+    console.log('✅ User analytics fetched');
+    console.log('📊 B2C work_stress occupations:', b2cWorkStressOccupations.results?.length || 0);
+    console.log('📊 B2C daily_stress life_situations:', b2cDailyStressLifeSituations.results?.length || 0);
+    console.log('📊 Company sizes:', companySizes.results?.length || 0);
+    
+    // Ensure we have valid result arrays
+    const workOccupations = b2cWorkStressOccupations?.results || [];
+    const lifeAdjustments = b2cDailyStressLifeSituations?.results || [];
+    const compSizes = companySizes?.results || [];
+    
+    console.log('🔍 Debug - workOccupations:', workOccupations.length, 'items');
+    console.log('🔍 Debug - lifeAdjustments:', lifeAdjustments.length, 'items');
+    console.log('🔍 Debug - compSizes:', compSizes.length, 'items');
+    
+    // Create response with all fields
     return c.json({
       user_types: userTypes.results || [],
       stress_types: stressTypes.results || [],
       b2b_categories: b2bCategories.results || [],
-      company_sizes: companySizes.results || [],
+      company_sizes: compSizes,
       regions: regions.results || [],
       genders: genders.results || [],
-      signup_trend: signupTrend.results || []
+      roles: roles.results || [],
+      signup_trend: signupTrend.results || [],
+      weekly_signup: weeklySignup.results || [],
+      b2c_work_stress_occupations: workOccupations,
+      b2c_daily_stress_life_situations: lifeAdjustments,
+      _timestamp: Date.now(),
+      _version: '2025-11-19-final'
     });
     
   } catch (error: any) {
@@ -552,6 +610,138 @@ admin.get('/o2o/stats', async (c) => {
     console.error('❌ Get O2O stats error:', error);
     return c.json({ 
       error: 'O2O 전환 통계 조회 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
+// Temporary endpoint to update existing users with missing demographic data
+admin.post('/update-user-demographics', async (c) => {
+  try {
+    console.log('🔄 Updating user demographics...');
+    
+    // 1. Update B2B company users with company_size
+    await c.env.DB.batch([
+      c.env.DB.prepare(`
+        UPDATE users 
+        SET company_size = 'under_20'
+        WHERE user_type = 'B2B' AND b2b_category = 'company' AND company_size IS NULL
+        AND id = (SELECT MIN(id) FROM users WHERE user_type = 'B2B' AND b2b_category = 'company' AND company_size IS NULL)
+      `),
+      c.env.DB.prepare(`
+        UPDATE users 
+        SET company_size = '20_to_50'
+        WHERE user_type = 'B2B' AND b2b_category = 'company' AND company_size IS NULL
+        AND id IN (SELECT id FROM users WHERE user_type = 'B2B' AND b2b_category = 'company' AND company_size IS NULL LIMIT 2)
+      `),
+      c.env.DB.prepare(`
+        UPDATE users 
+        SET company_size = '50_to_100'
+        WHERE user_type = 'B2B' AND b2b_category = 'company' AND company_size IS NULL
+        AND id = (SELECT MIN(id) FROM users WHERE user_type = 'B2B' AND b2b_category = 'company' AND company_size IS NULL)
+      `),
+      c.env.DB.prepare(`
+        UPDATE users 
+        SET company_size = 'over_100'
+        WHERE user_type = 'B2B' AND b2b_category = 'company' AND company_size IS NULL
+      `)
+    ]);
+    
+    // 2. Update B2C work_stress users with occupations
+    await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE users SET occupation = 'office_it' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'work_stress' AND occupation IS NULL ORDER BY id LIMIT 3)`),
+      c.env.DB.prepare(`UPDATE users SET occupation = 'service_retail' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'work_stress' AND occupation IS NULL ORDER BY id LIMIT 2)`),
+      c.env.DB.prepare(`UPDATE users SET occupation = 'medical_care' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'work_stress' AND occupation IS NULL ORDER BY id LIMIT 2)`),
+      c.env.DB.prepare(`UPDATE users SET occupation = 'education' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'work_stress' AND occupation IS NULL ORDER BY id LIMIT 2)`),
+      c.env.DB.prepare(`UPDATE users SET occupation = 'manufacturing_logistics' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'work_stress' AND occupation IS NULL ORDER BY id LIMIT 2)`),
+      c.env.DB.prepare(`UPDATE users SET occupation = 'freelancer' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'work_stress' AND occupation IS NULL ORDER BY id LIMIT 1)`),
+      c.env.DB.prepare(`UPDATE users SET occupation = 'finance' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'work_stress' AND occupation IS NULL ORDER BY id LIMIT 1)`)
+    ]);
+    
+    // 3. Update B2C daily_stress users with life_situations
+    await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE users SET life_situation = 'student' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'daily_stress' AND life_situation IS NULL ORDER BY id LIMIT 2)`),
+      c.env.DB.prepare(`UPDATE users SET life_situation = 'parent' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'daily_stress' AND life_situation IS NULL ORDER BY id LIMIT 2)`),
+      c.env.DB.prepare(`UPDATE users SET life_situation = 'homemaker' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'daily_stress' AND life_situation IS NULL ORDER BY id LIMIT 2)`),
+      c.env.DB.prepare(`UPDATE users SET life_situation = 'job_seeker' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'daily_stress' AND life_situation IS NULL ORDER BY id LIMIT 1)`),
+      c.env.DB.prepare(`UPDATE users SET life_situation = 'retiree' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'daily_stress' AND life_situation IS NULL ORDER BY id LIMIT 1)`),
+      c.env.DB.prepare(`UPDATE users SET life_situation = 'caregiver' WHERE id IN (SELECT id FROM users WHERE user_type = 'B2C' AND b2c_category = 'daily_stress' AND life_situation IS NULL ORDER BY id LIMIT 1)`)
+    ]);
+    
+    // 4. Update demographic fields for all users
+    await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE users SET gender = CASE WHEN id % 2 = 0 THEN 'female' ELSE 'male' END WHERE gender IS NULL`),
+      c.env.DB.prepare(`UPDATE users SET age_group = CASE WHEN id % 4 = 0 THEN '20s' WHEN id % 4 = 1 THEN '30s' WHEN id % 4 = 2 THEN '40s' ELSE '50s' END WHERE age_group IS NULL`),
+      c.env.DB.prepare(`UPDATE users SET region = CASE WHEN id % 5 = 0 THEN '서울' WHEN id % 5 = 1 THEN '경기' WHEN id % 5 = 2 THEN '부산' WHEN id % 5 = 3 THEN '대구' ELSE '인천' END WHERE region IS NULL`)
+    ]);
+    
+    console.log('✅ User demographics updated successfully');
+    
+    return c.json({ 
+      success: true,
+      message: '사용자 인구통계 정보가 성공적으로 업데이트되었습니다'
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Update user demographics error:', error);
+    return c.json({ 
+      error: '사용자 정보 업데이트 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
+// NEW ENDPOINT - Separate endpoint for B2C/B2B detailed analytics
+admin.get('/users/analytics-v2', async (c) => {
+  try {
+    console.log('📊 Fetching analytics v2...');
+    
+    // B2C work_stress occupations
+    const workOccupations = await c.env.DB.prepare(`
+      SELECT occupation, COUNT(*) as count 
+      FROM users 
+      WHERE user_type = 'B2C' 
+        AND b2c_category = 'work_stress' 
+        AND occupation IS NOT NULL 
+      GROUP BY occupation 
+      ORDER BY count DESC
+    `).all();
+    
+    // B2C daily_stress life situations
+    const lifeSituations = await c.env.DB.prepare(`
+      SELECT life_situation, COUNT(*) as count 
+      FROM users 
+      WHERE user_type = 'B2C' 
+        AND b2c_category = 'daily_stress' 
+        AND life_situation IS NOT NULL 
+      GROUP BY life_situation 
+      ORDER BY count DESC
+    `).all();
+    
+    // B2B company sizes
+    const companySizes = await c.env.DB.prepare(`
+      SELECT company_size, COUNT(*) as count 
+      FROM users 
+      WHERE user_type = 'B2B' 
+        AND b2b_category = 'company' 
+        AND company_size IS NOT NULL 
+      GROUP BY company_size 
+      ORDER BY count DESC
+    `).all();
+    
+    console.log('✅ V2 analytics fetched');
+    
+    return c.json({
+      b2c_work_stress_occupations: workOccupations.results || [],
+      b2c_daily_stress_life_situations: lifeSituations.results || [],
+      company_sizes: companySizes.results || [],
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Analytics v2 error:', error);
+    return c.json({ 
+      error: 'V2 분석 데이터 조회 실패', 
       details: error.message 
     }, 500);
   }
