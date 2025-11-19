@@ -864,8 +864,77 @@ function openBlogModal() {
     alert('블로그 작성 기능은 준비 중입니다.');
 }
 
-function openClassModal() {
-    openWorkshopModal(); // Same form structure
+// Open Class Modal
+function openClassModal(classData = null) {
+    const modal = document.getElementById('class-modal');
+    const title = document.getElementById('class-modal-title');
+    const form = document.getElementById('class-form');
+    
+    if (classData) {
+        title.textContent = '클래스 수정';
+        document.getElementById('class-id').value = classData.id;
+        document.getElementById('class-title').value = classData.title;
+        document.getElementById('class-description').value = classData.description;
+        document.getElementById('class-price').value = classData.price;
+        document.getElementById('class-duration').value = classData.duration;
+        document.getElementById('class-max-participants').value = classData.max_participants;
+        document.getElementById('class-location').value = classData.location;
+        document.getElementById('class-is-active').checked = classData.is_active === 1;
+    } else {
+        title.textContent = '클래스 등록';
+        form.reset();
+        document.getElementById('class-id').value = '';
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Close Class Modal
+function closeClassModal() {
+    document.getElementById('class-modal').classList.add('hidden');
+    document.getElementById('class-form').reset();
+}
+
+// Save Class
+async function saveClass(event) {
+    event.preventDefault();
+    
+    const classData = {
+        title: document.getElementById('class-title').value,
+        description: document.getElementById('class-description').value,
+        price: parseInt(document.getElementById('class-price').value),
+        duration: parseInt(document.getElementById('class-duration').value),
+        max_participants: parseInt(document.getElementById('class-max-participants').value),
+        location: document.getElementById('class-location').value,
+        is_active: document.getElementById('class-is-active').checked ? 1 : 0
+    };
+    
+    try {
+        const classId = document.getElementById('class-id').value;
+        const url = classId ? `/api/classes/${classId}` : '/api/classes';
+        const method = classId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(classData)
+        });
+        
+        if (response.ok) {
+            alert(classId ? '클래스가 수정되었습니다.' : '클래스가 등록되었습니다.');
+            closeClassModal();
+            loadClasses();
+        } else {
+            const error = await response.json();
+            alert('저장 실패: ' + (error.message || '알 수 없는 오류'));
+        }
+    } catch (error) {
+        console.error('Save class error:', error);
+        alert('저장 중 오류가 발생했습니다.');
+    }
 }
 
 // Save Product

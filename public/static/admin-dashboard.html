@@ -1031,6 +1031,69 @@
         </div>
     </div>
 
+    <!-- Class Modal -->
+    <div id="class-modal" class="hidden fixed inset-0 modal-backdrop z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-chalkboard-teacher mr-2"></i><span id="class-modal-title">클래스 등록</span>
+                    </h3>
+                    <button onclick="closeClassModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <form id="class-form" class="p-6" onsubmit="saveClass(event)">
+                    <input type="hidden" id="class-id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">클래스명</label>
+                            <input type="text" id="class-title" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">설명</label>
+                            <textarea id="class-description" rows="3" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">가격 (원)</label>
+                                <input type="number" id="class-price" required min="0" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">소요시간 (분)</label>
+                                <input type="number" id="class-duration" required min="0" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">최대 참여자</label>
+                                <input type="number" id="class-max-participants" required min="1" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">지역</label>
+                                <input type="text" id="class-location" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="class-is-active" checked class="w-5 h-5 text-purple-600 rounded">
+                                <span class="text-sm font-semibold text-gray-700">활성</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex space-x-3">
+                        <button type="submit" class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90 font-semibold">
+                            <i class="fas fa-save mr-2"></i>저장
+                        </button>
+                        <button type="button" onclick="closeClassModal()" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-semibold">
+                            <i class="fas fa-times mr-2"></i>취소
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Workshop Modal -->
     <div id="workshop-modal" class="hidden fixed inset-0 modal-backdrop z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
