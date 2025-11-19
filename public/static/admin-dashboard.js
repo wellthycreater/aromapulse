@@ -1445,12 +1445,15 @@ async function loadUserStats() {
     }
 }
 
-// Update loadDashboard to include visitor stats
+// Update loadDashboard to include visitor stats, user analytics, SNS, and O2O
 const originalLoadDashboard = loadDashboard;
 async function loadDashboard() {
     if (originalLoadDashboard) await originalLoadDashboard();
     await loadVisitorStats();
     await loadUserStats();
+    await loadUserAnalytics();
+    await loadSNSStats();
+    await loadO2OStats();
 }
 
 // Update loadUsers to include user stats
@@ -1968,6 +1971,13 @@ let companySizeChart = null;
 let regionChart = null;
 let genderChart = null;
 let monthlySignupChart = null;
+
+// Chart instances for SNS and O2O analytics
+let snsChannelChart = null;
+let snsCTRChart = null;
+let o2oLocationChart = null;
+let o2oConversionRateChart = null;
+let dailySNSTrendChart = null;
 
 // Load User Analytics
 async function loadUserAnalytics() {
@@ -2639,6 +2649,391 @@ function renderMonthlySignupChartNew(data) {
 }
 
 console.log('✅ New user analytics chart functions loaded');
+
+// ==================== SNS Channel & O2O Conversion Analytics ====================
+
+// Load SNS Statistics
+async function loadSNSStats() {
+    console.log('📊 Loading SNS statistics...');
+    
+    try {
+        const response = await fetch('/api/admin/sns/stats', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) {
+            console.error('Failed to fetch SNS stats');
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('✅ SNS stats loaded:', data);
+        
+        // Render charts
+        renderSNSChannelChart(data);
+        renderSNSCTRChart(data);
+        renderDailySNSTrendChart(data);
+        
+    } catch (error) {
+        console.error('❌ Load SNS stats error:', error);
+    }
+}
+
+// Load O2O Conversion Statistics
+async function loadO2OStats() {
+    console.log('📊 Loading O2O conversion statistics...');
+    
+    try {
+        const response = await fetch('/api/admin/o2o/stats', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) {
+            console.error('Failed to fetch O2O stats');
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('✅ O2O stats loaded:', data);
+        
+        // Render charts
+        renderO2OLocationChart(data);
+        renderO2OConversionRateChart(data);
+        
+    } catch (error) {
+        console.error('❌ Load O2O stats error:', error);
+    }
+}
+
+// Render SNS Channel Traffic Chart
+function renderSNSChannelChart(data) {
+    const ctx = document.getElementById('snsChannelChart');
+    if (!ctx) return;
+    
+    if (snsChannelChart) {
+        snsChannelChart.destroy();
+    }
+    
+    const channelLabels = {
+        'blog': '블로그',
+        'instagram': '인스타그램',
+        'youtube': '유튜브'
+    };
+    
+    const labels = data.channel_totals.map(item => channelLabels[item.channel] || item.channel);
+    const visitors = data.channel_totals.map(item => item.total_visitors);
+    const clicks = data.channel_totals.map(item => item.total_clicks);
+    
+    snsChannelChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '총 방문자',
+                    data: visitors,
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: '클릭 수',
+                    data: clicks,
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            if (context.datasetIndex === 0) {
+                                const channel = data.channel_totals[context.dataIndex];
+                                return `고유 방문자: ${channel.total_unique}\nCTR: ${channel.ctr}%`;
+                            }
+                            return '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Render SNS Click-Through Rate Chart
+function renderSNSCTRChart(data) {
+    const ctx = document.getElementById('snsCTRChart');
+    if (!ctx) return;
+    
+    if (snsCTRChart) {
+        snsCTRChart.destroy();
+    }
+    
+    const channelLabels = {
+        'blog': '블로그',
+        'instagram': '인스타그램',
+        'youtube': '유튜브'
+    };
+    
+    const labels = data.channel_totals.map(item => channelLabels[item.channel] || item.channel);
+    const ctrValues = data.channel_totals.map(item => parseFloat(item.ctr) || 0);
+    
+    const colors = [
+        'rgba(59, 130, 246, 0.7)',    // Blue for blog
+        'rgba(236, 72, 153, 0.7)',    // Pink for instagram
+        'rgba(239, 68, 68, 0.7)'      // Red for youtube
+    ];
+    
+    snsCTRChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'CTR (%)',
+                data: ctrValues,
+                backgroundColor: colors,
+                borderColor: 'white',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: true, position: 'right' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const channel = data.channel_totals[context.dataIndex];
+                            return [
+                                `CTR: ${context.parsed}%`,
+                                `방문자: ${channel.total_visitors}`,
+                                `클릭: ${channel.total_clicks}`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Render Daily SNS Trend Chart
+function renderDailySNSTrendChart(data) {
+    const ctx = document.getElementById('dailySNSTrendChart');
+    if (!ctx) return;
+    
+    if (dailySNSTrendChart) {
+        dailySNSTrendChart.destroy();
+    }
+    
+    // Group data by date and channel
+    const dateMap = {};
+    data.daily_visits.forEach(item => {
+        if (!dateMap[item.visit_date]) {
+            dateMap[item.visit_date] = { blog: 0, instagram: 0, youtube: 0 };
+        }
+        dateMap[item.visit_date][item.channel] = item.visitor_count;
+    });
+    
+    const dates = Object.keys(dateMap).sort();
+    const blogData = dates.map(date => dateMap[date].blog);
+    const instagramData = dates.map(date => dateMap[date].instagram);
+    const youtubeData = dates.map(date => dateMap[date].youtube);
+    
+    dailySNSTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates.map(date => date.substring(5)), // Show MM-DD
+            datasets: [
+                {
+                    label: '블로그',
+                    data: blogData,
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: '인스타그램',
+                    data: instagramData,
+                    borderColor: 'rgba(236, 72, 153, 1)',
+                    backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: '유튜브',
+                    data: youtubeData,
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        }
+    });
+}
+
+// Render O2O Conversion by Location Chart
+function renderO2OLocationChart(data) {
+    const ctx = document.getElementById('o2oLocationChart');
+    if (!ctx) return;
+    
+    if (o2oLocationChart) {
+        o2oLocationChart.destroy();
+    }
+    
+    const locations = data.conversions_by_location.map(item => item.workshop_location);
+    const conversionCounts = data.conversions_by_location.map(item => item.conversion_count);
+    const revenues = data.conversions_by_location.map(item => item.total_revenue);
+    
+    o2oLocationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: locations,
+            datasets: [{
+                label: '전환 수',
+                data: conversionCounts,
+                backgroundColor: 'rgba(249, 115, 22, 0.6)',
+                borderColor: 'rgba(249, 115, 22, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y', // Horizontal bar chart
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const location = data.conversions_by_location[context.dataIndex];
+                            const avgRevenue = Math.round(location.avg_revenue || 0);
+                            return [
+                                `총 매출: ${location.total_revenue.toLocaleString()}원`,
+                                `평균 매출: ${avgRevenue.toLocaleString()}원`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Render O2O Conversion Rate by SNS Channel Chart
+function renderO2OConversionRateChart(data) {
+    const ctx = document.getElementById('o2oConversionRateChart');
+    if (!ctx) return;
+    
+    if (o2oConversionRateChart) {
+        o2oConversionRateChart.destroy();
+    }
+    
+    const channelLabels = {
+        'blog': '블로그',
+        'instagram': '인스타그램',
+        'youtube': '유튜브'
+    };
+    
+    const labels = data.conversions_by_source.map(item => 
+        channelLabels[item.referral_source] || item.referral_source
+    );
+    const conversionCounts = data.conversions_by_source.map(item => item.conversion_count);
+    const revenues = data.conversions_by_source.map(item => item.total_revenue);
+    
+    o2oConversionRateChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '전환 수',
+                    data: conversionCounts,
+                    backgroundColor: 'rgba(147, 51, 234, 0.6)',
+                    borderColor: 'rgba(147, 51, 234, 1)',
+                    borderWidth: 2,
+                    yAxisID: 'y'
+                },
+                {
+                    label: '총 매출 (만원)',
+                    data: revenues.map(r => Math.round(r / 10000)), // Convert to 만원
+                    backgroundColor: 'rgba(14, 165, 233, 0.6)',
+                    borderColor: 'rgba(14, 165, 233, 1)',
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: '전환 수' }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: '매출 (만원)' },
+                    grid: { drawOnChartArea: false }
+                }
+            },
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const source = data.conversions_by_source[context.dataIndex];
+                            if (context.datasetIndex === 1) {
+                                return `실제 매출: ${source.total_revenue.toLocaleString()}원`;
+                            }
+                            return '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+console.log('✅ SNS and O2O analytics functions loaded');
 
 // Chart instances for occupation/life situation
 let occupationChart = null;

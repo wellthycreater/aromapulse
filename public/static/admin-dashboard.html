@@ -387,6 +387,57 @@
                     </div>
                 </div>
                 
+                <!-- SNS Channel & O2O Conversion Section -->
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                        <i class="fas fa-share-alt text-sage mr-2"></i>SNS 채널 유입 및 O2O 전환 분석
+                    </h3>
+                    
+                    <!-- SNS Channel Traffic -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-chart-bar text-blue-500 mr-2"></i>SNS 채널별 유입 (최근 30일)
+                            </h4>
+                            <canvas id="snsChannelChart" style="max-height: 250px;"></canvas>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-mouse-pointer text-green-500 mr-2"></i>SNS 클릭률 (CTR)
+                            </h4>
+                            <canvas id="snsCTRChart" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- O2O Conversion Metrics -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-store-alt text-orange-500 mr-2"></i>온라인→오프라인 전환 (공방별)
+                            </h4>
+                            <canvas id="o2oLocationChart" style="max-height: 250px;"></canvas>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-funnel-dollar text-purple-500 mr-2"></i>SNS별 O2O 전환율
+                            </h4>
+                            <canvas id="o2oConversionRateChart" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Daily SNS Trend -->
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-chart-area text-indigo-500 mr-2"></i>일별 SNS 유입 추이 (최근 30일)
+                            </h4>
+                            <canvas id="dailySNSTrendChart" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Recent Activity Row -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <!-- Recent Users -->

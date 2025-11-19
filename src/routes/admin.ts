@@ -387,4 +387,176 @@ admin.get('/users/analytics', async (c) => {
   }
 });
 
+// SNS Channel Statistics
+admin.get('/sns/stats', async (c) => {
+  try {
+    console.log('📊 Fetching SNS channel stats...');
+    
+    // 1. Daily SNS visits (last 30 days)
+    const dailyVisits = await c.env.DB.prepare(`
+      SELECT 
+        visit_date,
+        channel,
+        visitor_count,
+        unique_visitors,
+        click_through
+      FROM sns_visits
+      WHERE visit_date >= date('now', '-30 days')
+      ORDER BY visit_date ASC, channel ASC
+    `).all();
+    
+    // 2. Total visitors by channel
+    const channelTotals = await c.env.DB.prepare(`
+      SELECT 
+        channel,
+        SUM(visitor_count) as total_visitors,
+        SUM(unique_visitors) as total_unique,
+        SUM(click_through) as total_clicks,
+        ROUND(CAST(SUM(click_through) AS REAL) / SUM(visitor_count) * 100, 2) as ctr
+      FROM sns_visits
+      WHERE visit_date >= date('now', '-30 days')
+      GROUP BY channel
+      ORDER BY total_visitors DESC
+    `).all();
+    
+    // 3. Recent trends (last 7 days vs previous 7 days)
+    const recentTrends = await c.env.DB.prepare(`
+      SELECT 
+        channel,
+        SUM(CASE WHEN visit_date >= date('now', '-7 days') THEN visitor_count ELSE 0 END) as recent_week,
+        SUM(CASE WHEN visit_date >= date('now', '-14 days') AND visit_date < date('now', '-7 days') THEN visitor_count ELSE 0 END) as previous_week
+      FROM sns_visits
+      WHERE visit_date >= date('now', '-14 days')
+      GROUP BY channel
+    `).all();
+    
+    // 4. User referral sources distribution
+    const referralSources = await c.env.DB.prepare(`
+      SELECT 
+        referral_source,
+        COUNT(*) as user_count
+      FROM users
+      WHERE referral_source IS NOT NULL
+      GROUP BY referral_source
+      ORDER BY user_count DESC
+    `).all();
+    
+    console.log('✅ SNS stats fetched');
+    
+    return c.json({
+      daily_visits: dailyVisits.results || [],
+      channel_totals: channelTotals.results || [],
+      recent_trends: recentTrends.results || [],
+      referral_sources: referralSources.results || []
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Get SNS stats error:', error);
+    return c.json({ 
+      error: 'SNS 통계 조회 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
+// O2O Conversion Statistics
+admin.get('/o2o/stats', async (c) => {
+  try {
+    console.log('📊 Fetching O2O conversion stats...');
+    
+    // 1. Total conversions by referral source
+    const conversionsBySource = await c.env.DB.prepare(`
+      SELECT 
+        referral_source,
+        COUNT(*) as conversion_count,
+        SUM(amount) as total_revenue
+      FROM o2o_conversions
+      GROUP BY referral_source
+      ORDER BY conversion_count DESC
+    `).all();
+    
+    // 2. Conversions by type
+    const conversionsByType = await c.env.DB.prepare(`
+      SELECT 
+        conversion_type,
+        COUNT(*) as count,
+        SUM(amount) as revenue
+      FROM o2o_conversions
+      GROUP BY conversion_type
+      ORDER BY count DESC
+    `).all();
+    
+    // 3. Conversions by workshop location
+    const conversionsByLocation = await c.env.DB.prepare(`
+      SELECT 
+        workshop_location,
+        COUNT(*) as conversion_count,
+        SUM(amount) as total_revenue,
+        AVG(amount) as avg_revenue
+      FROM o2o_conversions
+      GROUP BY workshop_location
+      ORDER BY conversion_count DESC
+    `).all();
+    
+    // 4. Daily conversion trend (last 30 days)
+    const dailyConversions = await c.env.DB.prepare(`
+      SELECT 
+        DATE(conversion_date) as conversion_day,
+        referral_source,
+        COUNT(*) as conversions,
+        SUM(amount) as revenue
+      FROM o2o_conversions
+      WHERE conversion_date >= datetime('now', '-30 days')
+      GROUP BY conversion_day, referral_source
+      ORDER BY conversion_day ASC
+    `).all();
+    
+    // 5. Conversion funnel metrics
+    const funnelMetrics = await c.env.DB.prepare(`
+      SELECT 
+        o.referral_source,
+        COUNT(DISTINCT u.id) as users_from_source,
+        COUNT(DISTINCT o.user_id) as converted_users,
+        COUNT(o.id) as total_conversions,
+        ROUND(CAST(COUNT(DISTINCT o.user_id) AS REAL) / COUNT(DISTINCT u.id) * 100, 2) as conversion_rate
+      FROM users u
+      LEFT JOIN o2o_conversions o ON u.id = o.user_id
+      WHERE u.referral_source IS NOT NULL
+      GROUP BY o.referral_source
+    `).all();
+    
+    // 6. SNS visit-to-conversion rate
+    const snsConversionRate = await c.env.DB.prepare(`
+      SELECT 
+        s.channel,
+        SUM(s.click_through) as total_clicks,
+        COUNT(o.id) as conversions,
+        ROUND(CAST(COUNT(o.id) AS REAL) / SUM(s.click_through) * 100, 2) as click_to_conversion_rate
+      FROM sns_visits s
+      LEFT JOIN o2o_conversions o ON o.referral_source = s.channel
+        AND DATE(o.conversion_date) = s.visit_date
+      WHERE s.visit_date >= date('now', '-30 days')
+      GROUP BY s.channel
+    `).all();
+    
+    console.log('✅ O2O stats fetched');
+    
+    return c.json({
+      conversions_by_source: conversionsBySource.results || [],
+      conversions_by_type: conversionsByType.results || [],
+      conversions_by_location: conversionsByLocation.results || [],
+      daily_conversions: dailyConversions.results || [],
+      funnel_metrics: funnelMetrics.results || [],
+      sns_conversion_rate: snsConversionRate.results || []
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Get O2O stats error:', error);
+    return c.json({ 
+      error: 'O2O 전환 통계 조회 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 export default admin;
