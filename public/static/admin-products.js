@@ -1741,8 +1741,45 @@ async function loadDashboardStats() {
     // 최근 댓글 렌더링
     renderRecentComments(data.recent.comments || []);
     
+    // 방문자 통계 로드
+    loadVisitorStats();
+    
   } catch (error) {
     console.error('대시보드 통계 로드 오류:', error);
+  }
+}
+
+// 방문자 통계 로드
+async function loadVisitorStats() {
+  try {
+    const response = await fetch('/api/visitors/stats');
+    
+    if (!response.ok) {
+      console.error('방문자 통계 조회 실패');
+      return;
+    }
+    
+    const data = await response.json();
+    
+    // 오늘 통계
+    document.getElementById('stat-today-visits').textContent = data.today.visits || 0;
+    document.getElementById('stat-today-unique').textContent = data.today.unique_visitors || 0;
+    
+    // 전체 통계
+    document.getElementById('stat-total-visits').textContent = data.total.visits || 0;
+    document.getElementById('stat-total-unique').textContent = data.total.unique_visitors || 0;
+    
+    // 7일 평균 계산
+    if (data.week && data.week.length > 0) {
+      const weekTotal = data.week.reduce((sum, day) => sum + (day.total_visits || 0), 0);
+      const weekAvg = Math.round(weekTotal / data.week.length);
+      document.getElementById('stat-week-avg').textContent = weekAvg;
+    } else {
+      document.getElementById('stat-week-avg').textContent = 0;
+    }
+    
+  } catch (error) {
+    console.error('방문자 통계 로드 오류:', error);
   }
 }
 

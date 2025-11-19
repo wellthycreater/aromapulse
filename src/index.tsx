@@ -21,6 +21,7 @@ import blogReviewsRoutes from './routes/blog-reviews';
 import ordersRoutes from './routes/orders';
 import userRoutes from './routes/user';
 import usersRoutes from './routes/users';
+import visitorsRoutes from './routes/visitors';
 import onedayClassesRoutes from './routes/oneday-classes';
 import workshopQuotesRoutes from './routes/workshop-quotes';
 
@@ -50,6 +51,7 @@ app.route('/api/blog-reviews', blogReviewsRoutes);
 app.route('/api/orders', ordersRoutes);
 app.route('/api/user', userRoutes);
 app.route('/api/users', usersRoutes);
+app.route('/api/visitors', visitorsRoutes);
 app.route('/api/oneday-classes', onedayClassesRoutes);
 app.route('/api/workshop-quotes', workshopQuotesRoutes);
 
@@ -876,6 +878,9 @@ app.get('/', (c) => {
             }, 2000); // 2초 후 실행
         });
         </script>
+        
+        <!-- Visitor Tracking -->
+        <script src="/static/visitor-tracker.js"></script>
     </body>
     </html>
   `);
