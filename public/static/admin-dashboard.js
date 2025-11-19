@@ -3193,7 +3193,16 @@ function renderO2OLocationChart(data) {
 // Render O2O Conversion Rate by SNS Channel Chart
 function renderO2OConversionRateChart(data) {
     const ctx = document.getElementById('o2oConversionRateChart');
-    if (!ctx) return;
+    if (!ctx) {
+        console.warn('⚠️ o2oConversionRateChart canvas not found');
+        return;
+    }
+    
+    if (!data || !data.conversions_by_source || data.conversions_by_source.length === 0) {
+        console.warn('⚠️ No conversions_by_source data');
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><p class="text-gray-400">데이터 없음</p></div>';
+        return;
+    }
     
     if (o2oConversionRateChart) {
         o2oConversionRateChart.destroy();
@@ -3208,8 +3217,10 @@ function renderO2OConversionRateChart(data) {
     const labels = data.conversions_by_source.map(item => 
         channelLabels[item.referral_source] || item.referral_source
     );
-    const conversionCounts = data.conversions_by_source.map(item => item.conversion_count);
-    const revenues = data.conversions_by_source.map(item => item.total_revenue);
+    const conversionCounts = data.conversions_by_source.map(item => item.conversion_count || 0);
+    const revenues = data.conversions_by_source.map(item => item.total_revenue || 0);
+    
+    console.log('📊 Rendering O2O Conversion Rate Chart:', { labels, conversionCounts, revenues });
     
     o2oConversionRateChart = new Chart(ctx, {
         type: 'bar',
@@ -3774,6 +3785,7 @@ async function loadO2OStats() {
         
         renderO2OLocationChart(data);
         renderO2OConversionChart(data);
+        renderO2OConversionRateChart(data);
         
     } catch (error) {
         console.error('❌ O2O stats error:', error);
