@@ -19,6 +19,10 @@ let currentMainTab = 'products'; // 'products' 또는 'classes'
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
+  
+  // 대시보드를 기본 탭으로 설정
+  switchTab('dashboard');
+  
   loadProducts();
   loadBlogPosts();
   loadDashboardStats(); // 대시보드 통계 로드
@@ -61,38 +65,80 @@ document.addEventListener('DOMContentLoaded', () => {
 function switchTab(tab) {
   currentTab = tab;
   
-  // 탭 버튼 스타일 업데이트
-  document.querySelectorAll('.tab-button').forEach(btn => {
-    btn.classList.remove('active', 'border-purple-600', 'text-purple-600');
-    btn.classList.add('border-transparent', 'text-gray-500');
+  console.log('[switchTab] 탭 전환:', tab);
+  
+  // 모든 탭 버튼 스타일 초기화
+  document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+    btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white', 'shadow-lg');
+    btn.classList.add('text-gray-700', 'hover:bg-gray-100');
   });
   
+  // 활성 탭 스타일 적용
   const activeTab = document.getElementById(`tab-${tab}`);
-  activeTab.classList.add('active', 'border-purple-600', 'text-purple-600');
-  activeTab.classList.remove('border-transparent', 'text-gray-500');
+  if (activeTab) {
+    activeTab.classList.remove('text-gray-700', 'hover:bg-gray-100');
+    activeTab.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white', 'shadow-lg');
+  }
   
-  // 섹션 표시/숨김
-  document.getElementById('dashboard-section').classList.add('hidden');
-  document.getElementById('products-grid').style.display = 'none';
-  document.getElementById('blog-management-section').classList.add('hidden');
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('empty-state').style.display = 'none';
-  document.getElementById('product-search-filter').style.display = 'none';
+  // 모든 섹션 숨기기
+  const dashboardSection = document.getElementById('dashboard-section');
+  const productsGrid = document.getElementById('products-grid');
+  const blogSection = document.getElementById('blog-management-section');
+  const loadingEl = document.getElementById('loading');
+  const emptyState = document.getElementById('empty-state');
+  const productSearchFilter = document.getElementById('product-search-filter');
+  const contentClasses = document.getElementById('content-classes');
+  const contentOnedayClasses = document.getElementById('content-oneday-classes');
   
-  // 대시보드 탭
+  if (dashboardSection) dashboardSection.classList.add('hidden');
+  if (productsGrid) productsGrid.style.display = 'none';
+  if (blogSection) blogSection.classList.add('hidden');
+  if (loadingEl) loadingEl.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'none';
+  if (productSearchFilter) productSearchFilter.style.display = 'none';
+  if (contentClasses) contentClasses.style.display = 'none';
+  if (contentOnedayClasses) contentOnedayClasses.style.display = 'none';
+  
+  // 선택된 탭에 따라 섹션 표시
   if (tab === 'dashboard') {
-    document.getElementById('dashboard-section').classList.remove('hidden');
+    console.log('[switchTab] 대시보드 탭 표시');
+    if (dashboardSection) dashboardSection.classList.remove('hidden');
     loadDashboardStats(); // 통계 새로고침
   } 
-  // 블로그 관리 탭인 경우
   else if (tab === 'blog') {
-    document.getElementById('blog-management-section').classList.remove('hidden');
+    console.log('[switchTab] 블로그 탭 활성화');
+    if (blogSection) {
+      blogSection.classList.remove('hidden');
+      console.log('[switchTab] 블로그 섹션 표시 완료');
+    } else {
+      console.error('[switchTab] 블로그 섹션 요소를 찾을 수 없습니다');
+    }
+    loadBlogPosts(); // 블로그 포스트 로드
   } 
-  // 제품 목록 탭
-  else {
-    document.getElementById('products-grid').style.display = 'grid';
-    document.getElementById('product-search-filter').style.display = 'block';
-    // 제품 필터링 및 렌더링
+  else if (tab === 'classes') {
+    console.log('[switchTab] 워크샵 탭 표시');
+    if (contentClasses) {
+      contentClasses.style.display = 'block';
+      loadClasses(); // 클래스 목록 로드
+    }
+  }
+  else if (tab === 'oneday-classes') {
+    console.log('[switchTab] 원데이 클래스 탭 표시');
+    if (contentOnedayClasses) {
+      contentOnedayClasses.style.display = 'block';
+      loadOnedayClasses(); // 원데이 클래스 목록 로드
+    }
+  }
+  else if (tab === 'products' || tab === 'all' || tab === 'symptom_care' || tab === 'refresh') {
+    console.log('[switchTab] 제품 탭 표시:', tab);
+    // 제품 관련 탭 - 'products'는 'all'로 처리
+    if (tab === 'products') {
+      currentTab = 'all';
+    } else {
+      currentTab = tab;
+    }
+    if (productsGrid) productsGrid.style.display = 'grid';
+    if (productSearchFilter) productSearchFilter.style.display = 'block';
     filterAndRenderProducts();
   }
 }
@@ -272,8 +318,13 @@ function toggleProductFields() {
 
 // 인증 확인
 async function checkAuth() {
+  console.log('[checkAuth] 인증 확인 시작');
+  
   const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
+  console.log('[checkAuth] 토큰 존재:', !!token);
+  
   if (!token) {
+    console.log('[checkAuth] 토큰 없음 - 로그인 페이지로 이동');
     alert('로그인이 필요합니다.');
     window.location.href = '/static/admin-login.html';
     return false;
@@ -283,37 +334,61 @@ async function checkAuth() {
     // JWT 토큰 디코딩 (간단한 방식)
     const payload = JSON.parse(atob(token.split('.')[1]));
     const userId = payload.userId;
+    console.log('[checkAuth] 토큰 디코딩 성공 - User ID:', userId);
+    
+    // 토큰 만료 확인
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < now) {
+      console.log('[checkAuth] 토큰 만료됨:', new Date(payload.exp * 1000));
+      throw new Error('토큰이 만료되었습니다');
+    }
+    console.log('[checkAuth] 토큰 유효 - 만료:', payload.exp ? new Date(payload.exp * 1000) : 'N/A');
     
     // 사용자 정보 조회
+    console.log('[checkAuth] 사용자 정보 조회 API 호출...');
     const response = await fetch(`/api/auth/me/${userId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
+    console.log('[checkAuth] API 응답 상태:', response.status);
+    
     if (!response.ok) {
-      throw new Error('인증 실패');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[checkAuth] API 오류:', errorData);
+      throw new Error(errorData.error || '인증 실패');
     }
     
     const data = await response.json();
     const user = data.user || data;
+    console.log('[checkAuth] 사용자 정보:', user.email, '/ role:', user.role);
     
     // 관리자 권한 확인 (role이 'admin' 또는 'super_admin'인 경우만 허용)
     if (user.role !== 'admin' && user.role !== 'super_admin') {
+      console.error('[checkAuth] 권한 부족 - role:', user.role);
       alert('관리자 권한이 필요합니다.\n\n관리자 계정으로 로그인해주세요.');
-      localStorage.removeItem('adminToken'); localStorage.removeItem('auth_token');
+      localStorage.removeItem('adminToken'); 
+      localStorage.removeItem('auth_token');
       window.location.href = '/static/admin-login.html';
       return false;
     }
     
+    console.log('[checkAuth] 인증 성공 ✅');
+    
     // 사용자 정보 표시 (회사명으로 고정)
-    document.getElementById('user-name').textContent = '웰씨코리아';
+    const userNameEl = document.getElementById('user-name');
+    if (userNameEl) {
+      userNameEl.textContent = '웰씨코리아';
+    }
     
     return true;
   } catch (error) {
-    console.error('인증 오류:', error);
-    alert('인증에 실패했습니다. 다시 로그인해주세요.');
-    localStorage.removeItem('adminToken'); localStorage.removeItem('auth_token');
+    console.error('[checkAuth] 인증 오류:', error.message);
+    console.error('[checkAuth] 상세:', error);
+    alert('인증에 실패했습니다. 다시 로그인해주세요.\n\n오류: ' + error.message);
+    localStorage.removeItem('adminToken'); 
+    localStorage.removeItem('auth_token');
     window.location.href = '/static/admin-login.html';
     return false;
   }
@@ -321,28 +396,36 @@ async function checkAuth() {
 
 // 제품 목록 로드
 async function loadProducts() {
+  console.log('[loadProducts] 제품 로드 시작');
   const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   const loadingEl = document.getElementById('loading');
   const gridEl = document.getElementById('products-grid');
   
-  loadingEl.style.display = 'block';
-  gridEl.innerHTML = '';
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (gridEl) gridEl.innerHTML = '';
   
   try {
+    console.log('[loadProducts] API 호출: /api/admin-products');
     const response = await fetch('/api/admin-products', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
+    console.log('[loadProducts] API 응답 상태:', response.status);
+    
     if (!response.ok) {
-      throw new Error('제품 목록 로드 실패');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[loadProducts] API 오류:', errorData);
+      throw new Error(errorData.error || '제품 목록 로드 실패');
     }
     
     const data = await response.json();
     currentProducts = data.products || [];
     
-    loadingEl.style.display = 'none';
+    console.log('[loadProducts] 로드된 제품 수:', currentProducts.length);
+    
+    if (loadingEl) loadingEl.style.display = 'none';
     
     // 제품 개수 업데이트
     updateProductCounts();
@@ -350,15 +433,20 @@ async function loadProducts() {
     // 제품 필터링 및 렌더링
     filterAndRenderProducts();
     
+    console.log('[loadProducts] 제품 로드 완료');
+    
   } catch (error) {
-    console.error('제품 로드 오류:', error);
-    loadingEl.style.display = 'none';
-    gridEl.innerHTML = `
-      <div class="col-span-full text-center py-12 text-red-500">
-        <i class="fas fa-exclamation-circle text-6xl mb-4"></i>
-        <p class="text-lg">제품 목록을 불러오는 중 오류가 발생했습니다.</p>
-      </div>
-    `;
+    console.error('[loadProducts] 제품 로드 오류:', error);
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (gridEl) {
+      gridEl.innerHTML = `
+        <div class="col-span-full text-center py-12 text-red-500">
+          <i class="fas fa-exclamation-circle text-6xl mb-4"></i>
+          <p class="text-lg">제품 목록을 불러오는 중 오류가 발생했습니다.</p>
+          <p class="text-sm text-gray-600 mt-2">${error.message}</p>
+        </div>
+      `;
+    }
   }
 }
 
@@ -884,14 +972,18 @@ function logout() {
 
 // 블로그 게시물 목록 로드
 async function loadBlogPosts() {
+  console.log('[loadBlogPosts] 블로그 포스트 로드 시작');
   const token = localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   
   try {
+    console.log('[loadBlogPosts] API 호출 중...');
     const response = await fetch('/api/blog-reviews/posts', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
+    
+    console.log('[loadBlogPosts] API 응답 상태:', response.status);
     
     if (!response.ok) {
       throw new Error('블로그 게시물 목록 로드 실패');
@@ -900,8 +992,14 @@ async function loadBlogPosts() {
     const data = await response.json();
     blogPosts = data.posts || [];
     
+    console.log('[loadBlogPosts] 로드된 포스트 수:', blogPosts.length);
+    
     // 블로그 개수 업데이트
-    document.getElementById('count-blog').textContent = blogPosts.length;
+    const countEl = document.getElementById('count-blog');
+    if (countEl) {
+      countEl.textContent = blogPosts.length;
+      console.log('[loadBlogPosts] 개수 업데이트 완료');
+    }
     
     // 블로그 게시물 목록 렌더링
     renderBlogPosts();
@@ -1645,15 +1743,18 @@ async function submitManualComment() {
 function changePeriod(period) {
   currentPeriod = period;
   
-  // 버튼 스타일 업데이트
+  // 모든 기간 버튼 스타일 초기화
   document.querySelectorAll('.period-btn').forEach(btn => {
-    btn.classList.remove('bg-purple-600', 'text-white');
-    btn.classList.add('border-gray-300', 'text-gray-700');
+    btn.classList.remove('bg-white', 'text-purple-600', 'shadow-lg', 'shadow-xl');
+    btn.classList.add('bg-white/20', 'backdrop-blur-sm', 'text-white');
   });
   
+  // 선택된 버튼 스타일 적용
   const activeBtn = document.getElementById(`period-${period}`);
-  activeBtn.classList.add('bg-purple-600', 'text-white');
-  activeBtn.classList.remove('border-gray-300', 'text-gray-700');
+  if (activeBtn) {
+    activeBtn.classList.remove('bg-white/20', 'backdrop-blur-sm', 'text-white');
+    activeBtn.classList.add('bg-white', 'text-purple-600', 'shadow-lg');
+  }
   
   // 통계 새로고침
   loadDashboardStats();
