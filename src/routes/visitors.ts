@@ -99,10 +99,20 @@ visitors.get('/stats', async (c) => {
     
     const today = new Date().toISOString().split('T')[0];
     
+    // 어제 날짜 계산
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
     // 오늘 통계
     const todayStats = await DB.prepare(
       'SELECT * FROM visitor_stats WHERE stat_date = ?'
     ).bind(today).first();
+    
+    // 어제 통계
+    const yesterdayStats = await DB.prepare(
+      'SELECT * FROM visitor_stats WHERE stat_date = ?'
+    ).bind(yesterdayStr).first();
     
     // 전체 통계
     const totalStats = await DB.prepare(`
@@ -124,16 +134,40 @@ visitors.get('/stats', async (c) => {
         unique_visitors
       FROM visitor_stats
       WHERE stat_date >= ?
-      ORDER BY stat_date DESC
+      ORDER BY stat_date ASC
     `).bind(sevenDaysAgoStr).all();
     
+    const todayVisitors = (todayStats as any)?.unique_visitors || 0;
+    const yesterdayVisitors = (yesterdayStats as any)?.unique_visitors || 0;
+    const todayVisits = (todayStats as any)?.total_visits || 0;
+    const yesterdayVisits = (yesterdayStats as any)?.total_visits || 0;
+    
+    // 증감률 계산
+    const visitorsChange = yesterdayVisitors > 0 
+      ? ((todayVisitors - yesterdayVisitors) / yesterdayVisitors * 100).toFixed(1)
+      : '0';
+    const visitsChange = yesterdayVisits > 0
+      ? ((todayVisits - yesterdayVisits) / yesterdayVisits * 100).toFixed(1)
+      : '0';
+    
     return c.json({
-      today_visitors: (todayStats as any)?.unique_visitors || 0,
+      today_visitors: todayVisitors,
       total_visitors: (totalStats as any)?.total_unique_visitors || 0,
       today: {
-        visits: (todayStats as any)?.total_visits || 0,
-        unique_visitors: (todayStats as any)?.unique_visitors || 0,
+        visits: todayVisits,
+        unique_visitors: todayVisitors,
         date: today
+      },
+      yesterday: {
+        visits: yesterdayVisits,
+        unique_visitors: yesterdayVisitors,
+        date: yesterdayStr
+      },
+      comparison: {
+        visitors_change: parseFloat(visitorsChange),
+        visits_change: parseFloat(visitsChange),
+        visitors_trend: todayVisitors > yesterdayVisitors ? 'up' : todayVisitors < yesterdayVisitors ? 'down' : 'same',
+        visits_trend: todayVisits > yesterdayVisits ? 'up' : todayVisits < yesterdayVisits ? 'down' : 'same'
       },
       total: {
         visits: (totalStats as any)?.total_visits || 0,

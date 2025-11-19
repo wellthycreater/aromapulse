@@ -1,88 +1,226 @@
 import { Hono } from 'hono';
-import type { CloudflareBindings } from '../types';
+import type { D1Database } from '@cloudflare/workers-types';
 
-const app = new Hono<{ Bindings: CloudflareBindings }>();
+type Bindings = {
+  DB: D1Database;
+};
 
-// Dashboard stats
-app.get('/stats', async (c) => {
+const adminDashboard = new Hono<{ Bindings: Bindings }>();
+
+// 대시보드 전체 통계
+adminDashboard.get('/stats', async (c) => {
   try {
-    const db = c.env.DB;
+    const { DB } = c.env;
     
-    // Get total users count
-    const usersResult = await db.prepare('SELECT COUNT(*) as count FROM users').first();
-    const totalUsers = usersResult?.count || 0;
+    // 전체 회원 수
+    const totalUsers = await DB.prepare('SELECT COUNT(*) as count FROM users').first();
     
-    // Get total products count
-    const productsResult = await db.prepare('SELECT COUNT(*) as count FROM products WHERE is_active = 1').first();
-    const totalProducts = productsResult?.count || 0;
+    // B2C 회원 수
+    const b2cUsers = await DB.prepare(
+      "SELECT COUNT(*) as count FROM users WHERE user_type IN ('general_stress', 'work_stress')"
+    ).first();
     
-    // Get active workshops count
-    const workshopsResult = await db.prepare('SELECT COUNT(*) as count FROM workshops WHERE is_active = 1').first();
-    const activeWorkshops = workshopsResult?.count || 0;
+    // B2B 회원 수
+    const b2bUsers = await DB.prepare(
+      "SELECT COUNT(*) as count FROM users WHERE user_type IN ('perfumer', 'company', 'shop')"
+    ).first();
     
-    // Get active oneday classes count
-    const classesResult = await db.prepare('SELECT COUNT(*) as count FROM oneday_classes WHERE is_active = 1').first();
-    const activeClasses = classesResult?.count || 0;
+    // 최근 7일 신규 가입
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString();
+    
+    const newUsers = await DB.prepare(
+      'SELECT COUNT(*) as count FROM users WHERE created_at >= ?'
+    ).bind(sevenDaysAgoStr).first();
+    
+    // 전체 제품 수
+    const totalProducts = await DB.prepare('SELECT COUNT(*) as count FROM products').first();
+    
+    // 워크샵 수
+    const workshops = await DB.prepare(
+      "SELECT COUNT(*) as count FROM workshop_bookings WHERE status != 'cancelled'"
+    ).first();
+    
+    // 원데이 클래스 수
+    const classes = await DB.prepare(
+      "SELECT COUNT(*) as count FROM oneday_class_bookings WHERE status != 'cancelled'"
+    ).first();
     
     return c.json({
-      users: totalUsers,
-      products: totalProducts,
-      workshops: activeWorkshops,
-      classes: activeClasses
+      users: {
+        total: (totalUsers as any)?.count || 0,
+        b2c: (b2cUsers as any)?.count || 0,
+        b2b: (b2bUsers as any)?.count || 0,
+        new_7days: (newUsers as any)?.count || 0
+      },
+      products: (totalProducts as any)?.count || 0,
+      bookings: {
+        workshops: (workshops as any)?.count || 0,
+        classes: (classes as any)?.count || 0
+      }
     });
+    
   } catch (error) {
-    console.error('Dashboard stats error:', error);
-    return c.json({ error: 'Failed to load dashboard stats' }, 500);
+    console.error('대시보드 통계 오류:', error);
+    return c.json({ error: '통계 조회 실패' }, 500);
   }
 });
 
-// Recent activity
-app.get('/activity', async (c) => {
+// 최근 가입 회원 목록
+adminDashboard.get('/recent-users', async (c) => {
   try {
-    const db = c.env.DB;
+    const { DB } = c.env;
+    const limit = parseInt(c.req.query('limit') || '5');
     
-    const activities = [];
+    const result = await DB.prepare(`
+      SELECT 
+        id,
+        name,
+        email,
+        user_type,
+        created_at
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).bind(limit).all();
     
-    // Get recent user registrations
-    const recentUsers = await db.prepare(`
-      SELECT name, created_at FROM users 
-      ORDER BY created_at DESC 
-      LIMIT 5
-    `).all();
+    return c.json(result.results || []);
     
-    recentUsers.results?.forEach((user: any) => {
-      activities.push({
-        icon: 'fa-user-plus',
-        message: `${user.name}님이 회원가입했습니다.`,
-        created_at: user.created_at
-      });
-    });
-    
-    // Get recent orders
-    const recentOrders = await db.prepare(`
-      SELECT o.id, u.name, o.created_at 
-      FROM orders o
-      JOIN users u ON o.user_id = u.id
-      ORDER BY o.created_at DESC 
-      LIMIT 5
-    `).all();
-    
-    recentOrders.results?.forEach((order: any) => {
-      activities.push({
-        icon: 'fa-shopping-cart',
-        message: `${order.name}님이 주문했습니다. (주문번호: ${order.id})`,
-        created_at: order.created_at
-      });
-    });
-    
-    // Sort by date
-    activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    
-    return c.json(activities.slice(0, 10));
   } catch (error) {
-    console.error('Activity load error:', error);
-    return c.json({ error: 'Failed to load activity' }, 500);
+    console.error('최근 회원 조회 오류:', error);
+    return c.json({ error: '최근 회원 조회 실패' }, 500);
   }
 });
 
-export default app;
+// 최근 활동 로그
+adminDashboard.get('/recent-activities', async (c) => {
+  try {
+    const { DB } = c.env;
+    const limit = parseInt(c.req.query('limit') || '10');
+    
+    // 최근 로그인 기록 (user_login_logs 테이블이 있는 경우)
+    try {
+      const loginLogs = await DB.prepare(`
+        SELECT 
+          'login' as activity_type,
+          email,
+          login_method,
+          device_type,
+          login_at as created_at
+        FROM user_login_logs
+        ORDER BY login_at DESC
+        LIMIT ?
+      `).bind(Math.floor(limit / 2)).all();
+      
+      // 최근 가입 기록
+      const signupLogs = await DB.prepare(`
+        SELECT 
+          'signup' as activity_type,
+          email,
+          user_type as login_method,
+          'unknown' as device_type,
+          created_at
+        FROM users
+        ORDER BY created_at DESC
+        LIMIT ?
+      `).bind(Math.floor(limit / 2)).all();
+      
+      // 두 배열 합치고 시간순 정렬
+      const allActivities = [
+        ...(loginLogs.results || []),
+        ...(signupLogs.results || [])
+      ].sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      ).slice(0, limit);
+      
+      return c.json(allActivities);
+      
+    } catch (loginError) {
+      // user_login_logs 테이블이 없는 경우, 가입 기록만 반환
+      const signupLogs = await DB.prepare(`
+        SELECT 
+          'signup' as activity_type,
+          email,
+          user_type as login_method,
+          'unknown' as device_type,
+          created_at
+        FROM users
+        ORDER BY created_at DESC
+        LIMIT ?
+      `).bind(limit).all();
+      
+      return c.json(signupLogs.results || []);
+    }
+    
+  } catch (error) {
+    console.error('최근 활동 조회 오류:', error);
+    return c.json({ error: '최근 활동 조회 실패' }, 500);
+  }
+});
+
+// 디바이스/브라우저 통계
+adminDashboard.get('/device-stats', async (c) => {
+  try {
+    const { DB } = c.env;
+    
+    try {
+      // 디바이스별 통계
+      const deviceStats = await DB.prepare(`
+        SELECT 
+          device_type,
+          COUNT(*) as count
+        FROM user_login_logs
+        WHERE login_at >= datetime('now', '-30 days')
+        GROUP BY device_type
+        ORDER BY count DESC
+      `).all();
+      
+      // 브라우저별 통계
+      const browserStats = await DB.prepare(`
+        SELECT 
+          browser,
+          COUNT(*) as count
+        FROM user_login_logs
+        WHERE login_at >= datetime('now', '-30 days')
+          AND browser IS NOT NULL
+        GROUP BY browser
+        ORDER BY count DESC
+        LIMIT 5
+      `).all();
+      
+      // OS별 통계
+      const osStats = await DB.prepare(`
+        SELECT 
+          os,
+          COUNT(*) as count
+        FROM user_login_logs
+        WHERE login_at >= datetime('now', '-30 days')
+          AND os IS NOT NULL
+        GROUP BY os
+        ORDER BY count DESC
+        LIMIT 5
+      `).all();
+      
+      return c.json({
+        devices: deviceStats.results || [],
+        browsers: browserStats.results || [],
+        os: osStats.results || []
+      });
+      
+    } catch (error) {
+      // user_login_logs 테이블이 없는 경우 빈 데이터 반환
+      return c.json({
+        devices: [],
+        browsers: [],
+        os: []
+      });
+    }
+    
+  } catch (error) {
+    console.error('디바이스 통계 조회 오류:', error);
+    return c.json({ error: '디바이스 통계 조회 실패' }, 500);
+  }
+});
+
+export default adminDashboard;

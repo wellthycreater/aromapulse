@@ -1396,3 +1396,343 @@ async function resetVisitorStats(resetType) {
         }
     }
 }
+
+// ==================== Enhanced Dashboard Features ====================
+
+// Chart instances
+let weeklyVisitorsChart = null;
+let deviceStatsChart = null;
+
+// Enhanced Load Visitor Stats with comparison
+async function loadEnhancedVisitorStats() {
+    try {
+        const response = await fetch('/api/visitors/stats');
+        const data = await response.json();
+        
+        // Update today visitors with change indicator
+        document.getElementById('stat-visitors-today').textContent = data.today_visitors || 0;
+        
+        // Update change indicator
+        const changeEl = document.getElementById('stat-visitors-today-change');
+        if (changeEl && data.comparison) {
+            const change = data.comparison.visitors_change;
+            const trend = data.comparison.visitors_trend;
+            
+            if (trend === 'up') {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${Math.abs(change).toFixed(1)}%`;
+                changeEl.className = 'text-sm font-medium text-green-300';
+            } else if (trend === 'down') {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(change).toFixed(1)}%`;
+                changeEl.className = 'text-sm font-medium text-red-300';
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-minus"></i> 0%`;
+                changeEl.className = 'text-sm font-medium text-purple-200';
+            }
+        }
+        
+        // Update total visitors
+        document.getElementById('stat-visitors-total').textContent = data.total_visitors || 0;
+        
+        // Update weekly chart
+        if (data.week && data.week.length > 0) {
+            updateWeeklyChart(data.week);
+        }
+        
+    } catch (error) {
+        console.error('Enhanced visitor stats load error:', error);
+        document.getElementById('stat-visitors-today').textContent = '0';
+        document.getElementById('stat-visitors-total').textContent = '0';
+    }
+}
+
+// Update Weekly Visitors Chart
+function updateWeeklyChart(weekData) {
+    const ctx = document.getElementById('weeklyVisitorsChart');
+    if (!ctx) return;
+    
+    const labels = weekData.map(d => {
+        const date = new Date(d.stat_date);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+    });
+    
+    const visitors = weekData.map(d => d.unique_visitors || 0);
+    const visits = weekData.map(d => d.total_visits || 0);
+    
+    if (weeklyVisitorsChart) {
+        weeklyVisitorsChart.destroy();
+    }
+    
+    weeklyVisitorsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '순 방문자',
+                    data: visitors,
+                    borderColor: 'rgb(147, 51, 234)',
+                    backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: '총 방문',
+                    data: visits,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Load Recent Users
+async function loadRecentUsers() {
+    try {
+        const response = await fetch('/api/admin/dashboard/recent-users?limit=5', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load recent users');
+        
+        const users = await response.json();
+        const container = document.getElementById('recent-users');
+        
+        if (!users || users.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">최근 가입 회원이 없습니다</p>';
+            return;
+        }
+        
+        container.innerHTML = users.map(user => `
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-800">${user.name || '이름 없음'}</p>
+                    <p class="text-xs text-gray-500">${user.email}</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs px-2 py-1 rounded-full ${getUserTypeBadge(user.user_type)}">${getUserTypeLabel(user.user_type)}</span>
+                    <p class="text-xs text-gray-400 mt-1">${formatDate(user.created_at)}</p>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Load recent users error:', error);
+        document.getElementById('recent-users').innerHTML = '<p class="text-red-500 text-sm text-center py-4">로딩 실패</p>';
+    }
+}
+
+// Load Recent Activities
+async function loadRecentActivities() {
+    try {
+        const response = await fetch('/api/admin/dashboard/recent-activities?limit=10', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load activities');
+        
+        const activities = await response.json();
+        const container = document.getElementById('recent-activity');
+        
+        if (!activities || activities.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">최근 활동이 없습니다</p>';
+            return;
+        }
+        
+        container.innerHTML = activities.map(activity => {
+            const icon = activity.activity_type === 'login' ? 'fa-sign-in-alt' : 'fa-user-plus';
+            const color = activity.activity_type === 'login' ? 'text-blue-500' : 'text-green-500';
+            const label = activity.activity_type === 'login' ? '로그인' : '가입';
+            
+            return `
+                <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded transition">
+                    <i class="fas ${icon} ${color}"></i>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-800 truncate">${activity.email}</p>
+                        <p class="text-xs text-gray-500">${label} • ${formatDate(activity.created_at)}</p>
+                    </div>
+                    ${activity.device_type && activity.device_type !== 'unknown' ? 
+                        `<i class="fas fa-${getDeviceIcon(activity.device_type)} text-gray-400 text-sm"></i>` : ''
+                    }
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Load recent activities error:', error);
+        document.getElementById('recent-activity').innerHTML = '<p class="text-red-500 text-sm text-center py-4">로딩 실패</p>';
+    }
+}
+
+// Load Device Stats
+async function loadDeviceStats() {
+    try {
+        const response = await fetch('/api/admin/dashboard/device-stats', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load device stats');
+        
+        const data = await response.json();
+        const ctx = document.getElementById('deviceStatsChart');
+        
+        if (!ctx) return;
+        
+        if (!data.devices || data.devices.length === 0) {
+            ctx.parentElement.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">디바이스 통계가 없습니다</p>';
+            return;
+        }
+        
+        const labels = data.devices.map(d => getDeviceLabel(d.device_type));
+        const counts = data.devices.map(d => d.count);
+        const colors = [
+            'rgba(147, 51, 234, 0.8)',
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)'
+        ];
+        
+        if (deviceStatsChart) {
+            deviceStatsChart.destroy();
+        }
+        
+        deviceStatsChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Load device stats error:', error);
+    }
+}
+
+// Load Dashboard Statistics
+async function loadDashboardStats() {
+    try {
+        const response = await fetch('/api/admin/dashboard/stats', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load dashboard stats');
+        
+        const data = await response.json();
+        
+        // Update stats
+        document.getElementById('stat-users').textContent = data.users?.total || 0;
+        document.getElementById('stat-products').textContent = data.products || 0;
+        document.getElementById('stat-workshops').textContent = data.bookings?.workshops || 0;
+        document.getElementById('stat-classes').textContent = data.bookings?.classes || 0;
+        
+    } catch (error) {
+        console.error('Load dashboard stats error:', error);
+    }
+}
+
+// Helper functions
+function getUserTypeBadge(userType) {
+    const badges = {
+        'general_stress': 'bg-purple-100 text-purple-700',
+        'work_stress': 'bg-blue-100 text-blue-700',
+        'perfumer': 'bg-pink-100 text-pink-700',
+        'company': 'bg-green-100 text-green-700',
+        'shop': 'bg-yellow-100 text-yellow-700'
+    };
+    return badges[userType] || 'bg-gray-100 text-gray-700';
+}
+
+function getUserTypeLabel(userType) {
+    const labels = {
+        'general_stress': 'B2C 일반',
+        'work_stress': 'B2C 직무',
+        'perfumer': 'B2B 조향사',
+        'company': 'B2B 기업',
+        'shop': 'B2B 가게'
+    };
+    return labels[userType] || userType;
+}
+
+function getDeviceIcon(deviceType) {
+    const icons = {
+        'mobile': 'mobile-alt',
+        'tablet': 'tablet-alt',
+        'desktop': 'desktop'
+    };
+    return icons[deviceType] || 'question';
+}
+
+function getDeviceLabel(deviceType) {
+    const labels = {
+        'mobile': '모바일',
+        'tablet': '태블릿',
+        'desktop': '데스크톱',
+        'unknown': '기타'
+    };
+    return labels[deviceType] || deviceType;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return '방금 전';
+    if (minutes < 60) return `${minutes}분 전`;
+    if (hours < 24) return `${hours}시간 전`;
+    if (days < 7) return `${days}일 전`;
+    
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+// Override loadDashboard
+const originalLoad = loadDashboard;
+loadDashboard = async function() {
+    await loadEnhancedVisitorStats();
+    await loadDashboardStats();
+    await loadRecentUsers();
+    await loadRecentActivities();
+    await loadDeviceStats();
+};
+
+// Override loadVisitorStats to use enhanced version
+loadVisitorStats = loadEnhancedVisitorStats;
