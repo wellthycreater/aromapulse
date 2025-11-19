@@ -138,51 +138,97 @@ function loadTabData(tabName) {
 
 // Load Dashboard
 async function loadDashboard() {
+    console.log('🚀 Loading dashboard...');
+    
+    // IMPORTANT: Ensure overview tab is visible by default
+    const overviewTab = document.getElementById('dashboard-tab-overview');
+    const detailedTab = document.getElementById('dashboard-tab-detailed');
+    if (overviewTab) {
+        overviewTab.style.display = 'block';
+        console.log('✅ Overview tab set to visible');
+    }
+    if (detailedTab) {
+        detailedTab.style.display = 'none';
+        console.log('✅ Detailed tab set to hidden');
+    }
+    
+    // Load stats (don't let this block the rest)
     try {
-        // Load stats
         const statsResponse = await fetch('/api/admin/dashboard/stats', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
-        const stats = await statsResponse.json();
         
-        document.getElementById('stat-users').textContent = stats.users || 0;
-        document.getElementById('stat-products').textContent = stats.products || 0;
-        document.getElementById('stat-workshops').textContent = stats.workshops || 0;
-        document.getElementById('stat-classes').textContent = stats.classes || 0;
-        
-        // Load recent activity
+        if (statsResponse.ok) {
+            const stats = await statsResponse.json();
+            document.getElementById('stat-users').textContent = stats.users || 0;
+            document.getElementById('stat-products').textContent = stats.products || 0;
+            document.getElementById('stat-workshops').textContent = stats.workshops || 0;
+            document.getElementById('stat-classes').textContent = stats.classes || 0;
+        } else {
+            console.warn('⚠️ Stats API failed, using defaults');
+            document.getElementById('stat-users').textContent = '-';
+            document.getElementById('stat-products').textContent = '-';
+            document.getElementById('stat-workshops').textContent = '-';
+            document.getElementById('stat-classes').textContent = '-';
+        }
+    } catch (error) {
+        console.error('❌ Stats load error:', error);
+        document.getElementById('stat-users').textContent = '-';
+        document.getElementById('stat-products').textContent = '-';
+        document.getElementById('stat-workshops').textContent = '-';
+        document.getElementById('stat-classes').textContent = '-';
+    }
+    
+    // Load recent activity (don't let this block the rest)
+    try {
         const activityResponse = await fetch('/api/admin/dashboard/activity', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
-        const activities = await activityResponse.json();
         
-        const activityContainer = document.getElementById('recent-activity');
-        if (activities && activities.length > 0) {
-            activityContainer.innerHTML = activities.map(activity => `
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-${activity.icon || 'info-circle'} text-sage"></i>
-                        <span class="text-sm text-gray-700">${activity.message}</span>
+        if (activityResponse.ok) {
+            const activities = await activityResponse.json();
+            const activityContainer = document.getElementById('recent-activity');
+            
+            if (activities && activities.length > 0) {
+                activityContainer.innerHTML = activities.map(activity => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-${activity.icon || 'info-circle'} text-sage"></i>
+                            <span class="text-sm text-gray-700">${activity.message}</span>
+                        </div>
+                        <span class="text-xs text-gray-500">${formatDate(activity.created_at)}</span>
                     </div>
-                    <span class="text-xs text-gray-500">${formatDate(activity.created_at)}</span>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                activityContainer.innerHTML = '<p class="text-center text-gray-500 py-4">최근 활동이 없습니다.</p>';
+            }
         } else {
-            activityContainer.innerHTML = '<p class="text-center text-gray-500 py-4">최근 활동이 없습니다.</p>';
+            console.warn('⚠️ Activity API failed');
+            document.getElementById('recent-activity').innerHTML = '<p class="text-center text-gray-500 py-4">활동 로그를 불러올 수 없습니다.</p>';
         }
-        
-        // Load user analytics charts
+    } catch (error) {
+        console.error('❌ Activity load error:', error);
+        document.getElementById('recent-activity').innerHTML = '<p class="text-center text-gray-500 py-4">활동 로그를 불러올 수 없습니다.</p>';
+    }
+    
+    // Load user analytics charts (ALWAYS run this)
+    try {
         console.log('🔄 Loading user analytics charts...');
         await loadUserAnalytics();
-        
-        // Load SNS and O2O analytics charts
+    } catch (error) {
+        console.error('❌ User analytics error:', error);
+    }
+    
+    // Load SNS and O2O analytics charts (ALWAYS run this)
+    try {
         console.log('🔄 Loading SNS and O2O analytics...');
         await loadSNSStats();
         await loadO2OStats();
-        
     } catch (error) {
-        console.error('Dashboard load error:', error);
+        console.error('❌ SNS/O2O analytics error:', error);
     }
+    
+    console.log('✅ Dashboard load complete');
 }
 
 // Load Users - Enhanced with full member information
