@@ -437,68 +437,182 @@ async function loadClasses() {
 async function loadBlog() {
     try {
         console.log('Loading blog posts...');
-        const response = await fetch('/api/blog/posts');
-        console.log('Blog response status:', response.status);
+        await loadBlogPosts();
+        await loadPostsForCommentSelect();
+    } catch (error) {
+        console.error('Blog load error:', error);
+    }
+}
+
+// Load blog posts with comments stats
+async function loadBlogPosts() {
+    try {
+        const response = await fetch('/api/admin/blog');
+        const posts = await response.json();
         
-        const data = await response.json();
-        console.log('Blog data:', data);
+        const grid = document.getElementById('blog-posts-grid');
         
-        const posts = data.posts || [];
-        console.log('Blog posts array length:', posts.length);
-        
-        const tbody = document.getElementById('blog-table-body');
-        document.getElementById('blog-total').textContent = posts.length;
-        
-        if (posts.length === 0) {
-            tbody.innerHTML = `
-                <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                    블로그 포스트가 없습니다.
-                </td></tr>
-            `;
+        if (!posts || posts.length === 0) {
+            grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">블로그 포스트가 없습니다.</div>';
             return;
         }
         
-        tbody.innerHTML = posts.map(post => {
-            // Handle null string values
-            const category = (post.category === 'null' || !post.category) ? '-' : post.category;
-            const contentPreview = (post.content === 'null' || !post.content) ? '내용 없음' : post.content.substring(0, 50);
-            
-            return `
-            <tr class="border-b hover:bg-gray-50 transition">
-                <td class="px-6 py-4">
-                    <div class="text-sm font-medium text-gray-900">${post.title}</div>
-                    <div class="text-xs text-gray-500 mt-1">${contentPreview}...</div>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600">${category}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">${post.view_count || 0}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">${formatDate(post.published_at)}</td>
-                <td class="px-6 py-4 text-center">
-                    <div class="flex items-center justify-center space-x-2">
-                        <a href="${post.url}" target="_blank" class="text-green-600 hover:text-green-800" title="블로그 보기">
-                            <i class="fas fa-external-link-alt"></i>
-                        </a>
-                        <button onclick="editBlog(${post.id})" class="text-blue-600 hover:text-blue-800" title="수정">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteBlog(${post.id})" class="text-red-600 hover:text-red-800" title="삭제">
-                            <i class="fas fa-trash"></i>
-                        </button>
+        grid.innerHTML = posts.map(post => `
+            <div class="bg-white border rounded-xl p-6 hover:shadow-lg transition">
+                <h4 class="font-bold text-lg text-gray-800 mb-2">${post.title}</h4>
+                <p class="text-sm text-gray-500 mb-4">게시물 ID: ${post.post_id}</p>
+                
+                <div class="grid grid-cols-2 gap-2 mb-4 text-sm">
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-comments mr-2 text-blue-500"></i>
+                        <span>댓글: <strong>${post.comment_count || 0}</strong>개</span>
                     </div>
-                </td>
-            </tr>
-            `;
-        }).join('');
-        
-        console.log('Blog posts loaded successfully');
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-shopping-cart mr-2 text-green-500"></i>
+                        <span>구매 의도: <strong>0</strong>개</span>
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-user mr-2 text-blue-400"></i>
+                        <span>B2C: <strong>0</strong></span>
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-briefcase mr-2 text-purple-400"></i>
+                        <span>B2B: <strong>0</strong></span>
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-robot mr-2 text-orange-400"></i>
+                        <span>챗봇 세션: <strong>0</strong></span>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-2">
+                    <a href="${post.url}" target="_blank" 
+                        class="flex-1 text-center bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-sm">
+                        <i class="fas fa-external-link-alt mr-1"></i>게시물 보기
+                    </a>
+                    <button onclick="viewComments(${post.id})" 
+                        class="flex-1 text-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm">
+                        <i class="fas fa-comments mr-1"></i>댓글 보기
+                    </button>
+                </div>
+            </div>
+        `).join('');
     } catch (error) {
-        console.error('Blog load error:', error);
-        const tbody = document.getElementById('blog-table-body');
-        tbody.innerHTML = `
-            <tr><td colspan="5" class="px-6 py-8 text-center text-red-500">
-                블로그 포스트를 불러오는데 실패했습니다. 콘솔을 확인하세요.
-            </td></tr>
-        `;
+        console.error('Load blog posts error:', error);
     }
+}
+
+// Load posts for comment select dropdown
+async function loadPostsForCommentSelect() {
+    try {
+        const response = await fetch('/api/admin/blog');
+        const posts = await response.json();
+        
+        const select = document.getElementById('comment-post-id');
+        select.innerHTML = '<option value="">게시물을 선택하세요</option>' +
+            posts.map(post => `<option value="${post.id}">${post.title}</option>`).join('');
+    } catch (error) {
+        console.error('Load posts for select error:', error);
+    }
+}
+
+// Add new blog post
+async function addBlogPost() {
+    const url = document.getElementById('blog-post-url').value.trim();
+    const publishedAt = document.getElementById('blog-post-date').value.trim();
+    
+    if (!url) {
+        alert('블로그 게시물 URL을 입력하세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/blog', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ url, published_at: publishedAt || null })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || '게시물 추가 실패');
+        }
+        
+        alert('✅ 블로그 게시물이 추가되었습니다!');
+        document.getElementById('blog-post-url').value = '';
+        document.getElementById('blog-post-date').value = '';
+        await loadBlogPosts();
+        await loadPostsForCommentSelect();
+    } catch (error) {
+        console.error('Add blog post error:', error);
+        alert('❌ 게시물 추가 실패: ' + error.message);
+    }
+}
+
+// Add comment with AI analysis
+async function addComment() {
+    const postId = document.getElementById('comment-post-id').value;
+    const author = document.getElementById('comment-author').value.trim();
+    const content = document.getElementById('comment-content').value.trim();
+    const createdAt = document.getElementById('comment-date').value.trim();
+    
+    if (!postId) {
+        alert('게시물을 선택하세요.');
+        return;
+    }
+    if (!author) {
+        alert('작성자명을 입력하세요.');
+        return;
+    }
+    if (!content) {
+        alert('댓글 내용을 입력하세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/blog/comments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                post_id: postId,
+                author_name: author,
+                content: content,
+                created_at: createdAt || null
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || '댓글 추가 실패');
+        }
+        
+        const data = await response.json();
+        alert(`✅ 댓글이 추가되고 AI 분석이 완료되었습니다!\n\n감정: ${data.analysis?.emotion || 'N/A'}\n의도: ${data.analysis?.intent || 'N/A'}\n사용자 타입: ${data.analysis?.user_type || 'N/A'}`);
+        resetCommentForm();
+        await loadBlogPosts();
+    } catch (error) {
+        console.error('Add comment error:', error);
+        alert('❌ 댓글 추가 실패: ' + error.message);
+    }
+}
+
+// Reset comment form
+function resetCommentForm() {
+    document.getElementById('comment-post-id').value = '';
+    document.getElementById('comment-author').value = '';
+    document.getElementById('comment-content').value = '';
+    document.getElementById('comment-date').value = '';
+}
+
+// View comments for a post
+function viewComments(postId) {
+    alert(`게시물 ${postId}의 댓글 보기 기능은 준비 중입니다.`);
 }
 
 // Modal Functions
