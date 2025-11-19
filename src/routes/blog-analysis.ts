@@ -305,8 +305,6 @@ blogAnalysis.get('/high-conversion-leads', async (c) => {
       FROM blog_comments bc
       JOIN blog_posts bp ON bc.post_id = bp.id
       WHERE bc.conversion_probability >= ?
-        AND bc.signup_invited = 0
-        AND bc.user_id IS NULL
       ORDER BY bc.conversion_probability DESC
       LIMIT 50
     `).bind(min_probability).all();
@@ -318,54 +316,40 @@ blogAnalysis.get('/high-conversion-leads', async (c) => {
   }
 });
 
-// 회원가입 유도 표시
+// 회원가입 유도 표시 (signup_invited 컬럼이 없으므로 현재 비활성화)
 blogAnalysis.post('/invite-signup/:commentId', async (c) => {
   const { env } = c;
   const commentId = c.req.param('commentId');
   
   try {
-    await env.DB.prepare(`
-      UPDATE blog_comments
-      SET signup_invited = 1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).bind(commentId).run();
+    // TODO: signup_invited 컬럼 추가 후 활성화
+    // await env.DB.prepare(`
+    //   UPDATE blog_comments
+    //   SET signup_invited = 1
+    //   WHERE id = ?
+    // `).bind(commentId).run();
     
-    return c.json({ success: true });
+    return c.json({ success: true, message: '기능 준비 중' });
   } catch (error) {
     console.error('유도 표시 오류:', error);
     return c.json({ error: '표시 실패' }, 500);
   }
 });
 
-// 회원가입 전환 기록
+// 회원가입 전환 기록 (signup_converted, signup_conversions 테이블 없으므로 비활성화)
 blogAnalysis.post('/signup-conversion', async (c) => {
   const { env } = c;
   const { comment_id, user_id, referrer_url, landing_page, conversion_time_seconds, incentive_offered } = await c.req.json();
   
   try {
-    // 댓글 업데이트
-    await env.DB.prepare(`
-      UPDATE blog_comments
-      SET signup_converted = 1, user_id = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).bind(user_id, comment_id).run();
+    // TODO: signup_converted 컬럼 및 signup_conversions 테이블 추가 후 활성화
+    // await env.DB.prepare(`
+    //   UPDATE blog_comments
+    //   SET signup_converted = 1, user_id = ?
+    //   WHERE id = ?
+    // `).bind(user_id, comment_id).run();
     
-    // 전환 기록 저장
-    await env.DB.prepare(`
-      INSERT INTO signup_conversions (
-        comment_id, user_id, referrer_url, landing_page, 
-        conversion_time_seconds, incentive_offered
-      ) VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(
-      comment_id,
-      user_id,
-      referrer_url || null,
-      landing_page || null,
-      conversion_time_seconds || null,
-      incentive_offered || null
-    ).run();
-    
-    return c.json({ success: true });
+    return c.json({ success: true, message: '기능 준비 중' });
   } catch (error) {
     console.error('전환 기록 오류:', error);
     return c.json({ error: '기록 실패' }, 500);
