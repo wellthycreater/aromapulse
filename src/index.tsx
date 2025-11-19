@@ -244,25 +244,9 @@ app.get('/', (c) => {
         <header class="glass-effect shadow-lg sticky top-0 z-50">
             <nav class="container mx-auto px-6 py-4">
                 <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                        <a href="/" class="flex items-center space-x-3">
-                            <img src="/static/logo-light.png" alt="아로마펄스" class="h-16 logo-image">
-                        </a>
-                        <!-- 방문자 통계 -->
-                        <div class="hidden md:flex items-center gap-3 bg-white bg-opacity-90 rounded-full px-4 py-2 shadow-sm">
-                            <div class="flex items-center gap-1 text-sm">
-                                <i class="fas fa-users text-purple-600"></i>
-                                <span class="font-semibold text-gray-700">오늘</span>
-                                <span class="font-bold text-purple-600" id="today-visitors">-</span>
-                            </div>
-                            <div class="w-px h-4 bg-gray-300"></div>
-                            <div class="flex items-center gap-1 text-sm">
-                                <i class="fas fa-chart-line text-pink-600"></i>
-                                <span class="font-semibold text-gray-700">전체</span>
-                                <span class="font-bold text-pink-600" id="total-visitors">-</span>
-                            </div>
-                        </div>
-                    </div>
+                    <a href="/" class="flex items-center space-x-3">
+                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-16 logo-image">
+                    </a>
                     <div class="hidden md:flex items-center space-x-8">
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
@@ -278,6 +262,21 @@ app.get('/', (c) => {
                         </a>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <!-- 방문자 통계 -->
+                        <div class="hidden md:flex items-center gap-3 bg-white bg-opacity-90 rounded-full px-4 py-2 shadow-sm">
+                            <div class="flex items-center gap-1 text-sm">
+                                <i class="fas fa-users text-purple-600"></i>
+                                <span class="font-semibold text-gray-700">오늘</span>
+                                <span class="font-bold text-purple-600" id="today-visitors">-</span>
+                            </div>
+                            <div class="w-px h-4 bg-gray-300"></div>
+                            <div class="flex items-center gap-1 text-sm">
+                                <i class="fas fa-chart-line text-pink-600"></i>
+                                <span class="font-semibold text-gray-700">전체</span>
+                                <span class="font-bold text-pink-600" id="total-visitors">-</span>
+                            </div>
+                        </div>
+                        
                         <!-- 비로그인 상태 -->
                         <div id="auth-buttons" class="flex items-center space-x-4">
                             <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800 font-semibold transition">
