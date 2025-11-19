@@ -34,25 +34,39 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
-        /* Custom Colors - Sage Green + Lavender Theme */
+        /* Custom Colors - Purple Gradient Theme (matching main site) */
         :root {
-            --sage-green: #7AA992;
-            --lavender: #BCA6E0;
-            --cream: #F3EDEA;
-            --dark-slate: #263238;
-            --medium-gray: #55606A;
-            --light-gray: #E6ECEB;
+            --primary-purple: #667eea;
+            --secondary-purple: #764ba2;
+            --accent-pink: #f093fb;
+            --purple-600: #9333ea;
+            --pink-600: #db2777;
+            --dark-slate: #1e293b;
+            --medium-gray: #64748b;
+            --light-gray: #f1f5f9;
+        }
+        
+        /* Hero Gradient (matching main site) */
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+        
+        /* Glass Effect */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
         
         /* Utility Classes */
-        .bg-sage { background-color: var(--sage-green); }
-        .bg-lavender { background-color: var(--lavender); }
-        .bg-cream { background-color: var(--cream); }
-        .text-sage { color: var(--sage-green); }
-        .text-lavender { color: var(--lavender); }
-        .border-sage { border-color: var(--sage-green); }
-        .hover\:bg-sage:hover { background-color: var(--sage-green); }
-        .hover\:bg-lavender:hover { background-color: var(--lavender); }
+        .bg-primary-purple { background-color: var(--primary-purple); }
+        .bg-secondary-purple { background-color: var(--secondary-purple); }
+        .bg-accent-pink { background-color: var(--accent-pink); }
+        .text-primary-purple { color: var(--primary-purple); }
+        .text-secondary-purple { color: var(--secondary-purple); }
+        .text-accent-pink { color: var(--accent-pink); }
+        .border-primary-purple { border-color: var(--primary-purple); }
+        .hover\:bg-primary-purple:hover { background-color: var(--primary-purple); }
+        .hover\:bg-secondary-purple:hover { background-color: var(--secondary-purple); }
         
         /* Tab Styling */
         .tab-button {
@@ -60,17 +74,13 @@
             position: relative;
         }
         .tab-button.active {
-            background-color: var(--sage-green);
+            background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
             color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
-        .tab-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background-color: var(--sage-green);
+        .tab-button:hover:not(.active) {
+            background-color: rgba(102, 126, 234, 0.1);
+            color: var(--primary-purple);
         }
         
         /* Sub-tab Styling */
@@ -78,8 +88,13 @@
             transition: all 0.3s ease;
         }
         .sub-tab-button.active {
-            background-color: var(--lavender);
+            background: linear-gradient(135deg, var(--secondary-purple), var(--accent-pink));
             color: white;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        }
+        .sub-tab-button:hover:not(.active) {
+            background-color: rgba(240, 147, 251, 0.1);
+            color: var(--accent-pink);
         }
         
         /* Animations */
@@ -92,6 +107,24 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
+        /* Hover Effects */
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+        
+        /* Card Hover */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -101,11 +134,11 @@
             background: var(--light-gray);
         }
         ::-webkit-scrollbar-thumb {
-            background: var(--sage-green);
+            background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #6A9882;
+            background: linear-gradient(135deg, var(--secondary-purple), var(--accent-pink));
         }
         
         /* Modal Backdrop */
@@ -142,30 +175,56 @@
             background-color: #FDE8E8;
             color: #9B1C1C;
         }
+        
+        /* Button Styles (matching main site) */
+        .btn-gradient {
+            background: linear-gradient(to right, var(--primary-purple), var(--accent-pink));
+            color: white;
+            border-radius: 9999px;
+            padding: 0.625rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .btn-gradient:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Enhanced Card Shadows */
+        .card-enhanced {
+            box-shadow: 0 10px 30px -10px rgba(102, 126, 234, 0.15);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+        .card-enhanced:hover {
+            box-shadow: 0 15px 40px -10px rgba(102, 126, 234, 0.25);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
-<body class="bg-cream min-h-screen">
+<body class="min-h-screen" style="background: linear-gradient(to bottom, #faf5ff 0%, #f5f3ff 50%, #fdf4ff 100%);">
     
-    <!-- Header -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
+    <!-- Header with Gradient -->
+    <header class="glass-effect shadow-lg sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-14 transition-all hover:scale-105">
                     <div>
-                        <h1 class="text-2xl font-bold text-sage">
-                            <i class="fas fa-spa mr-2"></i>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            <i class="fas fa-spa mr-2 text-purple-600"></i>
                             관리자 대시보드
                         </h1>
                         <p class="text-xs text-gray-500 mt-1">AromaPulse Admin Dashboard</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <div class="text-sm text-gray-600">
-                        <i class="fas fa-user-shield mr-1"></i>
-                        <span id="admin-name">관리자</span>
+                    <div class="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-full px-4 py-2">
+                        <i class="fas fa-user-shield text-purple-600"></i>
+                        <span id="admin-name" class="text-sm font-semibold text-gray-700">관리자</span>
                     </div>
-                    <button onclick="logout()" class="text-red-600 hover:text-red-700 transition font-semibold">
+                    <button onclick="logout()" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full hover:shadow-lg transition transform hover:scale-105 font-semibold">
                         <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
                     </button>
                 </div>
@@ -176,29 +235,29 @@
     <!-- Main Navigation Tabs -->
     <div class="bg-white border-b shadow-sm">
         <div class="container mx-auto px-6">
-            <div class="flex space-x-1 overflow-x-auto">
+            <div class="flex space-x-2 overflow-x-auto">
                 <button onclick="switchMainTab('dashboard')" 
-                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100 active" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap rounded-t-lg active" 
                     data-tab="dashboard">
                     <i class="fas fa-chart-line mr-2"></i>대시보드
                 </button>
                 <button onclick="switchMainTab('users')" 
-                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap rounded-t-lg" 
                     data-tab="users">
                     <i class="fas fa-users mr-2"></i>회원 관리
                 </button>
                 <button onclick="switchMainTab('products')" 
-                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap rounded-t-lg" 
                     data-tab="products">
                     <i class="fas fa-box mr-2"></i>제품 관리
                 </button>
                 <button onclick="switchMainTab('blog')" 
-                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap rounded-t-lg" 
                     data-tab="blog">
                     <i class="fas fa-blog mr-2"></i>블로그 관리
                 </button>
                 <button onclick="switchMainTab('workshops')" 
-                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap hover:bg-gray-100" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap rounded-t-lg" 
                     data-tab="workshops">
                     <i class="fas fa-hands-helping mr-2"></i>워크샵 관리
                 </button>
@@ -218,19 +277,19 @@
         <div id="section-dashboard" class="content-section">
             <div class="fade-in">
                 <h2 class="text-3xl font-bold text-dark-slate mb-6">
-                    <i class="fas fa-chart-line text-sage mr-3"></i>대시보드
+                    <i class="fas fa-chart-line text-purple-600 mr-3"></i>대시보드
                 </h2>
                 
                 <!-- Dashboard Sub-Tabs -->
                 <div class="mb-6 border-b border-gray-200">
                     <div class="flex space-x-4">
                         <button onclick="switchDashboardTab('overview')" 
-                            class="dashboard-tab-button pb-4 px-6 font-semibold text-sage border-b-2 border-sage" 
+                            class="dashboard-tab-button pb-4 px-6 font-semibold text-purple-600 border-b-2 border-purple-600" 
                             data-dashboard-tab="overview">
                             <i class="fas fa-chart-pie mr-2"></i>전체 개요
                         </button>
                         <button onclick="switchDashboardTab('detailed')" 
-                            class="dashboard-tab-button pb-4 px-6 font-semibold text-gray-500 border-b-2 border-transparent hover:text-sage hover:border-sage transition" 
+                            class="dashboard-tab-button pb-4 px-6 font-semibold text-gray-500 border-b-2 border-transparent hover:text-purple-600 hover:border-purple-600 transition" 
                             data-dashboard-tab="detailed">
                             <i class="fas fa-chart-bar mr-2"></i>세부 분석 (B2C/B2B + SNS/O2O)
                         </button>
@@ -281,22 +340,22 @@
 
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-sage hover-lift">
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-600 hover-lift">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">전체 회원</p>
-                                <p class="text-3xl font-bold text-sage" id="stat-users">-</p>
+                                <p class="text-3xl font-bold text-purple-600" id="stat-users">-</p>
                             </div>
-                            <i class="fas fa-users text-4xl text-sage opacity-20"></i>
+                            <i class="fas fa-users text-4xl text-purple-600 opacity-20"></i>
                         </div>
                     </div>
-                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-lavender hover-lift">
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-pink-600 hover-lift">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">전체 제품</p>
-                                <p class="text-3xl font-bold text-lavender" id="stat-products">-</p>
+                                <p class="text-3xl font-bold text-pink-600" id="stat-products">-</p>
                             </div>
-                            <i class="fas fa-box text-4xl text-lavender opacity-20"></i>
+                            <i class="fas fa-box text-4xl text-pink-600 opacity-20"></i>
                         </div>
                     </div>
                     <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover-lift">
@@ -324,7 +383,7 @@
                     <!-- Weekly Visitors Chart -->
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">
-                            <i class="fas fa-chart-area text-sage mr-2"></i>주간 방문자 추이
+                            <i class="fas fa-chart-area text-purple-600 mr-2"></i>주간 방문자 추이
                         </h3>
                         <canvas id="weeklyVisitorsChart" style="max-height: 250px;"></canvas>
                     </div>
@@ -332,7 +391,7 @@
                     <!-- Device Stats -->
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">
-                            <i class="fas fa-mobile-alt text-sage mr-2"></i>디바이스 통계
+                            <i class="fas fa-mobile-alt text-purple-600 mr-2"></i>디바이스 통계
                         </h3>
                         <canvas id="deviceStatsChart" style="max-height: 250px;"></canvas>
                     </div>
@@ -341,7 +400,7 @@
                 <!-- User Analytics Section in Dashboard -->
                 <div class="mb-8">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-chart-pie text-sage mr-2"></i>회원 통계 분석
+                        <i class="fas fa-chart-pie text-purple-600 mr-2"></i>회원 통계 분석
                     </h3>
                     
                     <!-- User Type & Stress Type Row -->
@@ -430,7 +489,7 @@
                 <!-- SNS Channel & O2O Conversion Section -->
                 <div class="mb-8">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-share-alt text-sage mr-2"></i>SNS 채널 유입 및 O2O 전환 분석
+                        <i class="fas fa-share-alt text-purple-600 mr-2"></i>SNS 채널 유입 및 O2O 전환 분석
                     </h3>
                     
                     <!-- SNS Channel Traffic -->
@@ -485,7 +544,7 @@
                     <!-- Recent Users -->
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">
-                            <i class="fas fa-user-plus text-sage mr-2"></i>최근 가입 회원
+                            <i class="fas fa-user-plus text-purple-600 mr-2"></i>최근 가입 회원
                         </h3>
                         <div id="recent-users" class="space-y-3">
                             <p class="text-gray-500 text-sm text-center py-4">로딩 중...</p>
@@ -495,7 +554,7 @@
                     <!-- Recent Activity -->
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">
-                            <i class="fas fa-history text-sage mr-2"></i>최근 활동 로그
+                            <i class="fas fa-history text-purple-600 mr-2"></i>최근 활동 로그
                         </h3>
                         <div id="recent-activity" class="space-y-3">
                             <p class="text-gray-500 text-sm text-center py-4">로딩 중...</p>
@@ -509,7 +568,7 @@
         <div id="section-users" class="content-section hidden">
             <div class="fade-in">
                 <h2 class="text-3xl font-bold text-dark-slate mb-6">
-                    <i class="fas fa-users text-sage mr-3"></i>회원 관리
+                    <i class="fas fa-users text-purple-600 mr-3"></i>회원 관리
                 </h2>
 
                 <!-- Search and Filter -->
@@ -524,7 +583,7 @@
                             <option value="B2B">기업 (B2B)</option>
                         </select>
                         <button onclick="searchUsers()" 
-                            class="bg-sage text-white px-6 py-2 rounded-lg hover:opacity-90 transition font-semibold">
+                            class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:opacity-90 transition font-semibold">
                             <i class="fas fa-search mr-2"></i>검색
                         </button>
                     </div>
@@ -571,10 +630,10 @@
             <div class="fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-dark-slate">
-                        <i class="fas fa-box text-sage mr-3"></i>제품 관리
+                        <i class="fas fa-box text-purple-600 mr-3"></i>제품 관리
                     </h2>
                     <button onclick="openProductModal()" 
-                        class="bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                        class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
                         <i class="fas fa-plus mr-2"></i>제품 등록
                     </button>
                 </div>
@@ -594,18 +653,18 @@
         <div id="section-blog" class="content-section hidden">
             <div class="fade-in">
                 <h2 class="text-3xl font-bold text-dark-slate mb-6">
-                    <i class="fas fa-blog text-sage mr-3"></i>블로그 댓글 분석 & 관리
+                    <i class="fas fa-blog text-purple-600 mr-3"></i>블로그 댓글 분석 & 관리
                 </h2>
 
                 <!-- Stats Overview -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-lavender hover-lift">
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-pink-600 hover-lift">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">총 댓글</p>
-                                <p class="text-3xl font-bold text-lavender" id="blog-stat-comments">0</p>
+                                <p class="text-3xl font-bold text-pink-600" id="blog-stat-comments">0</p>
                             </div>
-                            <i class="fas fa-comments text-4xl text-lavender opacity-20"></i>
+                            <i class="fas fa-comments text-4xl text-pink-600 opacity-20"></i>
                         </div>
                     </div>
                     <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover-lift">
@@ -642,7 +701,7 @@
                     <div class="border-b border-gray-200">
                         <nav class="flex space-x-8 px-6" aria-label="Tabs">
                             <button onclick="switchBlogSubTab('high-leads')" 
-                                class="blog-sub-tab-btn border-b-2 border-lavender py-4 px-1 text-sm font-medium text-lavender">
+                                class="blog-sub-tab-btn border-b-2 border-pink-600 py-4 px-1 text-sm font-medium text-pink-600">
                                 <i class="fas fa-star mr-2"></i>고전환율 리드
                             </button>
                             <button onclick="switchBlogSubTab('posts')" 
@@ -666,7 +725,7 @@
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-2xl font-bold text-gray-800">
-                                <i class="fas fa-bullseye mr-2 text-lavender"></i>
+                                <i class="fas fa-bullseye mr-2 text-pink-600"></i>
                                 회원가입 유도 대상
                             </h3>
                             <div class="flex items-center space-x-4">
@@ -694,7 +753,7 @@
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-2xl font-bold text-gray-800">
-                                <i class="fas fa-blog mr-2 text-lavender"></i>
+                                <i class="fas fa-blog mr-2 text-pink-600"></i>
                                 등록된 블로그 포스트
                             </h3>
                             <button onclick="crawlAllBlogComments()" id="crawl-all-btn"
@@ -755,7 +814,7 @@
                 <div id="blog-add-post-tab" class="blog-sub-content hidden">
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <h3 class="text-2xl font-bold text-gray-800 mb-6">
-                            <i class="fas fa-plus mr-2 text-lavender"></i>
+                            <i class="fas fa-plus mr-2 text-pink-600"></i>
                             새 블로그 게시물 추가
                         </h3>
                         
@@ -790,7 +849,7 @@
 
                             <div class="flex space-x-3">
                                 <button onclick="addBlogPost()" 
-                                    class="flex-1 bg-lavender text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                                    class="flex-1 bg-pink-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
                                     <i class="fas fa-plus mr-2"></i>게시물 추가
                                 </button>
                                 <button onclick="resetBlogPostForm()" 
@@ -811,7 +870,7 @@
                 <div id="blog-add-comment-tab" class="blog-sub-content hidden">
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <h3 class="text-2xl font-bold text-gray-800 mb-6">
-                            <i class="fas fa-comment-medical mr-2 text-lavender"></i>
+                            <i class="fas fa-comment-medical mr-2 text-pink-600"></i>
                             수동 댓글 추가
                         </h3>
                         
@@ -858,7 +917,7 @@
                             
                             <div class="flex space-x-3">
                                 <button onclick="addBlogComment()" 
-                                    class="flex-1 bg-lavender text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                                    class="flex-1 bg-pink-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
                                     <i class="fas fa-magic mr-2"></i>댓글 추가 및 분석
                                 </button>
                                 <button onclick="resetBlogCommentForm()" 
@@ -876,10 +935,10 @@
             <div class="fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-dark-slate">
-                        <i class="fas fa-hands-helping text-sage mr-3"></i>워크샵 관리
+                        <i class="fas fa-hands-helping text-purple-600 mr-3"></i>워크샵 관리
                     </h2>
                     <button onclick="openWorkshopModal()" 
-                        class="bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                        class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
                         <i class="fas fa-plus mr-2"></i>워크샵 등록
                     </button>
                 </div>
@@ -899,10 +958,10 @@
             <div class="fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-dark-slate">
-                        <i class="fas fa-chalkboard-teacher text-sage mr-3"></i>원데이 클래스 관리
+                        <i class="fas fa-chalkboard-teacher text-purple-600 mr-3"></i>원데이 클래스 관리
                     </h2>
                     <button onclick="openClassModal()" 
-                        class="bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
+                        class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-semibold">
                         <i class="fas fa-plus mr-2"></i>클래스 등록
                     </button>
                 </div>
@@ -954,13 +1013,13 @@
                         </div>
                         <div>
                             <label class="flex items-center space-x-2">
-                                <input type="checkbox" id="product-is-active" checked class="w-5 h-5 text-sage rounded">
+                                <input type="checkbox" id="product-is-active" checked class="w-5 h-5 text-purple-600 rounded">
                                 <span class="text-sm font-semibold text-gray-700">판매중</span>
                             </label>
                         </div>
                     </div>
                     <div class="mt-6 flex space-x-3">
-                        <button type="submit" class="flex-1 bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 font-semibold">
+                        <button type="submit" class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90 font-semibold">
                             <i class="fas fa-save mr-2"></i>저장
                         </button>
                         <button type="button" onclick="closeProductModal()" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-semibold">
@@ -1017,13 +1076,13 @@
                         </div>
                         <div>
                             <label class="flex items-center space-x-2">
-                                <input type="checkbox" id="workshop-is-active" checked class="w-5 h-5 text-sage rounded">
+                                <input type="checkbox" id="workshop-is-active" checked class="w-5 h-5 text-purple-600 rounded">
                                 <span class="text-sm font-semibold text-gray-700">활성</span>
                             </label>
                         </div>
                     </div>
                     <div class="mt-6 flex space-x-3">
-                        <button type="submit" class="flex-1 bg-sage text-white px-6 py-3 rounded-lg hover:opacity-90 font-semibold">
+                        <button type="submit" class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90 font-semibold">
                             <i class="fas fa-save mr-2"></i>저장
                         </button>
                         <button type="button" onclick="closeWorkshopModal()" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-semibold">
