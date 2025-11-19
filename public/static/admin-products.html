@@ -7,8 +7,20 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script>
         // 이 페이지는 더 이상 사용되지 않습니다. 새로운 대시보드로 리다이렉트합니다.
-        console.log('Redirecting to new admin dashboard...');
-        window.location.href = '/admin-dashboard';
+        console.log('Old admin-products page accessed, redirecting to new admin dashboard...');
+        // 토큰 확인 - 없으면 로그인 페이지로
+        const token = localStorage.getItem('adminToken') || 
+                      localStorage.getItem('admin_token') || 
+                      localStorage.getItem('auth_token') || 
+                      localStorage.getItem('token');
+        
+        if (!token) {
+            console.log('No token found, redirecting to login');
+            window.location.replace('/admin-login');
+        } else {
+            console.log('Token found, redirecting to dashboard');
+            window.location.replace('/admin-dashboard');
+        }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">

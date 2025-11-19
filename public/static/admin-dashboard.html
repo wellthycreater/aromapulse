@@ -6,6 +6,28 @@
     <title>아로마펄스 관리자 대시보드</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     
+    <script>
+        // 페이지 로드 전 즉시 토큰 확인 (무한 리다이렉트 방지)
+        console.log('=== Admin Dashboard Pre-Auth Check ===');
+        const token = localStorage.getItem('adminToken') || 
+                      localStorage.getItem('admin_token') || 
+                      localStorage.getItem('auth_token') || 
+                      localStorage.getItem('token');
+        console.log('Token exists:', !!token);
+        console.log('Token value:', token ? token.substring(0, 20) + '...' : 'null');
+        
+        if (!token) {
+            console.log('No token found, redirecting to login...');
+            alert('로그인이 필요합니다.');
+            window.location.replace('/admin-login');
+            // Prevent page from loading
+            document.documentElement.innerHTML = '<body style="margin:0;padding:20px;font-family:sans-serif;">Redirecting to login...</body>';
+            throw new Error('No auth token');
+        } else {
+            console.log('Token found, proceeding to load dashboard');
+        }
+    </script>
+    
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">

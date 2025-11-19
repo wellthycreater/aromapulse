@@ -30,12 +30,16 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     
     // 토큰 저장 (adminToken으로 통일)
     localStorage.setItem('adminToken', data.token);
+    localStorage.setItem('admin_token', data.token); // 하위 호환성
     localStorage.setItem('auth_token', data.token); // 하위 호환성
+    localStorage.setItem('token', data.token); // 하위 호환성
+    
+    console.log('Token saved to localStorage:', data.token);
     
     alert(`✅ 로그인 성공!\n\n환영합니다, ${data.user.name}님!`);
     
-    // 관리자 페이지로 이동
-    window.location.href = '/static/admin-products.html';
+    // 새로운 관리자 대시보드로 이동
+    window.location.href = '/admin-dashboard';
     
   } catch (error) {
     console.error('로그인 오류:', error);
