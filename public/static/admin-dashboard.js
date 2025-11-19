@@ -3190,101 +3190,6 @@ function renderO2OLocationChart(data) {
     });
 }
 
-// Render O2O Conversion Rate by SNS Channel Chart
-function renderO2OConversionRateChart(data) {
-    const ctx = document.getElementById('o2oConversionRateChart');
-    if (!ctx) {
-        console.warn('⚠️ o2oConversionRateChart canvas not found');
-        return;
-    }
-    
-    if (!data || !data.conversions_by_source || data.conversions_by_source.length === 0) {
-        console.warn('⚠️ No conversions_by_source data');
-        ctx.parentElement.innerHTML = '<div class="text-center py-8"><p class="text-gray-400">데이터 없음</p></div>';
-        return;
-    }
-    
-    if (o2oConversionRateChart) {
-        o2oConversionRateChart.destroy();
-    }
-    
-    const channelLabels = {
-        'blog': '블로그',
-        'instagram': '인스타그램',
-        'youtube': '유튜브'
-    };
-    
-    const labels = data.conversions_by_source.map(item => 
-        channelLabels[item.referral_source] || item.referral_source
-    );
-    const conversionCounts = data.conversions_by_source.map(item => item.conversion_count || 0);
-    const revenues = data.conversions_by_source.map(item => item.total_revenue || 0);
-    
-    console.log('📊 Rendering O2O Conversion Rate Chart:', { labels, conversionCounts, revenues });
-    
-    o2oConversionRateChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: '전환 수',
-                    data: conversionCounts,
-                    backgroundColor: 'rgba(147, 51, 234, 0.6)',
-                    borderColor: 'rgba(147, 51, 234, 1)',
-                    borderWidth: 2,
-                    yAxisID: 'y'
-                },
-                {
-                    label: '총 매출 (만원)',
-                    data: revenues.map(r => Math.round(r / 10000)), // Convert to 만원
-                    backgroundColor: 'rgba(14, 165, 233, 0.6)',
-                    borderColor: 'rgba(14, 165, 233, 1)',
-                    borderWidth: 2,
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    beginAtZero: true,
-                    ticks: { precision: 0 },
-                    title: { display: true, text: '전환 수' }
-                },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    beginAtZero: true,
-                    ticks: { precision: 0 },
-                    title: { display: true, text: '매출 (만원)' },
-                    grid: { drawOnChartArea: false }
-                }
-            },
-            plugins: {
-                legend: { display: true, position: 'top' },
-                tooltip: {
-                    callbacks: {
-                        afterLabel: function(context) {
-                            const source = data.conversions_by_source[context.dataIndex];
-                            if (context.datasetIndex === 1) {
-                                return `실제 매출: ${source.total_revenue.toLocaleString()}원`;
-                            }
-                            return '';
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
 console.log('✅ SNS and O2O analytics functions loaded');
 
 // Chart instances for occupation/life situation
@@ -3785,7 +3690,6 @@ async function loadO2OStats() {
         
         renderO2OLocationChart(data);
         renderO2OConversionChart(data);
-        renderO2OConversionRateChart(data);
         
     } catch (error) {
         console.error('❌ O2O stats error:', error);
@@ -3903,8 +3807,16 @@ function renderO2OLocationChart(data) {
 
 // Render O2O Conversion Chart
 function renderO2OConversionChart(data) {
-    const ctx = document.getElementById('o2oConversionChart');
-    if (!ctx || !data.funnel_metrics || data.funnel_metrics.length === 0) return;
+    const ctx = document.getElementById('o2oConversionRateChart');
+    if (!ctx) {
+        console.warn('⚠️ o2oConversionRateChart canvas not found');
+        return;
+    }
+    
+    if (!data.funnel_metrics || data.funnel_metrics.length === 0) {
+        console.warn('⚠️ No funnel_metrics data');
+        return;
+    }
     
     const validData = data.funnel_metrics.filter(item => item.referral_source && item.conversion_rate);
     if (validData.length === 0) return;
