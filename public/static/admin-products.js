@@ -115,6 +115,13 @@ async function loadDashboard() {
             }
         });
         
+        if (response.status === 401 || response.status === 403) {
+            console.error('[loadDashboard] 인증 실패 - 로그아웃합니다.');
+            alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+            logout();
+            return;
+        }
+        
         if (!response.ok) throw new Error('Failed to load dashboard');
         
         const stats = await response.json();
@@ -215,6 +222,13 @@ async function loadUsers() {
                 'Authorization': `Bearer ${authToken}`
             }
         });
+        
+        if (response.status === 401 || response.status === 403) {
+            console.error('[loadUsers] 인증 실패 - 로그아웃합니다.');
+            alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+            logout();
+            return;
+        }
         
         if (!response.ok) throw new Error('Failed to load users');
         
@@ -368,6 +382,13 @@ async function loadProducts() {
                 'Authorization': `Bearer ${authToken}`
             }
         });
+        
+        if (response.status === 401 || response.status === 403) {
+            console.error('[loadProducts] 인증 실패 - 로그아웃합니다.');
+            alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+            logout();
+            return;
+        }
         
         if (!response.ok) throw new Error('Failed to load products');
         
