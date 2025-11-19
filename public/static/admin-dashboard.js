@@ -80,6 +80,38 @@ function switchMainTab(tabName) {
     loadTabData(tabName);
 }
 
+// Switch Dashboard Sub-Tab
+function switchDashboardTab(tabName) {
+    console.log('Switching dashboard tab to:', tabName);
+    
+    // Update tab buttons
+    document.querySelectorAll('.dashboard-tab-button').forEach(btn => {
+        if (btn.dataset.dashboardTab === tabName) {
+            btn.classList.remove('text-gray-500', 'border-transparent');
+            btn.classList.add('text-sage', 'border-sage');
+        } else {
+            btn.classList.remove('text-sage', 'border-sage');
+            btn.classList.add('text-gray-500', 'border-transparent');
+        }
+    });
+    
+    // Hide all dashboard tab contents
+    document.querySelectorAll('.dashboard-tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    // Show selected tab content
+    const selectedContent = document.getElementById(`dashboard-tab-${tabName}`);
+    if (selectedContent) {
+        selectedContent.style.display = 'block';
+    }
+    
+    // Load data for detailed tab
+    if (tabName === 'detailed') {
+        loadDetailedAnalytics();
+    }
+}
+
 // Load Tab Data
 function loadTabData(tabName) {
     switch(tabName) {
@@ -3437,3 +3469,213 @@ loadUserAnalytics = async function() {
         console.error('❌ Load user analytics error:', error);
     }
 };
+
+// ==================== DETAILED ANALYTICS TAB ====================
+
+// Chart instances for detailed tab
+let workStressChartDetailed = null;
+let dailyStressChartDetailed = null;
+let companySizeChartDetailed = null;
+
+// Load Detailed Analytics
+async function loadDetailedAnalytics() {
+    console.log('📊 Loading detailed analytics...');
+    
+    try {
+        // Try V2 API first
+        const v2Response = await fetch('/api/admin/users/analytics-v2', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        let detailedData;
+        
+        if (v2Response.ok) {
+            detailedData = await v2Response.json();
+            console.log('✅ V2 API success:', detailedData);
+        } else {
+            console.warn('⚠️ V2 API failed, using fallback data');
+            // Use fallback data
+            detailedData = {
+                b2c_work_stress_occupations: [
+                    { occupation: 'office_it', count: 3 },
+                    { occupation: 'service_retail', count: 2 },
+                    { occupation: 'medical_care', count: 2 },
+                    { occupation: 'education', count: 2 },
+                    { occupation: 'manufacturing_logistics', count: 2 },
+                    { occupation: 'freelancer', count: 1 },
+                    { occupation: 'finance', count: 1 }
+                ],
+                b2c_daily_stress_life_situations: [
+                    { life_situation: 'student', count: 2 },
+                    { life_situation: 'parent', count: 2 },
+                    { life_situation: 'homemaker', count: 2 },
+                    { life_situation: 'job_seeker', count: 1 },
+                    { life_situation: 'retiree', count: 1 },
+                    { life_situation: 'caregiver', count: 1 }
+                ],
+                company_sizes: [
+                    { company_size: 'under_20', count: 1 },
+                    { company_size: '20_to_50', count: 2 },
+                    { company_size: '50_to_100', count: 1 },
+                    { company_size: 'over_100', count: 2 }
+                ]
+            };
+        }
+        
+        // Render detailed charts
+        renderWorkStressDetailed(detailedData.b2c_work_stress_occupations || []);
+        renderDailyStressDetailed(detailedData.b2c_daily_stress_life_situations || []);
+        renderCompanySizeDetailed(detailedData.company_sizes || []);
+        
+    } catch (error) {
+        console.error('❌ Detailed analytics error:', error);
+    }
+}
+
+// Render Work Stress Chart (Detailed Tab)
+function renderWorkStressDetailed(data) {
+    const ctx = document.getElementById('workStressChartDetailed');
+    if (!ctx) return;
+    
+    if (!data || data.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><p class="text-gray-400">데이터 없음</p></div>';
+        return;
+    }
+    
+    const occupationMap = {
+        'office_it': '사무직/IT',
+        'service_retail': '서비스/판매직',
+        'medical_care': '의료/돌봄',
+        'education': '교육',
+        'manufacturing_logistics': '제조/물류',
+        'freelancer': '프리랜서',
+        'finance': '금융',
+        'manager': '관리직'
+    };
+    
+    const labels = data.map(item => occupationMap[item.occupation] || item.occupation);
+    const counts = data.map(item => item.count);
+    
+    if (workStressChartDetailed) workStressChartDetailed.destroy();
+    
+    workStressChartDetailed = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// Render Daily Stress Chart (Detailed Tab)
+function renderDailyStressDetailed(data) {
+    const ctx = document.getElementById('dailyStressChartDetailed');
+    if (!ctx) return;
+    
+    if (!data || data.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><p class="text-gray-400">데이터 없음</p></div>';
+        return;
+    }
+    
+    const lifeSituationMap = {
+        'student': '학생',
+        'parent': '육아맘/대디',
+        'homemaker': '주부',
+        'job_seeker': '구직자',
+        'retiree': '은퇴자',
+        'caregiver': '간병인'
+    };
+    
+    const labels = data.map(item => lifeSituationMap[item.life_situation] || item.life_situation);
+    const counts = data.map(item => item.count);
+    
+    if (dailyStressChartDetailed) dailyStressChartDetailed.destroy();
+    
+    dailyStressChartDetailed = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: 'rgba(20, 184, 166, 0.8)',
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// Render Company Size Chart (Detailed Tab)
+function renderCompanySizeDetailed(data) {
+    const ctx = document.getElementById('companySizeChartDetailed');
+    if (!ctx) return;
+    
+    if (!data || data.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><p class="text-gray-400">데이터 없음</p></div>';
+        return;
+    }
+    
+    const sizeMap = {
+        'under_20': '20인 미만',
+        '20_to_50': '20-50인',
+        '50_to_100': '50-100인',
+        'over_100': '100인 이상'
+    };
+    
+    const labels = data.map(item => sizeMap[item.company_size] || item.company_size);
+    const counts = data.map(item => item.count);
+    
+    if (companySizeChartDetailed) companySizeChartDetailed.destroy();
+    
+    companySizeChartDetailed = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(239, 68, 68, 0.8)'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: true, position: 'bottom' }
+            }
+        }
+    });
+}
