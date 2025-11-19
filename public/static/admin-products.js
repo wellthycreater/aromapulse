@@ -139,9 +139,17 @@ function switchTab(tab) {
     } else {
       currentTab = tab;
     }
-    if (contentProducts) contentProducts.style.display = 'block';
-    if (productsGrid) productsGrid.style.display = 'grid';
+    if (contentProducts) {
+      contentProducts.style.display = 'block';
+      console.log('[switchTab] content-products 표시됨');
+    }
+    // 제품을 로드한 후에 표시되도록 loadProducts에서 처리
+    // if (productsGrid) productsGrid.style.display = 'grid';
     if (productSearchFilter) productSearchFilter.style.display = 'block';
+    
+    // 로딩 표시
+    if (loadingEl) loadingEl.style.display = 'block';
+    
     filterAndRenderProducts();
   }
 }
@@ -218,16 +226,26 @@ function applySearchAndFilter() {
     countEl.textContent = results.length;
   }
   
+  // 로딩 숨기기
+  const loadingEl = document.getElementById('loading');
+  if (loadingEl) loadingEl.style.display = 'none';
+  
   // 빈 상태 확인
   if (results.length === 0) {
-    gridEl.innerHTML = `
-      <div class="col-span-full text-center py-12 text-gray-500">
-        <i class="fas fa-search text-6xl mb-4"></i>
-        <p class="text-lg">검색 결과가 없습니다.</p>
-        <p class="text-sm mt-2">다른 검색어나 필터를 시도해보세요.</p>
-      </div>
-    `;
+    if (gridEl) gridEl.style.display = 'none';
+    const emptyState = document.getElementById('empty-state');
+    if (emptyState) emptyState.style.display = 'block';
     return;
+  }
+  
+  // 빈 상태 숨기기
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) emptyState.style.display = 'none';
+  
+  // 제품 그리드 표시
+  if (gridEl) {
+    gridEl.style.display = 'grid';
+    console.log('[applySearchAndFilter] products-grid 표시됨, 제품 수:', results.length);
   }
   
   // 제품 카드 렌더링
