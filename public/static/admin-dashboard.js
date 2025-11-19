@@ -210,16 +210,31 @@ async function loadUsers() {
                     subCategory = '<span class="text-xs text-blue-600">직무 스트레스</span>';
                 }
             } else if (user.user_type === 'B2B') {
-                if (user.b2b_business_type === 'perfumer') {
-                    subCategory = '<span class="text-xs text-pink-600"><i class="fas fa-flask mr-1"></i>조향사</span>';
-                } else if (user.b2b_business_type === 'company') {
-                    subCategory = '<span class="text-xs text-green-600"><i class="fas fa-building mr-1"></i>기업</span>';
-                } else if (user.b2b_business_type === 'shop') {
-                    subCategory = '<span class="text-xs text-purple-600"><i class="fas fa-store mr-1"></i>공방</span>';
+                // B2B category icons and labels
+                if (user.b2b_category === 'independent') {
+                    subCategory = '<span class="text-xs text-green-600"><i class="fas fa-store mr-1"></i>자영업자</span>';
+                } else if (user.b2b_category === 'wholesale') {
+                    subCategory = '<span class="text-xs text-blue-600"><i class="fas fa-truck mr-1"></i>도매/유통</span>';
+                } else if (user.b2b_category === 'company') {
+                    subCategory = '<span class="text-xs text-purple-600"><i class="fas fa-building mr-1"></i>기업 복지</span>';
+                    // Add company size if available
+                    if (user.company_size) {
+                        const sizeMap = {
+                            'under_20': '20인↓',
+                            '20_to_50': '20~50인',
+                            '50_to_100': '50~100인',
+                            'over_100': '100인↑'
+                        };
+                        subCategory += `<br><span class="text-xs text-gray-500">${sizeMap[user.company_size] || user.company_size}</span>`;
+                    }
+                    // Add department if available
+                    if (user.department) {
+                        subCategory += `<br><span class="text-xs text-gray-500">${user.department}</span>`;
+                    }
                 }
-                // Add company name if available
-                if (user.b2b_company_name) {
-                    subCategory += `<br><span class="text-xs text-gray-600">${user.b2b_company_name}</span>`;
+                // Add business name if available
+                if (user.b2b_business_name) {
+                    subCategory += `<br><span class="text-xs text-gray-600 font-semibold">${user.b2b_business_name}</span>`;
                 }
             }
             
@@ -1949,6 +1964,7 @@ loadVisitorStats = async function() {
 let userTypeChart = null;
 let stressTypeChart = null;
 let b2bCategoryChart = null;
+let companySizeChart = null;
 let regionChart = null;
 let genderChart = null;
 let monthlySignupChart = null;
@@ -1974,6 +1990,7 @@ async function loadUserAnalytics() {
         renderUserTypeChartNew(data);
         renderStressTypeChartNew(data);
         renderB2bCategoryChartNew(data);
+        renderCompanySizeChartNew(data);
         renderRegionChartNew(data);
         renderGenderChartNew(data);
         renderMonthlySignupChartNew(data);
@@ -2368,7 +2385,7 @@ function renderStressTypeChartNew(data) {
     });
 }
 
-// 3. B2B Category Chart - New
+// 3. B2B Category Chart - New (corrected)
 function renderB2bCategoryChartNew(data) {
     const ctx = document.getElementById('b2bCategoryChart');
     if (!ctx) return;
@@ -2380,9 +2397,9 @@ function renderB2bCategoryChartNew(data) {
     
     const labels = data.b2b_categories.map(item => {
         const map = {
-            'perfumer': '조향사',
-            'company': '기업',
-            'shop': '공방/가게'
+            'independent': '소규모 자영업자',
+            'wholesale': '대량 납품 업체',
+            'company': '기업 복지 담당'
         };
         return map[item.b2b_category] || item.b2b_category || '기타';
     });
@@ -2395,9 +2412,9 @@ function renderB2bCategoryChartNew(data) {
         data: {
             labels: labels,
             datasets: [{
-                label: '회원 수',
+                label: 'B2B 회원 수',
                 data: counts,
-                backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(147, 51, 234, 0.8)'],
+                backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(245, 158, 11, 0.8)'],
                 borderWidth: 0
             }]
         },
@@ -2409,13 +2426,92 @@ function renderB2bCategoryChartNew(data) {
                 x: { beginAtZero: true, ticks: { precision: 0 } }
             },
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const category = data.b2b_categories[context.dataIndex].b2b_category;
+                            const descriptions = {
+                                'independent': '가게, 에스테틱, 미용실, 네일샵 등',
+                                'wholesale': '도매상, 유통업체 - 대량 구매',
+                                'company': 'HR/복지 담당자 - 워크샵/클래스 신청'
+                            };
+                            return descriptions[category] || '';
+                        }
+                    }
+                }
             }
         }
     });
 }
 
-// 4. Region Chart - New
+// 4. Company Size Chart - New (B2B company category only)
+function renderCompanySizeChartNew(data) {
+    const ctx = document.getElementById('companySizeChart');
+    if (!ctx) return;
+    
+    if (!data.company_sizes || data.company_sizes.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">기업 복지 회원 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.company_sizes.map(item => {
+        const map = {
+            'under_20': '20인 미만',
+            '20_to_50': '20~50인',
+            '50_to_100': '50~100인',
+            'over_100': '100인 이상'
+        };
+        return map[item.company_size] || item.company_size || '미분류';
+    });
+    const counts = data.company_sizes.map(item => item.count);
+    
+    if (companySizeChart) companySizeChart.destroy();
+    
+    companySizeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: [
+                    'rgba(245, 158, 11, 0.8)',  // under_20
+                    'rgba(59, 130, 246, 0.8)',   // 20_to_50
+                    'rgba(16, 185, 129, 0.8)',   // 50_to_100
+                    'rgba(147, 51, 234, 0.8)'    // over_100
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { 
+                    display: true, 
+                    position: 'bottom' 
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const size = data.company_sizes[context.dataIndex].company_size;
+                            const notes = {
+                                'under_20': '스타트업, 소규모 기업',
+                                '20_to_50': '중소기업',
+                                '50_to_100': '중견기업',
+                                'over_100': '대기업'
+                            };
+                            return notes[size] || '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 6. Region Chart - New
 function renderRegionChartNew(data) {
     const ctx = document.getElementById('regionChart');
     if (!ctx) return;
@@ -2455,7 +2551,7 @@ function renderRegionChartNew(data) {
     });
 }
 
-// 5. Gender Chart - New
+// 7. Gender Chart - New
 function renderGenderChartNew(data) {
     const ctx = document.getElementById('genderChart');
     if (!ctx) return;
@@ -2498,7 +2594,7 @@ function renderGenderChartNew(data) {
     });
 }
 
-// 6. Monthly Signup Chart - New
+// 8. Monthly Signup Chart - New
 function renderMonthlySignupChartNew(data) {
     const ctx = document.getElementById('monthlySignupChart');
     if (!ctx) return;

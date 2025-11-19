@@ -237,7 +237,8 @@ admin.get('/users', async (c) => {
              is_active, created_at, last_login_at, role,
              oauth_provider,
              b2c_category, b2c_subcategory,
-             b2b_category, b2b_business_name, b2b_business_number, b2b_address
+             b2b_category, b2b_business_name, b2b_business_number, b2b_address,
+             company_size, department, position, address
       FROM users 
       ORDER BY created_at DESC
     `).all();
@@ -340,22 +341,27 @@ admin.get('/users/analytics', async (c) => {
       "SELECT b2c_category as stress_type, COUNT(*) as count FROM users WHERE user_type = 'B2C' AND b2c_category IS NOT NULL GROUP BY b2c_category"
     ).all();
     
-    // 3. B2B categories
+    // 3. B2B categories (independent, wholesale, company)
     const b2bCategories = await c.env.DB.prepare(
-      "SELECT b2b_business_type as b2b_category, COUNT(*) as count FROM users WHERE user_type = 'B2B' AND b2b_business_type IS NOT NULL GROUP BY b2b_business_type"
+      "SELECT b2b_category, COUNT(*) as count FROM users WHERE user_type = 'B2B' AND b2b_category IS NOT NULL GROUP BY b2b_category"
     ).all();
     
-    // 4. Region distribution (if region field exists)
+    // 4. Company sizes (for B2B company category only)
+    const companySizes = await c.env.DB.prepare(
+      "SELECT company_size, COUNT(*) as count FROM users WHERE user_type = 'B2B' AND b2b_category = 'company' AND company_size IS NOT NULL GROUP BY company_size"
+    ).all();
+    
+    // 5. Region distribution
     const regions = await c.env.DB.prepare(
       "SELECT region, COUNT(*) as count FROM users WHERE region IS NOT NULL GROUP BY region ORDER BY count DESC LIMIT 10"
     ).all();
     
-    // 5. Gender distribution
+    // 6. Gender distribution
     const genders = await c.env.DB.prepare(
       "SELECT gender, COUNT(*) as count FROM users WHERE gender IS NOT NULL GROUP BY gender"
     ).all();
     
-    // 6. Monthly signup trend (last 12 months)
+    // 7. Monthly signup trend (last 12 months)
     const signupTrend = await c.env.DB.prepare(
       "SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count FROM users WHERE created_at >= datetime('now', '-12 months') GROUP BY month ORDER BY month ASC"
     ).all();
@@ -366,6 +372,7 @@ admin.get('/users/analytics', async (c) => {
       user_types: userTypes.results || [],
       stress_types: stressTypes.results || [],
       b2b_categories: b2bCategories.results || [],
+      company_sizes: companySizes.results || [],
       regions: regions.results || [],
       genders: genders.results || [],
       signup_trend: signupTrend.results || []
