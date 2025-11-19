@@ -1834,25 +1834,25 @@ async function loadUserAnalytics() {
     console.log('📊 Loading user analytics...');
     
     try {
-        const response = await fetch('/api/user-analytics/stats', {
+        const response = await fetch('/api/admin/users/analytics', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
         if (!response.ok) {
-            console.warn('⚠️ User analytics API failed');
+            console.warn('⚠️ User analytics API failed:', response.status);
             return;
         }
         
         const data = await response.json();
         console.log('✅ User analytics data:', data);
         
-        // Render all charts
-        renderUserTypeChart(data);
-        renderStressTypeChart(data);
-        renderB2bCategoryChart(data);
-        renderRegionChart(data);
-        renderGenderChart(data);
-        renderMonthlySignupChart(data);
+        // Render all charts with new data structure
+        renderUserTypeChartNew(data);
+        renderStressTypeChartNew(data);
+        renderB2bCategoryChartNew(data);
+        renderRegionChartNew(data);
+        renderGenderChartNew(data);
+        renderMonthlySignupChartNew(data);
         
     } catch (error) {
         console.error('❌ Load user analytics error:', error);
@@ -2118,3 +2118,265 @@ loadUsers = async function() {
         }
     }
 };
+
+// ==================== New User Analytics Charts ====================
+
+let userTypeChartNew, stressTypeChartNew, b2bCategoryChartNew, regionChartNew, genderChartNew, monthlySignupChartNew;
+
+// 1. User Type Chart (B2C vs B2B) - New
+function renderUserTypeChartNew(data) {
+    const ctx = document.getElementById('userTypeChart');
+    if (!ctx || !data.user_types || data.user_types.length === 0) {
+        if (ctx) ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.user_types.map(item => item.user_type || '기타');
+    const counts = data.user_types.map(item => item.count);
+    const colors = ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(239, 68, 68, 0.8)'];
+    
+    if (userTypeChartNew) userTypeChartNew.destroy();
+    
+    userTypeChartNew = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: colors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: true, position: 'bottom' }
+            }
+        }
+    });
+}
+
+// 2. Stress Type Chart (B2C categories) - New
+function renderStressTypeChartNew(data) {
+    const ctx = document.getElementById('stressTypeChart');
+    if (!ctx) return;
+    
+    if (!data.stress_types || data.stress_types.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.stress_types.map(item => {
+        const map = {
+            'daily_stress': '일상 스트레스',
+            'work_stress': '직무 스트레스',
+            'general_stress': '일반 스트레스'
+        };
+        return map[item.stress_type] || item.stress_type || '기타';
+    });
+    const counts = data.stress_types.map(item => item.count);
+    
+    if (stressTypeChartNew) stressTypeChartNew.destroy();
+    
+    stressTypeChartNew = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: ['rgba(147, 51, 234, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// 3. B2B Category Chart - New
+function renderB2bCategoryChartNew(data) {
+    const ctx = document.getElementById('b2bCategoryChart');
+    if (!ctx) return;
+    
+    if (!data.roles || data.roles.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.roles.map(item => {
+        const map = {
+            'perfumer': '조향사',
+            'hr_manager': 'HR 담당자',
+            'culture_team': '조직문화팀',
+            'welfare_manager': '복리후생 담당자'
+        };
+        return map[item.company_role] || item.company_role || '기타';
+    });
+    const counts = data.roles.map(item => item.count);
+    
+    if (b2bCategoryChartNew) b2bCategoryChartNew.destroy();
+    
+    b2bCategoryChartNew = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(147, 51, 234, 0.8)'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// 4. Region Chart - New
+function renderRegionChartNew(data) {
+    const ctx = document.getElementById('regionChart');
+    if (!ctx) return;
+    
+    if (!data.regions || data.regions.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.regions.map(item => item.region || '미분류');
+    const counts = data.regions.map(item => item.count);
+    
+    if (regionChartNew) regionChartNew.destroy();
+    
+    regionChartNew = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '회원 수',
+                data: counts,
+                backgroundColor: 'rgba(147, 51, 234, 0.8)',
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// 5. Gender Chart - New
+function renderGenderChartNew(data) {
+    const ctx = document.getElementById('genderChart');
+    if (!ctx) return;
+    
+    if (!data.genders || data.genders.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.genders.map(item => {
+        const map = {
+            'male': '남성',
+            'female': '여성',
+            'other': '기타'
+        };
+        return map[item.gender] || item.gender || '미분류';
+    });
+    const counts = data.genders.map(item => item.count);
+    
+    if (genderChartNew) genderChartNew.destroy();
+    
+    genderChartNew = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: true, position: 'bottom' }
+            }
+        }
+    });
+}
+
+// 6. Monthly Signup Chart - New
+function renderMonthlySignupChartNew(data) {
+    const ctx = document.getElementById('monthlySignupChart');
+    if (!ctx) return;
+    
+    if (!data.signup_trend || data.signup_trend.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">데이터 없음</p></div>';
+        return;
+    }
+    
+    const labels = data.signup_trend.map(item => {
+        const [year, month] = item.month.split('-');
+        return `${month}월`;
+    });
+    const counts = data.signup_trend.map(item => item.count);
+    
+    if (monthlySignupChartNew) monthlySignupChartNew.destroy();
+    
+    monthlySignupChartNew = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '신규 가입',
+                data: counts,
+                borderColor: 'rgba(147, 51, 234, 0.8)',
+                backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+console.log('✅ New user analytics chart functions loaded');

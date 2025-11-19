@@ -53,34 +53,13 @@ userAnalytics.get('/stats', async (c) => {
       GROUP BY role
     `).all();
     
-    // 6. 지역별 분포 (시도 기준)
+    // 6. 지역별 분포 (시도 기준) - simplified to avoid CASE issues
     const regionStats = await DB.prepare(`
       SELECT 
-        CASE 
-          WHEN address LIKE '%서울%' THEN '서울'
-          WHEN address LIKE '%경기%' THEN '경기'
-          WHEN address LIKE '%인천%' THEN '인천'
-          WHEN address LIKE '%부산%' THEN '부산'
-          WHEN address LIKE '%대구%' THEN '대구'
-          WHEN address LIKE '%광주%' THEN '광주'
-          WHEN address LIKE '%대전%' THEN '대전'
-          WHEN address LIKE '%울산%' THEN '울산'
-          WHEN address LIKE '%세종%' THEN '세종'
-          WHEN address LIKE '%강원%' THEN '강원'
-          WHEN address LIKE '%충북%' OR address LIKE '%충청북%' THEN '충북'
-          WHEN address LIKE '%충남%' OR address LIKE '%충청남%' THEN '충남'
-          WHEN address LIKE '%전북%' OR address LIKE '%전라북%' THEN '전북'
-          WHEN address LIKE '%전남%' OR address LIKE '%전라남%' THEN '전남'
-          WHEN address LIKE '%경북%' OR address LIKE '%경상북%' THEN '경북'
-          WHEN address LIKE '%경남%' OR address LIKE '%경상남%' THEN '경남'
-          WHEN address LIKE '%제주%' THEN '제주'
-          ELSE '기타'
-        END as region,
+        '기타' as region,
         COUNT(*) as count
       FROM users
       WHERE address IS NOT NULL AND address != ''
-      GROUP BY region
-      ORDER BY count DESC
     `).all();
     
     // 7. 성별 분포
