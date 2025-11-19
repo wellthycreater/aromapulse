@@ -1508,28 +1508,37 @@ function updateWeeklyChart(weekData) {
 
 // Load Recent Users
 async function loadRecentUsers() {
+    console.log('👥 loadRecentUsers called');
     const container = document.getElementById('recent-users');
-    if (!container) return;
+    if (!container) {
+        console.error('❌ recent-users container not found');
+        return;
+    }
     
     try {
+        console.log('📡 Fetching recent users...');
         const response = await fetch('/api/admin/dashboard/recent-users?limit=5', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
+        console.log(`📡 Response status: ${response.status}`);
+        
         if (!response.ok) {
-            console.warn('Recent users API failed');
+            console.warn('⚠️ Recent users API failed');
             container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4"><i class="fas fa-info-circle mr-2"></i>회원 목록을 불러올 수 없습니다</p>';
             return;
         }
         
         const users = await response.json();
+        console.log(`✅ Loaded ${users.length} recent users:`, users);
         
         if (!users || users.length === 0) {
+            console.log('📭 No recent users');
             container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4"><i class="fas fa-inbox mr-2"></i>최근 가입 회원이 없습니다</p>';
             return;
         }
         
-        container.innerHTML = users.map(user => `
+        const html = users.map(user => `
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                 <div class="flex-1 min-w-0">
                     <p class="font-medium text-gray-800 truncate">${user.name || '이름 없음'}</p>
@@ -1542,8 +1551,11 @@ async function loadRecentUsers() {
             </div>
         `).join('');
         
+        container.innerHTML = html;
+        console.log('✅ Recent users rendered');
+        
     } catch (error) {
-        console.error('Load recent users error:', error);
+        console.error('❌ Load recent users error:', error);
         container.innerHTML = '<p class="text-red-400 text-sm text-center py-4"><i class="fas fa-exclamation-triangle mr-2"></i>로딩 실패</p>';
     }
 }
@@ -1769,19 +1781,24 @@ function formatDate(dateString) {
 // Enhance existing loadDashboard - store original first
 const _originalLoadDashboard = loadDashboard;
 loadDashboard = async function() {
+    console.log('🚀 Enhanced loadDashboard called');
+    
     // Call original dashboard loading logic
     try {
         await _originalLoadDashboard();
+        console.log('✅ Original loadDashboard completed');
     } catch (e) {
-        console.warn('Original loadDashboard error:', e);
+        console.warn('⚠️ Original loadDashboard error:', e);
     }
     
     // Add enhanced features
+    console.log('📊 Loading enhanced features...');
     await loadEnhancedVisitorStats();
     await loadDashboardStats();
     await loadRecentUsers();
     await loadRecentActivities();
     await loadDeviceStats();
+    console.log('✅ Enhanced features loaded');
 };
 
 // Enhance loadVisitorStats
