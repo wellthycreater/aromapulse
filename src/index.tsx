@@ -183,6 +183,11 @@ app.get('/admin-orders', (c) => c.redirect('/static/admin-orders.html'));
 app.get('/admin/orders', (c) => c.redirect('/static/admin-orders.html'));
 app.get('/admin-orders.html', (c) => c.redirect('/static/admin-orders.html'));
 
+// Admin dashboard page
+app.get('/admin-dashboard', (c) => c.redirect('/static/admin-dashboard.html'));
+app.get('/admin/dashboard', (c) => c.redirect('/static/admin-dashboard.html'));
+app.get('/admin-dashboard.html', (c) => c.redirect('/static/admin-dashboard.html'));
+
 // Chatbot page
 app.get('/chatbot', (c) => c.redirect('/static/chatbot.html'));
 app.get('/admin/chatbot', (c) => c.redirect('/static/chatbot.html'));
