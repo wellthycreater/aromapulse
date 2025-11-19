@@ -1986,13 +1986,37 @@ function renderRegionChart(data) {
     const ctx = document.getElementById('regionChart');
     if (!ctx) return;
     
-    if (!data.by_region || data.by_region.length === 0) {
-        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">지역 정보 없음</p></div>';
-        return;
+    // Use sample data if no real data exists
+    let regionData = data.by_region;
+    let isSampleData = false;
+    
+    if (!regionData || regionData.length === 0) {
+        isSampleData = true;
+        regionData = [
+            {region: '서울', count: 25},
+            {region: '경기', count: 20},
+            {region: '부산', count: 10},
+            {region: '인천', count: 8},
+            {region: '대구', count: 6},
+            {region: '대전', count: 5},
+            {region: '광주', count: 4},
+            {region: '기타', count: 12}
+        ];
     }
     
-    const labels = data.by_region.map(item => item.region);
-    const counts = data.by_region.map(item => item.count);
+    // Update chart title if using sample data
+    if (isSampleData) {
+        const titleEl = ctx.parentElement.querySelector('h3');
+        if (titleEl && !titleEl.querySelector('.sample-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'sample-badge text-xs px-2 py-0.5 ml-2 bg-yellow-100 text-yellow-700 rounded';
+            badge.innerHTML = '샘플 데이터';
+            titleEl.appendChild(badge);
+        }
+    }
+    
+    const labels = regionData.map(item => item.region);
+    const counts = regionData.map(item => item.count);
     
     if (regionChart) regionChart.destroy();
     
@@ -2001,7 +2025,7 @@ function renderRegionChart(data) {
         data: {
             labels: labels,
             datasets: [{
-                label: '회원 수',
+                label: isSampleData ? '회원 수 (샘플)' : '회원 수',
                 data: counts,
                 backgroundColor: 'rgba(147, 51, 234, 0.8)',
                 borderWidth: 0
@@ -2026,16 +2050,34 @@ function renderGenderChart(data) {
     const ctx = document.getElementById('genderChart');
     if (!ctx) return;
     
-    if (!data.by_gender || data.by_gender.length === 0) {
-        ctx.parentElement.innerHTML = '<div class="text-center py-4"><i class="fas fa-inbox text-gray-300 text-2xl mb-1"></i><p class="text-gray-400 text-xs">성별 정보 없음</p></div>';
-        return;
+    // Use sample data if no real data exists
+    let genderData = data.by_gender;
+    let isSampleData = false;
+    
+    if (!genderData || genderData.length === 0) {
+        isSampleData = true;
+        genderData = [
+            {gender: 'female', count: 55},
+            {gender: 'male', count: 35}
+        ];
     }
     
-    const labels = data.by_gender.map(item => {
+    // Update chart title if using sample data
+    if (isSampleData) {
+        const titleEl = ctx.parentElement.querySelector('h3');
+        if (titleEl && !titleEl.querySelector('.sample-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'sample-badge text-xs px-2 py-0.5 ml-2 bg-yellow-100 text-yellow-700 rounded';
+            badge.innerHTML = '샘플 데이터';
+            titleEl.appendChild(badge);
+        }
+    }
+    
+    const labels = genderData.map(item => {
         const map = { 'male': '남성', 'female': '여성', 'other': '기타' };
         return map[item.gender] || item.gender;
     });
-    const counts = data.by_gender.map(item => item.count);
+    const counts = genderData.map(item => item.count);
     
     if (genderChart) genderChart.destroy();
     
@@ -2389,9 +2431,22 @@ function renderOccupationChart(data) {
     const ctx = document.getElementById('occupationChart');
     if (!ctx) return;
     
-    if (!data.by_occupation || data.by_occupation.length === 0) {
-        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">직무 스트레스 사용자의 업종 데이터가 없습니다</p><p class="text-gray-400 text-xs mt-1">회원가입 시 업종 정보를 수집하면 표시됩니다</p></div>';
-        return;
+    // Use sample data if no real data exists
+    let occupationData = data.by_occupation;
+    let isSampleData = false;
+    
+    if (!occupationData || occupationData.length === 0) {
+        isSampleData = true;
+        occupationData = [
+            {occupation: 'office_it', count: 15},
+            {occupation: 'service_retail', count: 12},
+            {occupation: 'medical_care', count: 8},
+            {occupation: 'education', count: 7},
+            {occupation: 'freelancer_self_employed', count: 6},
+            {occupation: 'manufacturing_logistics', count: 5},
+            {occupation: 'finance', count: 4},
+            {occupation: 'management_executive', count: 3}
+        ];
     }
     
     const occupationLabels = {
@@ -2406,10 +2461,21 @@ function renderOccupationChart(data) {
         'other': '기타'
     };
     
-    const labels = data.by_occupation.map(item => 
+    // Update chart title if using sample data
+    if (isSampleData) {
+        const titleEl = ctx.parentElement.querySelector('h3');
+        if (titleEl && !titleEl.querySelector('.sample-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'sample-badge text-xs px-2 py-0.5 ml-2 bg-yellow-100 text-yellow-700 rounded';
+            badge.innerHTML = '샘플 데이터';
+            titleEl.appendChild(badge);
+        }
+    }
+    
+    const labels = occupationData.map(item => 
         occupationLabels[item.occupation] || item.occupation
     );
-    const counts = data.by_occupation.map(item => item.count);
+    const counts = occupationData.map(item => item.count);
     
     if (occupationChart) occupationChart.destroy();
     
@@ -2418,7 +2484,7 @@ function renderOccupationChart(data) {
         data: {
             labels: labels,
             datasets: [{
-                label: '직무 스트레스 회원 수',
+                label: isSampleData ? '직무 스트레스 회원 수 (샘플)' : '직무 스트레스 회원 수',
                 data: counts,
                 backgroundColor: [
                     'rgba(99, 102, 241, 0.8)',
@@ -2446,7 +2512,7 @@ function renderOccupationChart(data) {
                 tooltip: {
                     callbacks: {
                         afterLabel: function(context) {
-                            const occupation = data.by_occupation[context.dataIndex].occupation;
+                            const occupation = occupationData[context.dataIndex].occupation;
                             const stressTypes = {
                                 'office_it': '💻 고강도 인지부하',
                                 'service_retail': '👥 고객대면 스트레스',
@@ -2470,9 +2536,20 @@ function renderLifeSituationChart(data) {
     const ctx = document.getElementById('lifeSituationChart');
     if (!ctx) return;
     
-    if (!data.by_life_situation || data.by_life_situation.length === 0) {
-        ctx.parentElement.innerHTML = '<div class="text-center py-8"><i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i><p class="text-gray-400 text-sm">일상 스트레스 사용자의 생활 상황 데이터가 없습니다</p><p class="text-gray-400 text-xs mt-1">회원가입 시 생활 상황 정보를 수집하면 표시됩니다</p></div>';
-        return;
+    // Use sample data if no real data exists
+    let lifeSituationData = data.by_life_situation;
+    let isSampleData = false;
+    
+    if (!lifeSituationData || lifeSituationData.length === 0) {
+        isSampleData = true;
+        lifeSituationData = [
+            {life_situation: 'student', count: 18},
+            {life_situation: 'parent', count: 14},
+            {life_situation: 'homemaker', count: 10},
+            {life_situation: 'job_seeker', count: 8},
+            {life_situation: 'retiree', count: 5},
+            {life_situation: 'caregiver', count: 3}
+        ];
     }
     
     const lifeSituationLabels = {
@@ -2485,10 +2562,21 @@ function renderLifeSituationChart(data) {
         'other': '기타'
     };
     
-    const labels = data.by_life_situation.map(item => 
+    // Update chart title if using sample data
+    if (isSampleData) {
+        const titleEl = ctx.parentElement.querySelector('h3');
+        if (titleEl && !titleEl.querySelector('.sample-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'sample-badge text-xs px-2 py-0.5 ml-2 bg-yellow-100 text-yellow-700 rounded';
+            badge.innerHTML = '샘플 데이터';
+            titleEl.appendChild(badge);
+        }
+    }
+    
+    const labels = lifeSituationData.map(item => 
         lifeSituationLabels[item.life_situation] || item.life_situation
     );
-    const counts = data.by_life_situation.map(item => item.count);
+    const counts = lifeSituationData.map(item => item.count);
     
     if (lifeSituationChart) lifeSituationChart.destroy();
     
@@ -2497,7 +2585,7 @@ function renderLifeSituationChart(data) {
         data: {
             labels: labels,
             datasets: [{
-                label: '일상 스트레스 회원 수',
+                label: isSampleData ? '일상 스트레스 회원 수 (샘플)' : '일상 스트레스 회원 수',
                 data: counts,
                 backgroundColor: [
                     'rgba(139, 92, 246, 0.8)',
@@ -2523,7 +2611,7 @@ function renderLifeSituationChart(data) {
                 tooltip: {
                     callbacks: {
                         afterLabel: function(context) {
-                            const situation = data.by_life_situation[context.dataIndex].life_situation;
+                            const situation = lifeSituationData[context.dataIndex].life_situation;
                             const descriptions = {
                                 'student': '📚 학업 스트레스',
                                 'parent': '👶 육아 스트레스',
