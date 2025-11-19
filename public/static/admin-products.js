@@ -244,10 +244,16 @@ function updateProductCounts() {
   const refreshCount = currentProducts.filter(p => p.concept === 'refresh').length;
   const blogCount = blogPosts.length;
   
-  document.getElementById('count-all').textContent = allCount;
-  document.getElementById('count-symptom-care').textContent = symptomCareCount;
-  document.getElementById('count-refresh').textContent = refreshCount;
-  document.getElementById('count-blog').textContent = blogCount;
+  // 안전하게 요소가 존재하는지 확인 후 업데이트
+  const countAllEl = document.getElementById('count-all');
+  const countSymptomCareEl = document.getElementById('count-symptom-care');
+  const countRefreshEl = document.getElementById('count-refresh');
+  const countBlogEl = document.getElementById('count-blog');
+  
+  if (countAllEl) countAllEl.textContent = allCount;
+  if (countSymptomCareEl) countSymptomCareEl.textContent = symptomCareCount;
+  if (countRefreshEl) countRefreshEl.textContent = refreshCount;
+  if (countBlogEl) countBlogEl.textContent = blogCount;
 }
 
 // 제품 컨셉 변경 시 필드 토글
