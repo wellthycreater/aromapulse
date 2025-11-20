@@ -649,7 +649,6 @@ app.get('/', (c) => {
                 <div class="grid md:grid-cols-5 gap-8 mb-12">
                     <!-- Company Info -->
                     <div class="md:col-span-2">
-                        <h4 class="text-2xl font-bold mb-4">아로마펄스</h4>
                         <p class="text-gray-400 mb-2 leading-relaxed">
                             <i class="fas fa-spa text-pink-400 mr-2"></i>
                             향기로움 치유하는 향기의 힘으로 더 나은 삶을 지향합니다 
