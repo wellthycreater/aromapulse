@@ -658,10 +658,6 @@ app.get('/', (c) => {
                             향기로 시작하는 행복한 변화<br/>
                             당신의 일상에 평온함을 더합니다
                         </p>
-                        <p class="text-gray-500 text-xs mb-6 italic">
-                            경쟁을 뒤로 치우는<br/>
-                            당신 집과 귀여 서비스
-                        </p>
                         
                         <!-- Social Media -->
                         <div class="mb-6">
