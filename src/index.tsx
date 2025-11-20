@@ -140,9 +140,12 @@ app.get('/signup', (c) => c.redirect('/static/signup-new.html'));
 // Dashboard page - redirect to static file
 app.get('/dashboard', (c) => c.redirect('/static/dashboard.html'));
 
-// Profile edit page - redirect to static file
-app.get('/profile', (c) => c.redirect('/static/profile-edit.html'));
-app.get('/profile-edit', (c) => c.redirect('/static/profile-edit.html'));
+// Profile edit page - redirect to static file (deprecated - use /mypage instead)
+app.get('/profile', (c) => c.redirect('/static/mypage.html'));
+app.get('/profile-edit', (c) => c.redirect('/static/mypage.html'));
+
+// MyPage - new user profile page
+app.get('/mypage', (c) => c.redirect('/static/mypage.html'));
 
 // Workshops page - redirect to static file (B2B 전용 - 기업 팀빌딩)
 app.get('/workshops', (c) => c.redirect('/static/workshops'));

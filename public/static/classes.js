@@ -19,18 +19,89 @@ window.addEventListener('DOMContentLoaded', async () => {
 // UI 업데이트 (인증 링크)
 function updateAuthUI() {
     const token = localStorage.getItem('token');
-    const authLink = document.getElementById('auth-link');
+    const authButtons = document.getElementById('auth-buttons');
+    const userMenu = document.getElementById('user-menu');
     
     if (!token) {
         // 로그인하지 않은 경우
-        authLink.textContent = '로그인';
-        authLink.href = '/login';
+        if (authButtons) authButtons.classList.remove('hidden');
+        if (userMenu) userMenu.classList.add('hidden');
     } else {
         // 로그인된 경우
-        authLink.textContent = '대시보드';
-        authLink.href = '/dashboard';
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            
+            // 토큰 만료 체크
+            if (payload.exp && payload.exp * 1000 < Date.now()) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                if (authButtons) authButtons.classList.remove('hidden');
+                if (userMenu) userMenu.classList.add('hidden');
+                return;
+            }
+            
+            // 로그인 상태 UI 표시
+            if (authButtons) authButtons.classList.add('hidden');
+            if (userMenu) {
+                userMenu.classList.remove('hidden');
+                userMenu.classList.add('flex');
+            }
+            
+            // 사용자 정보 표시
+            const userName = payload.name || '사용자';
+            const userInitial = userName.charAt(0).toUpperCase();
+            
+            const userNameEl = document.getElementById('user-name');
+            const userInitialEl = document.getElementById('user-initial');
+            
+            if (userNameEl) userNameEl.textContent = userName;
+            if (userInitialEl) userInitialEl.textContent = userInitial;
+            
+        } catch (e) {
+            console.error('Token parse error:', e);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            if (authButtons) authButtons.classList.remove('hidden');
+            if (userMenu) userMenu.classList.add('hidden');
+        }
     }
 }
+
+// 로그아웃 함수
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    alert('로그아웃되었습니다.');
+    location.reload();
+}
+
+// 프로필 드롭다운 토글
+function toggleProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+// 프로필 버튼 클릭 이벤트 설정
+document.addEventListener('DOMContentLoaded', () => {
+    const profileBtn = document.getElementById('profile-btn');
+    if (profileBtn) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleProfileDropdown();
+        });
+    }
+    
+    // 드롭다운 외부 클릭 시 닫기
+    document.addEventListener('click', (e) => {
+        const profileBtn = document.getElementById('profile-btn');
+        const dropdown = document.getElementById('profile-dropdown');
+        if (profileBtn && dropdown && !profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+});
 
 // 클래스 상세 페이지로 이동 (권한 체크 없이)
 function viewClass(id) {

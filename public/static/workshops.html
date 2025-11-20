@@ -97,12 +97,37 @@
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <a href="/dashboard" class="text-gray-700 hover:text-purple-600 font-medium transition">
-                        <i class="fas fa-user-circle mr-2"></i>마이페이지
-                    </a>
-                    <a href="/login" id="auth-link" class="gradient-pink-purple text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition">
-                        로그인
-                    </a>
+                    <!-- 비로그인 상태 -->
+                    <div id="auth-buttons" class="flex items-center space-x-4">
+                        <a href="/login" class="gradient-pink-purple text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition">
+                            로그인
+                        </a>
+                    </div>
+                    
+                    <!-- 로그인 상태 (처음엔 숨김) -->
+                    <div id="user-menu" class="hidden relative">
+                        <button id="profile-btn" class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition">
+                            <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-bold">
+                                <span id="user-initial">U</span>
+                            </div>
+                            <span id="user-name" class="font-semibold hidden md:block">사용자</span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        
+                        <!-- 드롭다운 메뉴 -->
+                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
+                            <a href="/mypage" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
+                                <i class="fas fa-user mr-2"></i>마이페이지
+                            </a>
+                            <a href="/shop" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
+                                <i class="fas fa-shopping-cart mr-2"></i>장바구니
+                            </a>
+                            <hr class="my-2">
+                            <button onclick="logout()" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition">
+                                <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
