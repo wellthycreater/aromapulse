@@ -88,6 +88,9 @@
                     <a href="/" class="text-gray-700 hover:text-purple-600 font-medium transition flex items-center">
                         <i class="fas fa-home mr-2"></i>홈
                     </a>
+                    <a href="/shop" class="text-gray-700 hover:text-purple-600 font-medium transition flex items-center">
+                        <i class="fas fa-shopping-bag mr-2"></i>쇼핑
+                    </a>
                     <a href="/workshops" class="text-purple-600 font-bold flex items-center">
                         <i class="fas fa-briefcase mr-2"></i>워크샵
                     </a>
@@ -357,6 +360,14 @@
                     if (payload.exp && payload.exp * 1000 < Date.now()) {
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
+                        location.href = '/login';
+                        return;
+                    }
+                    
+                    // B2B 사용자가 아니면 원데이 클래스로 리다이렉트
+                    if (payload.userType !== 'B2B') {
+                        alert('워크샵 서비스는 기업 고객 전용입니다.\n원데이 클래스를 이용해주세요.');
+                        location.href = '/oneday-classes';
                         return;
                     }
                     
@@ -376,6 +387,10 @@
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
                 }
+            } else {
+                // 비로그인 시 로그인 페이지로 리다이렉트
+                alert('워크샵 서비스는 로그인이 필요합니다.');
+                location.href = '/login';
             }
         }
         

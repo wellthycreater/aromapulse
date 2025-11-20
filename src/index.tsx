@@ -299,6 +299,10 @@ app.get('/', (c) => {
                         <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-star mr-2"></i>힐링 체험
                         </a>
+                        <!-- B2B 전용 워크샵 메뉴 (로그인 시 B2B 사용자에게만 표시) -->
+                        <a href="/workshops" id="workshop-menu" class="hidden text-gray-700 hover:text-purple-600 font-semibold transition items-center">
+                            <i class="fas fa-briefcase mr-2"></i>워크샵
+                        </a>
                     </div>
                     
                     <!-- Right: Visitor Stats & Auth -->
@@ -345,8 +349,11 @@ app.get('/', (c) => {
                                 
                                 <!-- 드롭다운 메뉴 -->
                                 <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
-                                    <a href="/static/profile" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
-                                        <i class="fas fa-user mr-2"></i>프로필
+                                    <a href="/mypage" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
+                                        <i class="fas fa-user mr-2"></i>마이페이지
+                                    </a>
+                                    <a href="/shop" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
+                                        <i class="fas fa-shopping-cart mr-2"></i>장바구니
                                     </a>
                                     <hr class="my-2">
                                     <button onclick="logout()" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition">
