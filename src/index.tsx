@@ -704,7 +704,7 @@ app.get('/', (c) => {
                         <ul class="space-y-2 text-gray-400">
                             <li>
                                 <a href="/shop" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-heart text-pink-500 mr-2"></i>제품 둘러
+                                    <i class="fas fa-heart text-pink-500 mr-2"></i>제품 보기
                                 </a>
                             </li>
                             <li>
