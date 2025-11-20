@@ -218,12 +218,26 @@ adminDashboard.get('/device-stats', async (c) => {
         LIMIT 5
       `).all();
       
-      // If login logs have data, return them
+      // If login logs have data, also get combined stats from login logs
       if (loginDeviceStats.results && loginDeviceStats.results.length > 0) {
+        const loginCombinedStats = await DB.prepare(`
+          SELECT 
+            device_type,
+            os as device_os,
+            COUNT(*) as count
+          FROM user_login_logs
+          WHERE login_at >= datetime('now', '-30 days')
+            AND device_type IS NOT NULL 
+            AND os IS NOT NULL
+          GROUP BY device_type, os
+          ORDER BY count DESC
+        `).all();
+        
         return c.json({
           devices: loginDeviceStats.results || [],
           browsers: loginBrowserStats.results || [],
-          os: loginOsStats.results || []
+          os: loginOsStats.results || [],
+          combined: loginCombinedStats.results || []
         });
       }
       
