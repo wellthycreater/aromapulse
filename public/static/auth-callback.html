@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 중...</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen flex items-center justify-center">
+    <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-600 mb-4"></div>
+        <p class="text-xl font-semibold text-gray-700">로그인 처리 중...</p>
+        <p class="text-sm text-gray-500 mt-2">잠시만 기다려주세요</p>
+    </div>
+    
+    <script>
+        // 쿠키에서 토큰 읽기
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        // 즉시 실행
+        (function() {
+            console.log('[AUTH-CALLBACK] Starting authentication callback processing');
+            
+            // 쿠키에서 auth_token 확인
+            const token = getCookie('auth_token');
+            console.log('[AUTH-CALLBACK] Token from cookie:', token ? 'Found' : 'Not found');
+            
+            if (token) {
+                // 토큰 디코딩하여 사용자 정보 추출
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    console.log('[AUTH-CALLBACK] Token payload:', payload);
+                    
+                    const user = {
+                        id: payload.userId,
+                        email: payload.email,
+                        name: payload.name,
+                        user_type: payload.userType,
+                        role: payload.role || 'user'
+                    };
+                    
+                    // localStorage에 저장
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(user));
+                    
+                    console.log('[AUTH-CALLBACK] Saved to localStorage - token:', !!localStorage.getItem('token'));
+                    console.log('[AUTH-CALLBACK] Saved to localStorage - user:', !!localStorage.getItem('user'));
+                    console.log('[AUTH-CALLBACK] User info:', user);
+                    
+                    // 관리자인 경우 관리자 페이지로, 아니면 홈으로
+                    let redirectUrl = '/';
+                    if (user.role === 'admin' || user.role === 'super_admin') {
+                        redirectUrl = '/admin-products';
+                    }
+                    
+                    console.log('[AUTH-CALLBACK] Redirecting to:', redirectUrl);
+                    
+                    // 쿠키 정리 (선택사항)
+                    document.cookie = 'auth_token=; Path=/; Max-Age=0';
+                    
+                    // 리다이렉트
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 500);
+                    
+                } catch (error) {
+                    console.error('[AUTH-CALLBACK] Token parsing error:', error);
+                    alert('로그인 처리 중 오류가 발생했습니다.');
+                    window.location.href = '/login';
+                }
+            } else {
+                console.error('[AUTH-CALLBACK] No token found in cookie');
+                alert('로그인 정보를 찾을 수 없습니다.');
+                window.location.href = '/login';
+            }
+        })();
+    </script>
+</body>
+</html>

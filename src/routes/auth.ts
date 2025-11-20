@@ -335,10 +335,10 @@ auth.get('/naver/callback', async (c) => {
     // JWT 토큰 생성
     const token = await generateToken(user, c.env.JWT_SECRET);
     
-    // 토큰을 쿠키에 저장하고 홈으로 리다이렉트
-    c.header('Set-Cookie', `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
+    // 토큰을 쿠키에 저장하고 콜백 페이지로 리다이렉트 (localStorage 저장용)
+    c.header('Set-Cookie', `auth_token=${token}; Path=/; SameSite=Lax; Max-Age=600`);
     
-    return c.redirect('/');
+    return c.redirect('/static/auth-callback.html');
     
   } catch (error: any) {
     console.error('Naver OAuth error:', error);
@@ -443,9 +443,9 @@ auth.get('/google/callback', async (c) => {
     
     const token = await generateToken(user, c.env.JWT_SECRET);
     
-    c.header('Set-Cookie', `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
+    c.header('Set-Cookie', `auth_token=${token}; Path=/; SameSite=Lax; Max-Age=600`);
     
-    return c.redirect('/');
+    return c.redirect('/static/auth-callback.html');
     
   } catch (error: any) {
     console.error('Google OAuth error:', error);
@@ -539,9 +539,9 @@ auth.get('/kakao/callback', async (c) => {
     
     const token = await generateToken(user, c.env.JWT_SECRET);
     
-    c.header('Set-Cookie', `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
+    c.header('Set-Cookie', `auth_token=${token}; Path=/; SameSite=Lax; Max-Age=600`);
     
-    return c.redirect('/');
+    return c.redirect('/static/auth-callback.html');
     
   } catch (error: any) {
     console.error('Kakao OAuth error:', error);
