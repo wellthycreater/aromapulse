@@ -35,17 +35,35 @@ adminDashboard.get('/stats', async (c) => {
     ).bind(sevenDaysAgoStr).first();
     
     // 전체 제품 수
-    const totalProducts = await DB.prepare('SELECT COUNT(*) as count FROM products').first();
+    let totalProducts: any = null;
+    try {
+      totalProducts = await DB.prepare('SELECT COUNT(*) as count FROM products').first();
+    } catch (e) {
+      console.warn('Products table not found');
+      totalProducts = { count: 0 };
+    }
     
     // 워크샵 수
-    const workshops = await DB.prepare(
-      "SELECT COUNT(*) as count FROM workshop_bookings WHERE status != 'cancelled'"
-    ).first();
+    let workshops: any = null;
+    try {
+      workshops = await DB.prepare(
+        "SELECT COUNT(*) as count FROM workshop_bookings WHERE status != 'cancelled'"
+      ).first();
+    } catch (e) {
+      console.warn('workshop_bookings table not found');
+      workshops = { count: 0 };
+    }
     
     // 원데이 클래스 수
-    const classes = await DB.prepare(
-      "SELECT COUNT(*) as count FROM oneday_class_bookings WHERE status != 'cancelled'"
-    ).first();
+    let classes: any = null;
+    try {
+      classes = await DB.prepare(
+        "SELECT COUNT(*) as count FROM oneday_class_bookings WHERE status != 'cancelled'"
+      ).first();
+    } catch (e) {
+      console.warn('oneday_class_bookings table not found');
+      classes = { count: 0 };
+    }
     
     return c.json({
       users: {
