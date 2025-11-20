@@ -264,11 +264,16 @@ app.get('/', (c) => {
         <!-- Header -->
         <header class="glass-effect shadow-lg sticky top-0 z-50">
             <nav class="container mx-auto px-6 py-4">
-                <div class="flex justify-between items-center">
-                    <a href="/" class="flex items-center space-x-3">
-                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-16 logo-image">
-                    </a>
-                    <div class="hidden md:flex items-center space-x-8">
+                <div class="flex items-center justify-between">
+                    <!-- Left: Logo -->
+                    <div class="flex-shrink-0">
+                        <a href="/" class="flex items-center space-x-3">
+                            <img src="/static/logo-light.png" alt="아로마펄스" class="h-16 logo-image">
+                        </a>
+                    </div>
+                    
+                    <!-- Center: Navigation Menu -->
+                    <div class="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
@@ -279,6 +284,8 @@ app.get('/', (c) => {
                             <i class="fas fa-spa mr-2"></i>워크샵
                         </a>
                     </div>
+                    
+                    <!-- Right: Visitor Stats & Auth -->
                     <div class="flex items-center space-x-4">
                         <!-- 방문자 통계 -->
                         <div class="hidden md:flex items-center gap-3 bg-white bg-opacity-90 rounded-full px-4 py-2 shadow-sm">
