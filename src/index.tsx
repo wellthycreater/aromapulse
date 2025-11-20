@@ -649,26 +649,52 @@ app.get('/', (c) => {
                 <div class="grid md:grid-cols-5 gap-8 mb-12">
                     <!-- Company Info -->
                     <div class="md:col-span-2">
-                        <h4 class="text-2xl font-bold mb-4">아로마펄스</h4>
-                        <p class="text-gray-400 mb-6 leading-relaxed">향기로 시작하는 행복한 변화<br/>당신의 일상에 평온함을 더합니다</p>
+                        <h4 class="text-2xl font-bold mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center mr-3 text-lg">AP</span>
+                            AROMAPULSE
+                        </h4>
+                        <p class="text-gray-400 mb-2 leading-relaxed">
+                            <i class="fas fa-spa text-pink-400 mr-2"></i>
+                            향기로움 치유하는 향기의 힘으로 더 나은 삶을 지향합니다 
+                            <i class="fas fa-spa text-pink-400 ml-2"></i>
+                        </p>
+                        <p class="text-gray-500 text-sm mb-6 leading-relaxed">
+                            향기로 시작하는 행복한 변화<br/>
+                            당신의 일상에 평온함을 더합니다
+                        </p>
+                        <p class="text-gray-500 text-xs mb-6 italic">
+                            경쟁을 뒤로 치우는<br/>
+                            당신 집과 귀여 서비스
+                        </p>
                         
                         <!-- Social Media -->
                         <div class="mb-6">
-                            <h5 class="text-sm font-semibold text-gray-300 mb-3">소셜 미디어</h5>
+                            <h5 class="text-sm font-semibold text-gray-300 mb-3">블로그/커뮤니티</h5>
                             <div class="flex space-x-3">
-                                <a href="https://blog.naver.com/aromapulse" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition">
+                                <a href="https://blog.naver.com/aromapulse" target="_blank" 
+                                   class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-green-600 transition" 
+                                   title="네이버 블로그">
                                     <i class="fab fa-blogger-b"></i>
                                 </a>
-                                <a href="#" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition">
+                                <a href="#" target="_blank" 
+                                   class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition"
+                                   title="인스타그램">
                                     <i class="fab fa-instagram"></i>
                                 </a>
-                                <a href="#" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition">
+                                <a href="#" target="_blank" 
+                                   class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-red-600 transition"
+                                   title="유튜브">
                                     <i class="fab fa-youtube"></i>
+                                </a>
+                                <a href="#" target="_blank" 
+                                   class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition"
+                                   title="틱톡">
+                                    <i class="fab fa-tiktok"></i>
                                 </a>
                             </div>
                         </div>
                         
-                        <!-- Newsletter (Optional) -->
+                        <!-- Newsletter -->
                         <div>
                             <h5 class="text-sm font-semibold text-gray-300 mb-3">뉴스레터 구독</h5>
                             <div class="flex">
@@ -680,38 +706,66 @@ app.get('/', (c) => {
                         </div>
                     </div>
                     
-                    <!-- Products -->
+                    <!-- Services -->
                     <div>
-                        <h4 class="text-lg font-bold mb-4">제품</h4>
+                        <h4 class="text-lg font-bold mb-4">서비스</h4>
                         <ul class="space-y-2 text-gray-400">
-                            <li><a href="/shop" class="hover:text-white transition">전체 제품</a></li>
-                            <li><a href="/shop?category=symptom_care" class="hover:text-white transition">증상 케어</a></li>
-                            <li><a href="/shop?category=refresh" class="hover:text-white transition">리프레시</a></li>
-                            <li><a href="/oneday-classes" class="hover:text-white transition">힐링 체험</a></li>
+                            <li>
+                                <a href="/shop" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-heart text-pink-500 mr-2"></i>제품 둘러
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/oneday-classes" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-star text-yellow-500 mr-2"></i>체험 후기
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/workshops" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-clipboard-list text-blue-500 mr-2"></i>입점 제안
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/patch-apply" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-gift text-purple-500 mr-2"></i>경영 운영
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/blog" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-newspaper text-cyan-500 mr-2"></i>코리아 네트워크
+                                </a>
+                            </li>
                         </ul>
                     </div>
                     
-                    <!-- Customer Support -->
+                    <!-- Account Info -->
                     <div>
                         <h4 class="text-lg font-bold mb-4">고객 지원</h4>
                         <ul class="space-y-2 text-gray-400">
-                            <li><a href="/faq" class="hover:text-white transition">자주 묻는 질문</a></li>
-                            <li><a href="/contact" class="hover:text-white transition">1:1 문의</a></li>
-                            <li><a href="/shipping" class="hover:text-white transition">배송 안내</a></li>
-                            <li><a href="/returns" class="hover:text-white transition">교환/환불</a></li>
+                            <li>
+                                <a href="/faq" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-question-circle text-blue-400 mr-2"></i>FAQ
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/contact" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-comments text-green-400 mr-2"></i>1:1 문의 (카톡)
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/shipping" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-truck text-orange-400 mr-2"></i>배송 안내
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/returns" class="hover:text-white transition flex items-center">
+                                    <i class="fas fa-undo text-red-400 mr-2"></i>반품/교환
+                                </a>
+                            </li>
                         </ul>
                     </div>
                     
-                    <!-- Policies -->
-                    <div>
-                        <h4 class="text-lg font-bold mb-4">정책</h4>
-                        <ul class="space-y-2 text-gray-400">
-                            <li><a href="/terms" class="hover:text-white transition">이용약관</a></li>
-                            <li><a href="/privacy" class="hover:text-white transition font-semibold">개인정보처리방침</a></li>
-                            <li><a href="/refund" class="hover:text-white transition">환불정책</a></li>
-                            <li><a href="/wholesale" class="hover:text-white transition">도매 문의</a></li>
-                        </ul>
-                    </div>
+
                 </div>
                 
                 <!-- Company Details -->
@@ -808,11 +862,38 @@ app.get('/', (c) => {
                     </div>
                 </div>
                 
+                <!-- Additional Notice -->
+                <div class="border-t border-gray-800 pt-8 mb-8">
+                    <div class="text-gray-400 text-xs leading-relaxed space-y-2">
+                        <p class="font-semibold text-gray-300 mb-3">소비자 피해보상 안내</p>
+                        <p>
+                            상품 불량 등에 의한 반품, 교환, A/S, 환불, 품질보증 및 피해보상 등에 관한 사항은 
+                            소비자분쟁해결기준(공정거래위원회 고시)에 따릅니다.
+                        </p>
+                        <p class="mt-4">
+                            <span class="font-semibold text-gray-300">미성년자 보호:</span> 
+                            만 19세 미만의 미성년자는 법정대리인(부모님)의 동의 없이 상품 구매가 제한됩니다.
+                        </p>
+                        <p class="mt-4">
+                            <span class="font-semibold text-gray-300">주의사항:</span> 
+                            아로마 제품은 의약품이 아니며, 질병의 진단, 치료, 예방 목적으로 사용할 수 없습니다. 
+                            건강상 문제가 있는 경우 반드시 전문의와 상담하세요.
+                        </p>
+                    </div>
+                </div>
+                
                 <!-- Copyright -->
                 <div class="border-t border-gray-800 pt-8 text-center">
-                    <p class="text-gray-400 text-sm mb-2">
-                        © 2025 아로마펄스 (AromaPulse). All rights reserved.
+                    <p class="text-gray-400 text-sm mb-3">
+                        © 2025 플라피쌀아이. All rights reserved.
                     </p>
+                    <div class="flex items-center justify-center space-x-3 text-gray-500 text-xs mb-4">
+                        <a href="/privacy" class="hover:text-purple-400 transition font-semibold">개인정보처리방침</a>
+                        <span>|</span>
+                        <a href="/terms" class="hover:text-purple-400 transition">이용약관</a>
+                        <span>|</span>
+                        <a href="/business-info" class="hover:text-purple-400 transition">사업자정보</a>
+                    </div>
                     <p class="text-gray-500 text-xs">
                         본 사이트의 모든 콘텐츠는 저작권법의 보호를 받으며 무단 전재, 복사, 배포 등을 금합니다.
                     </p>
