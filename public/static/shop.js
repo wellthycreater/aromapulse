@@ -263,6 +263,14 @@ function updateCartUI() {
   const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : BASE_DELIVERY_FEE;
   const total = subtotal + deliveryFee;
   
+  console.log('🛒 장바구니 배송비 계산:', {
+    subtotal,
+    FREE_DELIVERY_THRESHOLD,
+    deliveryFee,
+    total,
+    isFreeShipping: subtotal >= FREE_DELIVERY_THRESHOLD
+  });
+  
   // UI 업데이트
   subtotalEl.textContent = `${subtotal.toLocaleString()}원`;
   
