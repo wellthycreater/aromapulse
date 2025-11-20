@@ -52,9 +52,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadCartFromLocalStorage();
     
     if (cart.length === 0) {
-      alert('장바구니가 비어있습니다');
-      window.location.href = '/shop.html';
-      return;
+      console.warn('⚠️ 장바구니가 비어있습니다');
+      
+      // 개발/테스트용: 테스트 데이터 추가 옵션
+      if (confirm('장바구니가 비어있습니다.\n\n테스트용 상품을 추가하시겠습니까?\n(실제 결제는 되지 않습니다)')) {
+        // 테스트 상품 추가
+        cart = [
+          {
+            id: 1,
+            name: '테스트 아로마 디퓨저',
+            price: 29000,
+            quantity: 1
+          }
+        ];
+        localStorage.setItem('cart', JSON.stringify(cart));
+        console.log('✅ 테스트 상품 추가됨:', cart);
+      } else {
+        window.location.href = '/shop.html';
+        return;
+      }
     }
     
     console.log('✅ 장바구니 데이터:', cart);
@@ -136,6 +152,10 @@ function searchAddress() {
 
 // 결제 처리 - 매우 간단해짐!
 async function processPayment() {
+  console.log('🚀 processPayment 함수 호출됨');
+  console.log('🔍 토스페이먼츠 객체 확인:', tossPayments);
+  console.log('🛒 장바구니 데이터:', cart);
+  
   // 필수 정보 검증
   const customerName = document.getElementById('customer-name').value.trim();
   const customerEmail = document.getElementById('customer-email').value.trim();
@@ -144,6 +164,13 @@ async function processPayment() {
   const customerAddress = document.getElementById('customer-address').value.trim();
   const customerDetailAddress = document.getElementById('customer-detail-address').value.trim();
   const deliveryMessage = document.getElementById('delivery-message').value.trim();
+  
+  console.log('📝 입력 정보:', {
+    customerName,
+    customerEmail,
+    customerPhone,
+    customerAddress
+  });
   
   if (!customerName) {
     alert('이름을 입력해주세요');
