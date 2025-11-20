@@ -183,8 +183,8 @@ adminDashboard.get('/device-stats', async (c) => {
     const { DB } = c.env;
     
     try {
-      // 디바이스별 통계
-      const deviceStats = await DB.prepare(`
+      // Try to get data from user_login_logs first (more accurate for recent activity)
+      const loginDeviceStats = await DB.prepare(`
         SELECT 
           device_type,
           COUNT(*) as count
@@ -194,8 +194,7 @@ adminDashboard.get('/device-stats', async (c) => {
         ORDER BY count DESC
       `).all();
       
-      // 브라우저별 통계
-      const browserStats = await DB.prepare(`
+      const loginBrowserStats = await DB.prepare(`
         SELECT 
           browser,
           COUNT(*) as count
@@ -207,8 +206,7 @@ adminDashboard.get('/device-stats', async (c) => {
         LIMIT 5
       `).all();
       
-      // OS별 통계
-      const osStats = await DB.prepare(`
+      const loginOsStats = await DB.prepare(`
         SELECT 
           os,
           COUNT(*) as count
@@ -220,14 +218,57 @@ adminDashboard.get('/device-stats', async (c) => {
         LIMIT 5
       `).all();
       
+      // If login logs have data, return them
+      if (loginDeviceStats.results && loginDeviceStats.results.length > 0) {
+        return c.json({
+          devices: loginDeviceStats.results || [],
+          browsers: loginBrowserStats.results || [],
+          os: loginOsStats.results || []
+        });
+      }
+      
+      // Fallback to users table if no login logs
+      const userDeviceStats = await DB.prepare(`
+        SELECT 
+          device_type,
+          COUNT(*) as count
+        FROM users
+        WHERE device_type IS NOT NULL
+        GROUP BY device_type
+        ORDER BY count DESC
+      `).all();
+      
+      const userBrowserStats = await DB.prepare(`
+        SELECT 
+          device_browser as browser,
+          COUNT(*) as count
+        FROM users
+        WHERE device_browser IS NOT NULL
+        GROUP BY device_browser
+        ORDER BY count DESC
+        LIMIT 5
+      `).all();
+      
+      const userOsStats = await DB.prepare(`
+        SELECT 
+          device_os as os,
+          COUNT(*) as count
+        FROM users
+        WHERE device_os IS NOT NULL
+        GROUP BY device_os
+        ORDER BY count DESC
+        LIMIT 5
+      `).all();
+      
       return c.json({
-        devices: deviceStats.results || [],
-        browsers: browserStats.results || [],
-        os: osStats.results || []
+        devices: userDeviceStats.results || [],
+        browsers: userBrowserStats.results || [],
+        os: userOsStats.results || []
       });
       
     } catch (error) {
-      // user_login_logs 테이블이 없는 경우 빈 데이터 반환
+      console.error('Device stats query error:', error);
+      // Return empty data if tables don't exist
       return c.json({
         devices: [],
         browsers: [],
