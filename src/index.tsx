@@ -714,7 +714,7 @@ app.get('/', (c) => {
                             </li>
                             <li>
                                 <a href="/workshops" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-clipboard-list text-blue-500 mr-2"></i>입점 제안
+                                    <i class="fas fa-clipboard-list text-blue-500 mr-2"></i>제휴 제안
                                 </a>
                             </li>
                             <li>
