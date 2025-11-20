@@ -267,6 +267,11 @@
                     data-tab="classes">
                     <i class="fas fa-chalkboard-teacher mr-2"></i>원데이 클래스
                 </button>
+                <button onclick="switchMainTab('research')" 
+                    class="tab-button px-6 py-4 font-semibold whitespace-nowrap rounded-t-lg" 
+                    data-tab="research">
+                    <i class="fas fa-flask mr-2"></i>개발 연구소
+                </button>
             </div>
         </div>
     </div>
@@ -972,6 +977,520 @@
                     <div class="col-span-full text-center py-12 text-gray-500">
                         <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
                         <p>데이터를 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Research Lab Section (개발 연구소) -->
+        <div id="section-research" class="content-section hidden">
+            <div class="fade-in">
+                <h2 class="text-3xl font-bold text-dark-slate mb-2">
+                    <i class="fas fa-flask text-purple-600 mr-3"></i>개발 연구소
+                </h2>
+                <p class="text-sm text-gray-500 mb-6">
+                    <i class="fas fa-lock mr-1"></i>대표자 및 핵심 팀원 전용 - 회사 고용 및 이직률 분석
+                </p>
+                
+                <!-- HR Analytics Sub-Tabs -->
+                <div class="mb-6 border-b border-gray-200">
+                    <div class="flex space-x-4 overflow-x-auto">
+                        <button onclick="switchResearchTab('employment')" 
+                            class="research-tab-button pb-4 px-6 font-semibold text-purple-600 border-b-2 border-purple-600 whitespace-nowrap" 
+                            data-research-tab="employment">
+                            <i class="fas fa-user-plus mr-2"></i>고용률 분석
+                        </button>
+                        <button onclick="switchResearchTab('turnover')" 
+                            class="research-tab-button pb-4 px-6 font-semibold text-gray-500 border-b-2 border-transparent hover:text-purple-600 hover:border-purple-600 transition whitespace-nowrap" 
+                            data-research-tab="turnover">
+                            <i class="fas fa-exchange-alt mr-2"></i>이직률 분석
+                        </button>
+                        <button onclick="switchResearchTab('satisfaction')" 
+                            class="research-tab-button pb-4 px-6 font-semibold text-gray-500 border-b-2 border-transparent hover:text-purple-600 hover:border-purple-600 transition whitespace-nowrap" 
+                            data-research-tab="satisfaction">
+                            <i class="fas fa-smile mr-2"></i>직원 만족도
+                        </button>
+                        <button onclick="switchResearchTab('performance')" 
+                            class="research-tab-button pb-4 px-6 font-semibold text-gray-500 border-b-2 border-transparent hover:text-purple-600 hover:border-purple-600 transition whitespace-nowrap" 
+                            data-research-tab="performance">
+                            <i class="fas fa-chart-line mr-2"></i>성과 분석
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Employment Rate Tab -->
+                <div id="research-tab-employment" class="research-tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Stat Cards -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-green-400 to-green-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-user-check text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                                    +12% <i class="fas fa-arrow-up"></i>
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">현재 고용률</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="employment-rate">94.2%</p>
+                            <p class="text-xs text-gray-500 mt-2">전년 대비 12% 증가</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-blue-400 to-blue-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-users text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                                    +8 명
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">총 직원 수</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="total-employees">47명</p>
+                            <p class="text-xs text-gray-500 mt-2">지난 분기 대비 8명 증가</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-purple-400 to-purple-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-calendar-plus text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                                    이번 달
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">신규 채용</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="new-hires">5명</p>
+                            <p class="text-xs text-gray-500 mt-2">지난달 3명 대비 증가</p>
+                        </div>
+                    </div>
+
+                    <!-- Employment Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-line text-purple-600 mr-2"></i>월별 고용 추이
+                            </h3>
+                            <canvas id="employmentTrendChart"></canvas>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-pie text-pink-600 mr-2"></i>부서별 인원 분포
+                            </h3>
+                            <canvas id="departmentDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Turnover Rate Tab -->
+                <div id="research-tab-turnover" class="research-tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                        <!-- Turnover Stat Cards -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-red-400 to-red-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-user-minus text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                                    -3% <i class="fas fa-arrow-down"></i>
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">연간 이직률</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="annual-turnover">8.5%</p>
+                            <p class="text-xs text-gray-500 mt-2">전년 대비 3% 감소</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-orange-400 to-orange-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-calendar-times text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
+                                    이번 분기
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">분기 이직률</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="quarterly-turnover">2.1%</p>
+                            <p class="text-xs text-gray-500 mt-2">지난 분기 2.8% 대비 감소</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-clock text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                                    평균
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">평균 재직 기간</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="avg-tenure">3.2년</p>
+                            <p class="text-xs text-gray-500 mt-2">업계 평균 2.8년</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-pink-400 to-pink-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-door-open text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-red-600 bg-red-100 px-3 py-1 rounded-full">
+                                    이번 달
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">퇴사자 수</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="departures">2명</p>
+                            <p class="text-xs text-gray-500 mt-2">지난달 3명 대비 감소</p>
+                        </div>
+                    </div>
+
+                    <!-- Turnover Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-area text-red-600 mr-2"></i>월별 이직률 추이
+                            </h3>
+                            <canvas id="turnoverTrendChart"></canvas>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-bar text-orange-600 mr-2"></i>부서별 이직률
+                            </h3>
+                            <canvas id="departmentTurnoverChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Turnover Reasons Table -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-list-ul text-purple-600 mr-2"></i>퇴사 사유 분석 (최근 6개월)
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b-2 border-gray-200">
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">퇴사 사유</th>
+                                        <th class="text-center py-3 px-4 font-semibold text-gray-700">인원</th>
+                                        <th class="text-center py-3 px-4 font-semibold text-gray-700">비율</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-700">추세</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="turnover-reasons-tbody">
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><i class="fas fa-briefcase text-blue-500 mr-2"></i>더 나은 기회</td>
+                                        <td class="text-center py-3 px-4">8명</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">42%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-green-600"><i class="fas fa-arrow-down"></i> -5%</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><i class="fas fa-map-marker-alt text-purple-500 mr-2"></i>이사/거리</td>
+                                        <td class="text-center py-3 px-4">4명</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">21%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-gray-600"><i class="fas fa-minus"></i> 0%</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><i class="fas fa-graduation-cap text-green-500 mr-2"></i>학업/자기계발</td>
+                                        <td class="text-center py-3 px-4">3명</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">16%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-green-600"><i class="fas fa-arrow-down"></i> -3%</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><i class="fas fa-user-friends text-orange-500 mr-2"></i>개인 사정</td>
+                                        <td class="text-center py-3 px-4">2명</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">11%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-gray-600"><i class="fas fa-minus"></i> 0%</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4"><i class="fas fa-times-circle text-red-500 mr-2"></i>기타</td>
+                                        <td class="text-center py-3 px-4">2명</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">11%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-red-600"><i class="fas fa-arrow-up"></i> +2%</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Satisfaction Tab -->
+                <div id="research-tab-satisfaction" class="research-tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Satisfaction Stat Cards -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-green-400 to-green-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-smile-beam text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                                    +8% <i class="fas fa-arrow-up"></i>
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">전체 만족도</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="overall-satisfaction">4.3/5.0</p>
+                            <p class="text-xs text-gray-500 mt-2">전년 대비 8% 향상</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-blue-400 to-blue-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-heart text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                                    우수
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">추천 의향 (eNPS)</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="enps-score">+42</p>
+                            <p class="text-xs text-gray-500 mt-2">업계 평균 +28</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-purple-400 to-purple-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-clipboard-check text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                                    이번 분기
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">설문 참여율</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="survey-participation">89%</p>
+                            <p class="text-xs text-gray-500 mt-2">목표 85% 초과 달성</p>
+                        </div>
+                    </div>
+
+                    <!-- Satisfaction Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-line text-green-600 mr-2"></i>분기별 만족도 추이
+                            </h3>
+                            <canvas id="satisfactionTrendChart"></canvas>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-radar text-blue-600 mr-2"></i>영역별 만족도 (Radar)
+                            </h3>
+                            <canvas id="satisfactionRadarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Satisfaction Categories -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-th-list text-purple-600 mr-2"></i>세부 항목별 만족도
+                        </h3>
+                        <div class="space-y-4" id="satisfaction-categories">
+                            <!-- Work-Life Balance -->
+                            <div class="border-b pb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold text-gray-700"><i class="fas fa-balance-scale text-purple-500 mr-2"></i>워라벨</span>
+                                    <span class="text-2xl font-bold text-purple-600">4.5</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-purple-400 to-purple-600 h-3 rounded-full" style="width: 90%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Compensation -->
+                            <div class="border-b pb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold text-gray-700"><i class="fas fa-won-sign text-green-500 mr-2"></i>급여 및 복지</span>
+                                    <span class="text-2xl font-bold text-green-600">4.2</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full" style="width: 84%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Growth Opportunities -->
+                            <div class="border-b pb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold text-gray-700"><i class="fas fa-chart-line text-blue-500 mr-2"></i>성장 기회</span>
+                                    <span class="text-2xl font-bold text-blue-600">4.3</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full" style="width: 86%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Work Environment -->
+                            <div class="border-b pb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold text-gray-700"><i class="fas fa-building text-orange-500 mr-2"></i>근무 환경</span>
+                                    <span class="text-2xl font-bold text-orange-600">4.6</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-orange-400 to-orange-600 h-3 rounded-full" style="width: 92%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Team Culture -->
+                            <div class="border-b pb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold text-gray-700"><i class="fas fa-users text-pink-500 mr-2"></i>팀 문화</span>
+                                    <span class="text-2xl font-bold text-pink-600">4.4</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-pink-400 to-pink-600 h-3 rounded-full" style="width: 88%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Leadership -->
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold text-gray-700"><i class="fas fa-user-tie text-indigo-500 mr-2"></i>리더십</span>
+                                    <span class="text-2xl font-bold text-indigo-600">4.1</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-indigo-400 to-indigo-600 h-3 rounded-full" style="width: 82%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Analysis Tab -->
+                <div id="research-tab-performance" class="research-tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                        <!-- Performance Stat Cards -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-purple-400 to-purple-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-trophy text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                                    +15% <i class="fas fa-arrow-up"></i>
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">평균 성과 점수</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="avg-performance">4.2/5.0</p>
+                            <p class="text-xs text-gray-500 mt-2">전년 대비 15% 향상</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-green-400 to-green-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-star text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                                    상위 20%
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">고성과자</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="high-performers">9명</p>
+                            <p class="text-xs text-gray-500 mt-2">전체 직원의 19%</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-blue-400 to-blue-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-chart-line text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                                    이번 분기
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">목표 달성률</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="goal-achievement">92%</p>
+                            <p class="text-xs text-gray-500 mt-2">지난 분기 87%</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gradient-to-br from-pink-400 to-pink-600 text-white p-3 rounded-lg">
+                                    <i class="fas fa-graduation-cap text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                                    +25 시간
+                                </span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm font-semibold mb-1">교육 시간</h3>
+                            <p class="text-3xl font-bold text-gray-800" id="training-hours">48h</p>
+                            <p class="text-xs text-gray-500 mt-2">1인당 평균 분기 기준</p>
+                        </div>
+                    </div>
+
+                    <!-- Performance Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-bar text-purple-600 mr-2"></i>성과 분포
+                            </h3>
+                            <canvas id="performanceDistributionChart"></canvas>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-line text-blue-600 mr-2"></i>부서별 평균 성과
+                            </h3>
+                            <canvas id="departmentPerformanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Top Performers Table -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-enhanced">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-medal text-yellow-500 mr-2"></i>이번 분기 Top 10 고성과자
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b-2 border-gray-200">
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">순위</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">이름</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">부서</th>
+                                        <th class="text-center py-3 px-4 font-semibold text-gray-700">성과 점수</th>
+                                        <th class="text-center py-3 px-4 font-semibold text-gray-700">목표 달성률</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-700">승진 추천</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-performers-tbody">
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><span class="bg-yellow-400 text-white font-bold px-3 py-1 rounded-full">1</span></td>
+                                        <td class="py-3 px-4 font-semibold">김민준</td>
+                                        <td class="py-3 px-4 text-gray-600">개발팀</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold">4.9</span></td>
+                                        <td class="text-center py-3 px-4"><span class="text-green-600 font-semibold">125%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-green-600"><i class="fas fa-check-circle"></i> 추천</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><span class="bg-gray-300 text-white font-bold px-3 py-1 rounded-full">2</span></td>
+                                        <td class="py-3 px-4 font-semibold">이서연</td>
+                                        <td class="py-3 px-4 text-gray-600">마케팅팀</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold">4.8</span></td>
+                                        <td class="text-center py-3 px-4"><span class="text-green-600 font-semibold">118%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-green-600"><i class="fas fa-check-circle"></i> 추천</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><span class="bg-orange-400 text-white font-bold px-3 py-1 rounded-full">3</span></td>
+                                        <td class="py-3 px-4 font-semibold">박지훈</td>
+                                        <td class="py-3 px-4 text-gray-600">영업팀</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold">4.7</span></td>
+                                        <td class="text-center py-3 px-4"><span class="text-green-600 font-semibold">115%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-green-600"><i class="fas fa-check-circle"></i> 추천</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full">4</span></td>
+                                        <td class="py-3 px-4 font-semibold">최수진</td>
+                                        <td class="py-3 px-4 text-gray-600">디자인팀</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold">4.6</span></td>
+                                        <td class="text-center py-3 px-4"><span class="text-green-600 font-semibold">112%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-green-600"><i class="fas fa-check-circle"></i> 추천</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full">5</span></td>
+                                        <td class="py-3 px-4 font-semibold">정우성</td>
+                                        <td class="py-3 px-4 text-gray-600">개발팀</td>
+                                        <td class="text-center py-3 px-4"><span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold">4.6</span></td>
+                                        <td class="text-center py-3 px-4"><span class="text-green-600 font-semibold">110%</span></td>
+                                        <td class="text-right py-3 px-4"><span class="text-blue-600"><i class="fas fa-star"></i> 검토중</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

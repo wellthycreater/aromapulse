@@ -133,6 +133,9 @@ function loadTabData(tabName) {
         case 'classes':
             loadClasses();
             break;
+        case 'research':
+            loadResearchLab();
+            break;
     }
 }
 
@@ -4434,4 +4437,398 @@ function renderDailySNSTrendChart(data) {
             }
         }
     });
+}
+
+// ========================
+// Research Lab (개발 연구소)
+// ========================
+
+// Chart instances for Research Lab
+let employmentTrendChart = null;
+let departmentDistributionChart = null;
+let turnoverTrendChart = null;
+let departmentTurnoverChart = null;
+let satisfactionTrendChart = null;
+let satisfactionRadarChart = null;
+let performanceDistributionChart = null;
+let departmentPerformanceChart = null;
+
+// Switch Research Tab
+function switchResearchTab(tabName) {
+    console.log('Switching research tab to:', tabName);
+    
+    // Update tab buttons
+    document.querySelectorAll('.research-tab-button').forEach(btn => {
+        if (btn.dataset.researchTab === tabName) {
+            btn.classList.remove('text-gray-500', 'border-transparent');
+            btn.classList.add('text-purple-600', 'border-purple-600');
+        } else {
+            btn.classList.remove('text-purple-600', 'border-purple-600');
+            btn.classList.add('text-gray-500', 'border-transparent');
+        }
+    });
+    
+    // Hide all research tab contents
+    document.querySelectorAll('.research-tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Show selected tab content
+    const selectedContent = document.getElementById(`research-tab-${tabName}`);
+    if (selectedContent) {
+        selectedContent.classList.remove('hidden');
+        
+        // Render charts for selected tab
+        setTimeout(() => {
+            switch(tabName) {
+                case 'employment':
+                    renderEmploymentCharts();
+                    break;
+                case 'turnover':
+                    renderTurnoverCharts();
+                    break;
+                case 'satisfaction':
+                    renderSatisfactionCharts();
+                    break;
+                case 'performance':
+                    renderPerformanceCharts();
+                    break;
+            }
+        }, 100);
+    }
+}
+
+// Load Research Lab
+function loadResearchLab() {
+    console.log('🔬 Loading Research Lab...');
+    
+    // Show employment tab by default
+    switchResearchTab('employment');
+}
+
+// Render Employment Charts
+function renderEmploymentCharts() {
+    console.log('📊 Rendering employment charts...');
+    
+    // Employment Trend Chart
+    const employmentCtx = document.getElementById('employmentTrendChart');
+    if (employmentCtx) {
+        if (employmentTrendChart) employmentTrendChart.destroy();
+        
+        employmentTrendChart = new Chart(employmentCtx, {
+            type: 'line',
+            data: {
+                labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                datasets: [{
+                    label: '직원 수',
+                    data: [35, 36, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47],
+                    borderColor: 'rgb(102, 126, 234)',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { 
+                        beginAtZero: false,
+                        min: 30,
+                        ticks: { precision: 0 }
+                    }
+                },
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                }
+            }
+        });
+    }
+    
+    // Department Distribution Chart
+    const departmentCtx = document.getElementById('departmentDistributionChart');
+    if (departmentCtx) {
+        if (departmentDistributionChart) departmentDistributionChart.destroy();
+        
+        departmentDistributionChart = new Chart(departmentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['개발팀', '마케팅팀', '영업팀', '디자인팀', '경영지원팀', '고객지원팀'],
+                datasets: [{
+                    data: [12, 8, 7, 6, 8, 6],
+                    backgroundColor: [
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(240, 147, 251, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(236, 72, 153, 0.8)',
+                        'rgba(147, 51, 234, 0.8)',
+                        'rgba(251, 146, 60, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: true, position: 'right' }
+                }
+            }
+        });
+    }
+}
+
+// Render Turnover Charts
+function renderTurnoverCharts() {
+    console.log('📊 Rendering turnover charts...');
+    
+    // Turnover Trend Chart
+    const turnoverCtx = document.getElementById('turnoverTrendChart');
+    if (turnoverCtx) {
+        if (turnoverTrendChart) turnoverTrendChart.destroy();
+        
+        turnoverTrendChart = new Chart(turnoverCtx, {
+            type: 'line',
+            data: {
+                labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                datasets: [{
+                    label: '이직률 (%)',
+                    data: [3.2, 2.8, 2.5, 2.1, 1.8, 2.2, 2.0, 1.9, 2.3, 2.1, 1.8, 2.1],
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        max: 5,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                }
+            }
+        });
+    }
+    
+    // Department Turnover Chart
+    const deptTurnoverCtx = document.getElementById('departmentTurnoverChart');
+    if (deptTurnoverCtx) {
+        if (departmentTurnoverChart) departmentTurnoverChart.destroy();
+        
+        departmentTurnoverChart = new Chart(deptTurnoverCtx, {
+            type: 'bar',
+            data: {
+                labels: ['개발팀', '마케팅팀', '영업팀', '디자인팀', '경영지원팀', '고객지원팀'],
+                datasets: [{
+                    label: '이직률 (%)',
+                    data: [5.2, 8.5, 12.3, 6.1, 4.8, 9.2],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(251, 146, 60, 0.8)',
+                        'rgba(234, 179, 8, 0.8)',
+                        'rgba(251, 191, 36, 0.8)',
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(249, 115, 22, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+}
+
+// Render Satisfaction Charts
+function renderSatisfactionCharts() {
+    console.log('📊 Rendering satisfaction charts...');
+    
+    // Satisfaction Trend Chart
+    const satisfactionCtx = document.getElementById('satisfactionTrendChart');
+    if (satisfactionCtx) {
+        if (satisfactionTrendChart) satisfactionTrendChart.destroy();
+        
+        satisfactionTrendChart = new Chart(satisfactionCtx, {
+            type: 'line',
+            data: {
+                labels: ['Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023', 'Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'],
+                datasets: [{
+                    label: '전체 만족도',
+                    data: [3.8, 3.9, 4.0, 4.1, 4.2, 4.2, 4.3, 4.3],
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { 
+                        beginAtZero: false,
+                        min: 3.5,
+                        max: 5.0,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(1);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                }
+            }
+        });
+    }
+    
+    // Satisfaction Radar Chart
+    const radarCtx = document.getElementById('satisfactionRadarChart');
+    if (radarCtx) {
+        if (satisfactionRadarChart) satisfactionRadarChart.destroy();
+        
+        satisfactionRadarChart = new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: ['워라벨', '급여·복지', '성장 기회', '근무 환경', '팀 문화', '리더십'],
+                datasets: [{
+                    label: '현재 (Q4 2024)',
+                    data: [4.5, 4.2, 4.3, 4.6, 4.4, 4.1],
+                    borderColor: 'rgb(102, 126, 234)',
+                    backgroundColor: 'rgba(102, 126, 234, 0.2)'
+                }, {
+                    label: '전년 (Q4 2023)',
+                    data: [4.2, 3.9, 4.0, 4.3, 4.1, 3.8],
+                    borderColor: 'rgb(203, 213, 225)',
+                    backgroundColor: 'rgba(203, 213, 225, 0.2)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 5,
+                        ticks: { stepSize: 1 }
+                    }
+                },
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                }
+            }
+        });
+    }
+}
+
+// Render Performance Charts
+function renderPerformanceCharts() {
+    console.log('📊 Rendering performance charts...');
+    
+    // Performance Distribution Chart
+    const perfDistCtx = document.getElementById('performanceDistributionChart');
+    if (perfDistCtx) {
+        if (performanceDistributionChart) performanceDistributionChart.destroy();
+        
+        performanceDistributionChart = new Chart(perfDistCtx, {
+            type: 'bar',
+            data: {
+                labels: ['1점대', '2점대', '3점대', '4점대', '5점'],
+                datasets: [{
+                    label: '직원 수',
+                    data: [0, 2, 14, 24, 7],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(251, 146, 60, 0.8)',
+                        'rgba(234, 179, 8, 0.8)',
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(16, 185, 129, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+    
+    // Department Performance Chart
+    const deptPerfCtx = document.getElementById('departmentPerformanceChart');
+    if (deptPerfCtx) {
+        if (departmentPerformanceChart) departmentPerformanceChart.destroy();
+        
+        departmentPerformanceChart = new Chart(deptPerfCtx, {
+            type: 'bar',
+            data: {
+                labels: ['개발팀', '마케팅팀', '영업팀', '디자인팀', '경영지원팀', '고객지원팀'],
+                datasets: [{
+                    label: '평균 성과 점수',
+                    data: [4.5, 4.3, 4.2, 4.4, 4.1, 3.9],
+                    backgroundColor: [
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(240, 147, 251, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(236, 72, 153, 0.8)',
+                        'rgba(147, 51, 234, 0.8)',
+                        'rgba(251, 146, 60, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { 
+                        beginAtZero: false,
+                        min: 3.5,
+                        max: 5.0,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(1);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
 }
