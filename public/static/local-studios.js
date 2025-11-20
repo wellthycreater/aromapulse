@@ -149,22 +149,15 @@ function createStudioCard(studio) {
   const distanceText = studio.distance_formatted || `${distance}km`;
   const categoryIcon = getCategoryIcon(studio.category);
   
-  // 배송 가능 여부 판단
-  const canSameDayDelivery = distance <= 30;
-  const canNextDayDelivery = distance > 30 && distance <= 50;
+  // 50km 이내만 표시하고 모두 당일 배송권으로 통일
+  const canSameDayDelivery = distance <= 50;
   
   let deliveryBadge = '';
   if (canSameDayDelivery) {
     deliveryBadge = `
       <div class="absolute bottom-4 left-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full shadow-xl font-bold flex items-center">
         <i class="fas fa-shipping-fast mr-2"></i>
-        당일 배송
-      </div>`;
-  } else if (canNextDayDelivery) {
-    deliveryBadge = `
-      <div class="absolute bottom-4 left-4 bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-4 py-2 rounded-full shadow-xl font-bold flex items-center">
-        <i class="fas fa-truck mr-2"></i>
-        익일 배송
+        당일 배송권
       </div>`;
   }
 
