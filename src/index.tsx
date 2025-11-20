@@ -772,17 +772,23 @@ app.get('/', (c) => {
                 <div class="border-t border-gray-800 pt-8 mb-8">
                     <div class="grid md:grid-cols-2 gap-8 text-sm text-gray-400">
                         <div>
-                            <h5 class="text-white font-semibold mb-3">회사 정보</h5>
-                            <p class="mb-1"><span class="text-gray-500">상호명:</span> 아로마펄스(AromaPulse)</p>
-                            <p class="mb-1"><span class="text-gray-500">대표자:</span> [대표자명]</p>
-                            <p class="mb-1"><span class="text-gray-500">사업자등록번호:</span> [사업자번호]</p>
-                            <p class="mb-1"><span class="text-gray-500">통신판매업 신고번호:</span> [신고번호]</p>
-                            <p class="mb-1"><span class="text-gray-500">주소:</span> [사업장 주소]</p>
+                            <h5 class="text-white font-semibold mb-3">사업자 정보</h5>
+                            <p class="mb-1"><span class="text-gray-500">상호:</span> 웰씨코리아</p>
+                            <p class="mb-1"><span class="text-gray-500">브랜드:</span> 아로마펄스 (AromaPulse)</p>
+                            <p class="mb-1"><span class="text-gray-500">대표자:</span> 정하민</p>
+                            <p class="mb-1"><span class="text-gray-500">사업자등록번호:</span> 478-54-00846 
+                                <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4785400846" target="_blank" class="text-purple-400 hover:text-purple-300 ml-2 text-xs underline">
+                                    [사업자정보확인]
+                                </a>
+                            </p>
+                            <p class="mb-1"><span class="text-gray-500">통신판매업신고번호:</span> 제2024-인천연수-2597호</p>
+                            <p class="mb-1"><span class="text-gray-500">주소:</span> 인천광역시 연수구 컨벤시아대로 81, 5층, 509-10A (송도동, 드림시티)</p>
                         </div>
                         <div>
                             <h5 class="text-white font-semibold mb-3">고객센터</h5>
-                            <p class="mb-1"><span class="text-gray-500">전화:</span> <a href="tel:000-0000-0000" class="hover:text-white transition">000-0000-0000</a></p>
-                            <p class="mb-1"><span class="text-gray-500">이메일:</span> <a href="mailto:support@aromapulse.kr" class="hover:text-white transition">support@aromapulse.kr</a></p>
+                            <p class="mb-1"><span class="text-gray-500">대표전화:</span> <a href="tel:070-4233-5183" class="hover:text-white transition">070-4233-5183</a></p>
+                            <p class="mb-1"><span class="text-gray-500">고객지원:</span> <a href="mailto:support@wellthykorea.com" class="hover:text-white transition">support@wellthykorea.com</a></p>
+                            <p class="mb-1"><span class="text-gray-500">개인정보보호책임자:</span> <a href="mailto:privacy@wellthykorea.com" class="hover:text-white transition">privacy@wellthykorea.com</a></p>
                             <p class="mb-1"><span class="text-gray-500">운영시간:</span> 평일 10:00 - 18:00 (주말/공휴일 휴무)</p>
                             <p class="mb-1"><span class="text-gray-500">점심시간:</span> 12:00 - 13:00</p>
                         </div>
@@ -848,13 +854,7 @@ app.get('/', (c) => {
                 
                 <!-- Business Verification -->
                 <div class="border-t border-gray-800 pt-8 mb-8">
-                    <div class="text-center text-gray-400 text-sm space-y-2">
-                        <p>
-                            <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=[사업자번호]" target="_blank" class="hover:text-purple-400 transition underline">
-                                <i class="fas fa-check-circle text-green-500 mr-1"></i>
-                                사업자정보확인
-                            </a>
-                        </p>
+                    <div class="text-center text-gray-400 text-sm">
                         <p class="text-gray-500 text-xs">
                             <i class="fas fa-server mr-1"></i>
                             호스팅 제공: Cloudflare, Inc.
@@ -885,14 +885,14 @@ app.get('/', (c) => {
                 <!-- Copyright -->
                 <div class="border-t border-gray-800 pt-8 text-center">
                     <p class="text-gray-400 text-sm mb-3">
-                        © 2025 플라피쌀아이. All rights reserved.
+                        © 2025 웰씨코리아. All rights reserved.
                     </p>
                     <div class="flex items-center justify-center space-x-3 text-gray-500 text-xs mb-4">
                         <a href="/privacy" class="hover:text-purple-400 transition font-semibold">개인정보처리방침</a>
                         <span>|</span>
                         <a href="/terms" class="hover:text-purple-400 transition">이용약관</a>
                         <span>|</span>
-                        <a href="/business-info" class="hover:text-purple-400 transition">사업자정보</a>
+                        <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4785400846" target="_blank" class="hover:text-purple-400 transition">사업자정보</a>
                     </div>
                     <p class="text-gray-500 text-xs">
                         본 사이트의 모든 콘텐츠는 저작권법의 보호를 받으며 무단 전재, 복사, 배포 등을 금합니다.
