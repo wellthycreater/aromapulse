@@ -722,11 +722,6 @@ app.get('/', (c) => {
                                     <i class="fas fa-gift text-purple-500 mr-2"></i>경영 운영
                                 </a>
                             </li>
-                            <li>
-                                <a href="/blog" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-newspaper text-cyan-500 mr-2"></i>코리아 네트워크
-                                </a>
-                            </li>
                         </ul>
                     </div>
                     
