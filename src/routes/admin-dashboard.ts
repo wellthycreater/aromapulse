@@ -260,10 +260,23 @@ adminDashboard.get('/device-stats', async (c) => {
         LIMIT 5
       `).all();
       
+      // Combined device + OS stats for accurate categorization
+      const combinedStats = await DB.prepare(`
+        SELECT 
+          device_type,
+          device_os,
+          COUNT(*) as count
+        FROM users
+        WHERE device_type IS NOT NULL AND device_os IS NOT NULL
+        GROUP BY device_type, device_os
+        ORDER BY count DESC
+      `).all();
+      
       return c.json({
         devices: userDeviceStats.results || [],
         browsers: userBrowserStats.results || [],
-        os: userOsStats.results || []
+        os: userOsStats.results || [],
+        combined: combinedStats.results || []
       });
       
     } catch (error) {

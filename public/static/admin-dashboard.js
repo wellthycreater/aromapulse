@@ -2324,7 +2324,7 @@ async function loadDeviceStats() {
         
         const data = await response.json();
         
-        if ((!data.devices || data.devices.length === 0) && (!data.os || data.os.length === 0)) {
+        if ((!data.devices || data.devices.length === 0) && (!data.os || data.os.length === 0) && (!data.combined || data.combined.length === 0)) {
             ctx.parentElement.innerHTML = `
                 <div class="text-center py-8">
                     <i class="fas fa-inbox text-gray-400 text-3xl mb-2"></i>
@@ -2335,54 +2335,54 @@ async function loadDeviceStats() {
             return;
         }
         
-        // Combine device type and OS data to create detailed categories
-        // Categories: Android (mobile), iOS (mobile/tablet), Desktop (Windows/macOS/Linux), Tablet
+        // Use combined data for accurate categorization
+        // Categories: Android (mobile), iOS (mobile), iPad (iOS tablet), Android Tablet, Desktop
         const categories = {
             'Android': 0,
             'iOS': 0,
-            'Desktop': 0,
-            'Tablet': 0
+            'iPad': 0,
+            'Android Tablet': 0,
+            'Desktop': 0
         };
         
-        // Count from OS data (more accurate)
-        if (data.os && data.os.length > 0) {
-            data.os.forEach(item => {
-                const os = item.os.toLowerCase();
+        // Use combined stats if available (most accurate)
+        if (data.combined && data.combined.length > 0) {
+            data.combined.forEach(item => {
+                const deviceType = (item.device_type || '').toLowerCase();
+                const os = (item.device_os || '').toLowerCase();
                 const count = parseInt(item.count) || 0;
                 
-                if (os.includes('android')) {
-                    categories['Android'] += count;
-                } else if (os.includes('ios') || os.includes('iphone') || os.includes('ipad')) {
-                    // Check if it's iPad (tablet) or iPhone (mobile)
-                    if (os.includes('ipad')) {
-                        categories['Tablet'] += count;
-                    } else {
+                if (deviceType === 'mobile') {
+                    if (os.includes('android')) {
+                        categories['Android'] += count;
+                    } else if (os.includes('ios') || os.includes('iphone')) {
                         categories['iOS'] += count;
                     }
-                } else if (os.includes('windows') || os.includes('mac') || os.includes('linux')) {
+                } else if (deviceType === 'tablet') {
+                    if (os.includes('android')) {
+                        categories['Android Tablet'] += count;
+                    } else if (os.includes('ios') || os.includes('ipad')) {
+                        categories['iPad'] += count;
+                    }
+                } else if (deviceType === 'desktop') {
                     categories['Desktop'] += count;
                 }
             });
-        }
-        
-        // Fallback to device_type if OS data is incomplete
-        if (data.devices && data.devices.length > 0) {
+        } else if (data.devices && data.devices.length > 0) {
+            // Fallback if no combined data
             data.devices.forEach(item => {
                 const deviceType = item.device_type;
                 const count = parseInt(item.count) || 0;
                 
-                // Only use device_type data if category is still 0
-                if (deviceType === 'tablet' && categories['Tablet'] === 0) {
-                    categories['Tablet'] += count;
-                } else if (deviceType === 'desktop' && categories['Desktop'] === 0) {
+                if (deviceType === 'tablet') {
+                    // Default to iPad if no OS info
+                    categories['iPad'] += count;
+                } else if (deviceType === 'desktop') {
                     categories['Desktop'] += count;
                 } else if (deviceType === 'mobile') {
-                    // If we don't have OS data, split mobile between Android and iOS
-                    if (categories['Android'] === 0 && categories['iOS'] === 0) {
-                        // Estimate: 60% Android, 40% iOS in general market
-                        categories['Android'] += Math.round(count * 0.6);
-                        categories['iOS'] += Math.round(count * 0.4);
-                    }
+                    // Split between Android and iOS (60/40 estimate)
+                    categories['Android'] += Math.round(count * 0.6);
+                    categories['iOS'] += Math.round(count * 0.4);
                 }
             });
         }
@@ -2392,16 +2392,18 @@ async function loadDeviceStats() {
         const counts = [];
         const colors = [];
         const colorMap = {
-            'Android': 'rgba(60, 186, 84, 0.8)',      // Green
-            'iOS': 'rgba(0, 122, 255, 0.8)',          // Blue
-            'Desktop': 'rgba(147, 51, 234, 0.8)',     // Purple
-            'Tablet': 'rgba(245, 158, 11, 0.8)'       // Orange
+            'Android': 'rgba(60, 186, 84, 0.8)',           // Green
+            'iOS': 'rgba(0, 122, 255, 0.8)',               // Blue
+            'iPad': 'rgba(156, 163, 175, 0.8)',            // Gray
+            'Android Tablet': 'rgba(34, 197, 94, 0.8)',    // Lighter Green
+            'Desktop': 'rgba(147, 51, 234, 0.8)'           // Purple
         };
         const iconMap = {
             'Android': '📱 Android',
             'iOS': '🍎 iOS',
-            'Desktop': '💻 Desktop',
-            'Tablet': '📱 Tablet'
+            'iPad': '📱 iPad',
+            'Android Tablet': '📱 Android Tablet',
+            'Desktop': '💻 Desktop'
         };
         
         Object.keys(categories).forEach(key => {
