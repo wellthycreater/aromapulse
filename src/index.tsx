@@ -643,39 +643,179 @@ app.get('/', (c) => {
         </section>
 
         <!-- Footer -->
-        <footer class="bg-gray-900 text-white py-12">
+        <footer class="bg-gray-900 text-white py-16">
             <div class="container mx-auto px-6">
-                <div class="grid md:grid-cols-4 gap-8 mb-8">
-                    <div>
-                        <h4 class="text-xl font-bold mb-4">아로마펄스</h4>
-                        <p class="text-gray-400">향기로 시작하는 행복한 변화</p>
+                <!-- Main Footer Content -->
+                <div class="grid md:grid-cols-5 gap-8 mb-12">
+                    <!-- Company Info -->
+                    <div class="md:col-span-2">
+                        <h4 class="text-2xl font-bold mb-4">아로마펄스</h4>
+                        <p class="text-gray-400 mb-6 leading-relaxed">향기로 시작하는 행복한 변화<br/>당신의 일상에 평온함을 더합니다</p>
+                        
+                        <!-- Social Media -->
+                        <div class="mb-6">
+                            <h5 class="text-sm font-semibold text-gray-300 mb-3">소셜 미디어</h5>
+                            <div class="flex space-x-3">
+                                <a href="https://blog.naver.com/aromapulse" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition">
+                                    <i class="fab fa-blogger-b"></i>
+                                </a>
+                                <a href="#" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                                <a href="#" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition">
+                                    <i class="fab fa-youtube"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Newsletter (Optional) -->
+                        <div>
+                            <h5 class="text-sm font-semibold text-gray-300 mb-3">뉴스레터 구독</h5>
+                            <div class="flex">
+                                <input type="email" placeholder="이메일 주소" class="flex-1 px-4 py-2 bg-gray-800 text-white rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-600">
+                                <button class="bg-purple-600 px-6 py-2 rounded-r-lg hover:bg-purple-700 transition font-semibold">
+                                    구독
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <!-- Products -->
                     <div>
                         <h4 class="text-lg font-bold mb-4">제품</h4>
                         <ul class="space-y-2 text-gray-400">
                             <li><a href="/shop" class="hover:text-white transition">전체 제품</a></li>
                             <li><a href="/shop?category=symptom_care" class="hover:text-white transition">증상 케어</a></li>
                             <li><a href="/shop?category=refresh" class="hover:text-white transition">리프레시</a></li>
+                            <li><a href="/oneday-classes" class="hover:text-white transition">힐링 체험</a></li>
                         </ul>
                     </div>
+                    
+                    <!-- Customer Support -->
                     <div>
-                        <h4 class="text-lg font-bold mb-4">서비스</h4>
+                        <h4 class="text-lg font-bold mb-4">고객 지원</h4>
                         <ul class="space-y-2 text-gray-400">
-                            <li><a href="/workshops" class="hover:text-white transition">워크샵</a></li>
-                            <li><a href="/patch-apply" class="hover:text-white transition">패치 체험</a></li>
+                            <li><a href="/faq" class="hover:text-white transition">자주 묻는 질문</a></li>
+                            <li><a href="/contact" class="hover:text-white transition">1:1 문의</a></li>
+                            <li><a href="/shipping" class="hover:text-white transition">배송 안내</a></li>
+                            <li><a href="/returns" class="hover:text-white transition">교환/환불</a></li>
                         </ul>
                     </div>
+                    
+                    <!-- Policies -->
                     <div>
-                        <h4 class="text-lg font-bold mb-4">소셜 미디어</h4>
-                        <div class="flex space-x-4">
-                            <a href="https://blog.naver.com/aromapulse" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition">
-                                <i class="fas fa-blog"></i>
-                            </a>
+                        <h4 class="text-lg font-bold mb-4">정책</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="/terms" class="hover:text-white transition">이용약관</a></li>
+                            <li><a href="/privacy" class="hover:text-white transition font-semibold">개인정보처리방침</a></li>
+                            <li><a href="/refund" class="hover:text-white transition">환불정책</a></li>
+                            <li><a href="/wholesale" class="hover:text-white transition">도매 문의</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Company Details -->
+                <div class="border-t border-gray-800 pt-8 mb-8">
+                    <div class="grid md:grid-cols-2 gap-8 text-sm text-gray-400">
+                        <div>
+                            <h5 class="text-white font-semibold mb-3">회사 정보</h5>
+                            <p class="mb-1"><span class="text-gray-500">상호명:</span> 아로마펄스(AromaPulse)</p>
+                            <p class="mb-1"><span class="text-gray-500">대표자:</span> [대표자명]</p>
+                            <p class="mb-1"><span class="text-gray-500">사업자등록번호:</span> [사업자번호]</p>
+                            <p class="mb-1"><span class="text-gray-500">통신판매업 신고번호:</span> [신고번호]</p>
+                            <p class="mb-1"><span class="text-gray-500">주소:</span> [사업장 주소]</p>
+                        </div>
+                        <div>
+                            <h5 class="text-white font-semibold mb-3">고객센터</h5>
+                            <p class="mb-1"><span class="text-gray-500">전화:</span> <a href="tel:000-0000-0000" class="hover:text-white transition">000-0000-0000</a></p>
+                            <p class="mb-1"><span class="text-gray-500">이메일:</span> <a href="mailto:support@aromapulse.kr" class="hover:text-white transition">support@aromapulse.kr</a></p>
+                            <p class="mb-1"><span class="text-gray-500">운영시간:</span> 평일 10:00 - 18:00 (주말/공휴일 휴무)</p>
+                            <p class="mb-1"><span class="text-gray-500">점심시간:</span> 12:00 - 13:00</p>
                         </div>
                     </div>
                 </div>
-                <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
-                    <p>© 2025 아로마펄스 (AromaPulse). All rights reserved.</p>
+                
+                <!-- Escrow & Business Info -->
+                <div class="border-t border-gray-800 pt-8 mb-8">
+                    <div class="text-center mb-6">
+                        <h5 class="text-white font-semibold mb-4">구매안전서비스</h5>
+                        <p class="text-gray-400 text-sm mb-3">
+                            고객님의 안전거래를 위해 구매금액에 따라 에스크로 서비스를 제공하고 있습니다.
+                        </p>
+                        <a href="#" class="text-purple-400 hover:text-purple-300 text-sm underline">
+                            <i class="fas fa-external-link-alt mr-1"></i>서비스 가입 사실 확인
+                        </a>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center justify-center gap-8 text-gray-400 text-sm">
+                        <!-- Payment Methods -->
+                        <div class="text-center">
+                            <p class="text-gray-500 text-xs mb-2">결제수단</p>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-8 bg-yellow-400 rounded flex items-center justify-center text-xs font-bold text-gray-900">
+                                    카카오
+                                </div>
+                                <div class="w-12 h-8 bg-green-500 rounded flex items-center justify-center text-xs font-bold text-white">
+                                    네이버
+                                </div>
+                                <div class="w-12 h-8 bg-blue-500 rounded flex items-center justify-center text-xs font-bold text-white">
+                                    토스
+                                </div>
+                                <i class="fas fa-credit-card text-2xl text-gray-600"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="w-px h-12 bg-gray-700"></div>
+                        
+                        <!-- Delivery Partners -->
+                        <div class="text-center">
+                            <p class="text-gray-500 text-xs mb-2">배송파트너</p>
+                            <div class="flex items-center space-x-3">
+                                <div class="text-red-500 font-bold text-sm">CJ대한통운</div>
+                                <div class="text-blue-400 font-bold text-sm">우체국택배</div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-px h-12 bg-gray-700"></div>
+                        
+                        <!-- Security Features -->
+                        <div class="flex items-center space-x-6">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-shield-alt text-green-500 text-xl"></i>
+                                <span>안전거래</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-lock text-green-500 text-xl"></i>
+                                <span>SSL 보안</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Business Verification -->
+                <div class="border-t border-gray-800 pt-8 mb-8">
+                    <div class="text-center text-gray-400 text-sm space-y-2">
+                        <p>
+                            <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=[사업자번호]" target="_blank" class="hover:text-purple-400 transition underline">
+                                <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                                사업자정보확인
+                            </a>
+                        </p>
+                        <p class="text-gray-500 text-xs">
+                            <i class="fas fa-server mr-1"></i>
+                            호스팅 제공: Cloudflare, Inc.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Copyright -->
+                <div class="border-t border-gray-800 pt-8 text-center">
+                    <p class="text-gray-400 text-sm mb-2">
+                        © 2025 아로마펄스 (AromaPulse). All rights reserved.
+                    </p>
+                    <p class="text-gray-500 text-xs">
+                        본 사이트의 모든 콘텐츠는 저작권법의 보호를 받으며 무단 전재, 복사, 배포 등을 금합니다.
+                    </p>
                 </div>
             </div>
         </footer>
