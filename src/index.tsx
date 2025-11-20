@@ -704,22 +704,26 @@ app.get('/', (c) => {
                         <ul class="space-y-2 text-gray-400">
                             <li>
                                 <a href="/shop" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-heart text-pink-500 mr-2"></i>제품 보기
+                                    <i class="fas fa-heart text-pink-500 w-4 mr-3"></i>
+                                    <span>제품 보기</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="/oneday-classes" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-star text-yellow-500 mr-2"></i>체험 후기
+                                    <i class="fas fa-star text-yellow-500 w-4 mr-3"></i>
+                                    <span>체험 후기</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="/workshops" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-clipboard-list text-blue-500 mr-2"></i>제휴 제안
+                                    <i class="fas fa-clipboard-list text-blue-500 w-4 mr-3"></i>
+                                    <span>제휴 제안</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="/patch-apply" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-gift text-purple-500 mr-2"></i>경영 운영
+                                    <i class="fas fa-gift text-purple-500 w-4 mr-3"></i>
+                                    <span>경영 운영</span>
                                 </a>
                             </li>
                         </ul>
@@ -731,22 +735,26 @@ app.get('/', (c) => {
                         <ul class="space-y-2 text-gray-400">
                             <li>
                                 <a href="/faq" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-question-circle text-blue-400 mr-2"></i>FAQ
+                                    <i class="fas fa-question-circle text-blue-400 w-4 mr-3"></i>
+                                    <span>FAQ</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="/contact" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-comments text-green-400 mr-2"></i>1:1 문의 (카톡)
+                                    <i class="fas fa-comments text-green-400 w-4 mr-3"></i>
+                                    <span>1:1 문의 (카톡)</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="/shipping" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-truck text-orange-400 mr-2"></i>배송 안내
+                                    <i class="fas fa-truck text-orange-400 w-4 mr-3"></i>
+                                    <span>배송 안내</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="/returns" class="hover:text-white transition flex items-center">
-                                    <i class="fas fa-undo text-red-400 mr-2"></i>반품/교환
+                                    <i class="fas fa-undo text-red-400 w-4 mr-3"></i>
+                                    <span>반품/교환</span>
                                 </a>
                             </li>
                         </ul>
