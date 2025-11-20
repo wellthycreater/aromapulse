@@ -2498,3 +2498,166 @@ const existingIndex = cart.findIndex(item =>
 5. ✅ 주문 상태 자동 업데이트 (`payment_status='paid'`, `order_status='confirmed'`)
 6. ✅ 결제 성공/실패 페이지
 7. ✅ 장바구니 자동 비우기 (결제 완료 후)
+
+---
+
+## 🔒 관리자 대시보드 보안 강화 (v1.7.5) - 개발 연구소 비밀번호 보호
+
+### ✅ 완료된 작업 (2025-11-20)
+
+**개발 연구소(Research Lab) 섹션 비밀번호 보호 기능 추가**
+
+#### 1. 기능 개요
+- **목적**: 민감한 HR 데이터(고용률, 이직률, 직원 만족도, 성과 분석) 접근 제한
+- **대상**: 대표 운영자 및 핵심 팀원만 접근 가능
+- **방식**: 비밀번호 인증 후 sessionStorage 기반 접근 관리
+
+#### 2. 주요 기능
+**비밀번호 인증 모달**:
+- 개발 연구소 탭 클릭 시 비밀번호 인증 모달 자동 표시
+- 세션 내 인증 상태 유지 (브라우저 새로고침 시 재인증 필요)
+- 인증 성공 시 자동으로 개발 연구소 페이지로 이동
+
+**보안 설정**:
+- 서버 측 비밀번호 검증 (`/api/admin/verify-research-password`)
+- 환경 변수로 비밀번호 관리 (`RESEARCH_LAB_PASSWORD`)
+- 클라이언트에 비밀번호 노출 없음
+
+**사용자 경험**:
+- Enter 키 지원 (비밀번호 입력 후 Enter로 인증)
+- 실시간 오류 메시지 표시
+- 인증 중 로딩 스피너
+- 인증 성공 시 시각적 피드백
+
+#### 3. API 엔드포인트
+```
+POST /api/admin/verify-research-password
+Request Body:
+{
+  "password": "aromapulse2025!"
+}
+
+Response (성공):
+{
+  "success": true,
+  "message": "인증 성공"
+}
+
+Response (실패):
+{
+  "success": false,
+  "message": "비밀번호가 올바르지 않습니다"
+}
+```
+
+#### 4. 환경 변수 설정
+**로컬 개발** (`.dev.vars`):
+```bash
+RESEARCH_LAB_PASSWORD=aromapulse2025!
+```
+
+**프로덕션** (Cloudflare Pages Secrets):
+```bash
+echo "aromapulse2025!" | npx wrangler pages secret put RESEARCH_LAB_PASSWORD --project-name aromapulse
+```
+
+#### 5. 기술 스택
+- **Frontend**: Vanilla JavaScript + TailwindCSS
+- **Backend**: Hono (TypeScript) + JWT 인증
+- **Storage**: sessionStorage (클라이언트 측 인증 상태 관리)
+- **Security**: 서버 측 비밀번호 검증, 환경 변수 관리
+
+#### 6. 보안 고려사항
+✅ **서버 측 검증**: 모든 비밀번호 검증은 백엔드에서 수행
+✅ **환경 변수**: 비밀번호를 소스 코드에 하드코딩하지 않음
+✅ **세션 기반**: 브라우저 세션 종료 시 인증 상태 자동 초기화
+✅ **JWT 인증**: 관리자 권한과 연동하여 이중 보안
+✅ **HTTPS 통신**: 비밀번호 전송 시 암호화
+
+#### 7. 사용 방법
+
+**관리자 대시보드 접속**:
+1. `/admin-dashboard` 페이지 접속 (관리자 로그인 필요)
+2. "개발 연구소" 탭 클릭
+3. 비밀번호 입력 모달 표시
+4. 비밀번호 입력: `aromapulse2025!`
+5. "인증하기" 버튼 클릭 또는 Enter 키
+6. 인증 성공 시 개발 연구소 페이지 자동 표시
+
+**세션 관리**:
+- 브라우저 세션 내에서는 재인증 불필요
+- 브라우저 종료 또는 탭 닫기 시 인증 상태 초기화
+- 보안을 위해 sessionStorage 사용 (localStorage 아님)
+
+#### 8. 접근 가능한 데이터
+
+**개발 연구소 섹션 내용**:
+1. **고용률 분석**
+   - 월별 신규 채용 현황
+   - 직군별 채용 추이
+   - 채용 소요 시간 통계
+   - 채용 전환율
+
+2. **이직률 분석**
+   - 월별 퇴사 현황
+   - 부서별 이직률
+   - 퇴사 사유 분석
+   - 평균 근속 연수
+
+3. **직원 만족도**
+   - 월별 만족도 추이
+   - 부서별 만족도 비교
+   - 복리후생 만족도
+   - 워라밸 지수
+
+4. **성과 분석**
+   - 분기별 성과 평가 결과
+   - 부서별 평균 성과 점수
+   - 고성과자 비율
+   - 저성과자 관리 현황
+
+#### 9. 비밀번호 변경 방법
+
+**개발 환경**:
+```bash
+# .dev.vars 파일 수정
+vim /home/user/webapp/.dev.vars
+# RESEARCH_LAB_PASSWORD=new_password_here
+```
+
+**프로덕션 환경**:
+```bash
+# Cloudflare Pages Secret 업데이트
+echo "new_password_here" | npx wrangler pages secret put RESEARCH_LAB_PASSWORD --project-name aromapulse
+```
+
+#### 10. 배포 상태
+- ✅ **로컬 개발**: 테스트 완료
+- ✅ **프로덕션**: https://www.aromapulse.kr 배포 완료
+- ✅ **Git 커밋**: "Add password protection for Research Lab (개발 연구소) section"
+- ✅ **Cloudflare Secrets**: RESEARCH_LAB_PASSWORD 등록 완료
+
+### 🎯 비즈니스 가치
+
+**데이터 보안**:
+- ✅ 민감한 HR 데이터 접근 제한
+- ✅ 권한 있는 사용자만 열람 가능
+- ✅ 감사 추적 가능 (로그인 기록과 연동)
+
+**법적 컴플라이언스**:
+- ✅ 개인정보보호법 준수
+- ✅ 근로기준법 상 민감 정보 보호
+- ✅ 내부 정보 유출 방지
+
+**조직 관리**:
+- ✅ 경영진 전용 데이터 분석
+- ✅ 인사 의사결정 지원
+- ✅ 조직 건강도 모니터링
+
+---
+
+**마지막 업데이트**: 2025-11-20  
+**버전**: 1.7.5 - Research Lab Password Protection  
+**상태**: ✅ 개발 연구소 비밀번호 보호 기능 완료  
+**프로덕션 URL**: https://www.aromapulse.kr  
+**최신 배포**: https://ad4f2626.aromapulse.pages.dev
