@@ -293,12 +293,20 @@ app.get('/', (c) => {
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
-                        <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
-                            <i class="fas fa-star mr-2"></i>힐링 체험
-                        </a>
-                        <a href="/workshops" id="workshop-menu" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center" style="display: none;">
-                            <i class="fas fa-spa mr-2"></i>워크샵
-                        </a>
+                        <div class="relative group">
+                            <button class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                                <i class="fas fa-star mr-2"></i>힐링 체험
+                                <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                            </button>
+                            <div class="hidden group-hover:block absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
+                                <a href="/oneday-classes" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition">
+                                    <i class="fas fa-calendar-alt mr-2"></i>원데이 클래스
+                                </a>
+                                <a href="/local-studios" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>공방 찾기
+                                </a>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Right: Visitor Stats & Auth -->
@@ -386,11 +394,6 @@ app.get('/', (c) => {
                                 class="bg-pink-600 text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-pink-700 transition transform hover:scale-105">
                             <i class="fas fa-map-marker-alt mr-2"></i>
                             공방 찾기
-                        </button>
-                        <button onclick="location.href='/workshops'" 
-                                class="bg-purple-800 bg-opacity-50 backdrop-blur text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-opacity-70 transition">
-                            <i class="fas fa-spa mr-2"></i>
-                            워크샵 신청
                         </button>
                     </div>
                 </div>
