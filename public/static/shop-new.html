@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쇼핑 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .animated-bg {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .category-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .category-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-12">
+                </a>
+                
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="text-gray-700 hover:text-purple-600 font-semibold transition">
+                        <i class="fas fa-home mr-2"></i>홈
+                    </a>
+                    <a href="/shop" class="text-purple-600 font-bold">
+                        <i class="fas fa-shopping-bag mr-2"></i>쇼핑
+                    </a>
+                    <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition">
+                        <i class="fas fa-star mr-2"></i>힐링 체험
+                    </a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleCart()" class="relative text-gray-700 hover:text-purple-600 transition">
+                        <i class="fas fa-shopping-cart text-2xl"></i>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
+                    </button>
+                    <a href="/dashboard" class="text-gray-700 hover:text-purple-600 transition">
+                        <i class="fas fa-user-circle text-2xl"></i>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="animated-bg text-white py-20 relative overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <h1 class="text-5xl md:text-6xl font-bold mb-6 fade-in">
+                ✨ 향기로운 힐링 라이프
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 fade-in opacity-90">
+                증상 케어부터 일상 리프레시까지, 당신만의 향기를 찾아보세요
+            </p>
+            <button onclick="scrollToProducts()" class="bg-white text-purple-600 px-10 py-4 rounded-full font-bold text-lg hover:shadow-2xl hover:scale-105 transition transform">
+                <i class="fas fa-arrow-down mr-2"></i>제품 둘러보기
+            </button>
+        </div>
+    </section>
+
+    <div class="container mx-auto px-4 py-12">
+        <!-- Search & Filter Bar -->
+        <div class="glass-effect rounded-2xl shadow-xl p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="flex-1 w-full md:w-auto">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="search-input" placeholder="제품 검색..." 
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none transition"
+                            onkeyup="searchProducts()">
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="switchCategory('all')" id="cat-all" 
+                        class="category-btn active flex-1 md:flex-none px-6 py-3 rounded-xl font-bold transition">
+                        <i class="fas fa-th-large mr-2"></i>전체
+                    </button>
+                    <button onclick="switchCategory('symptom_care')" id="cat-symptom_care" 
+                        class="category-btn flex-1 md:flex-none px-6 py-3 rounded-xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+                        <i class="fas fa-heart-pulse mr-2"></i>증상 케어
+                    </button>
+                    <button onclick="switchCategory('refresh')" id="cat-refresh" 
+                        class="category-btn flex-1 md:flex-none px-6 py-3 rounded-xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+                        <i class="fas fa-spray-can mr-2"></i>리프레시
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <!-- 제품 카드들이 동적으로 추가됩니다 -->
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="text-center py-20">
+            <i class="fas fa-spinner fa-spin text-5xl text-purple-600 mb-4"></i>
+            <p class="text-gray-600 text-lg">제품을 불러오는 중...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-20" style="display: none;">
+            <div class="inline-block p-6 bg-gray-100 rounded-full mb-4">
+                <i class="fas fa-box-open text-6xl text-gray-400"></i>
+            </div>
+            <p class="text-gray-600 text-xl font-semibold">등록된 제품이 없습니다</p>
+            <p class="text-gray-400 mt-2">곧 다양한 제품을 만나보실 수 있습니다</p>
+        </div>
+    </div>
+
+    <!-- 장바구니 사이드바 -->
+    <div id="cart-sidebar" class="hidden fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl z-50 overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <h2 class="text-2xl font-bold gradient-text">
+                    <i class="fas fa-shopping-cart mr-2"></i>장바구니
+                </h2>
+                <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700 transition">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div id="cart-items" class="space-y-4 mb-6">
+                <!-- 장바구니 아이템들이 동적으로 추가됩니다 -->
+            </div>
+
+            <div id="cart-empty" class="text-center py-12">
+                <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500">장바구니가 비어있습니다</p>
+            </div>
+
+            <div id="cart-footer" class="border-t pt-6 space-y-4" style="display: none;">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-semibold text-gray-700">총 금액</span>
+                    <span class="text-3xl font-bold gradient-text" id="cart-total">0원</span>
+                </div>
+                <button onclick="proceedToCheckout()" 
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:scale-105 transition transform">
+                    <i class="fas fa-credit-card mr-2"></i>결제하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="cart-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" onclick="toggleCart()"></div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-12 mt-20">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm">© 2024 아로마펄스 by 웰씨코리아. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/shop-new.js"></script>
+
+    <!-- 사이드톡 AI 챗봇 -->
+    <script src="https://pages.sidetalk.ai/sidetalk.js"></script>
+    <script>
+    SidetalkAI('init', {
+        siteKey: '2836b61bcbfd435c0e1a407bf6ce71885c532aba4c648de494338d3942f565c1',
+        buttonText: 'AI 상담',
+        buttonBottom: '20px',
+        buttonRight: '20px'
+    });
+    </script>
+</body>
+</html>

@@ -133,7 +133,7 @@ app.get('/dev-login', (c) => c.redirect('/static/dev-login.html'));
 app.get('/test-login', (c) => c.redirect('/static/test-login-debug.html'));
 
 // Signup page - redirect to static file  
-app.get('/signup', (c) => c.redirect('/static/signup.html'));
+app.get('/signup', (c) => c.redirect('/static/signup-new.html'));
 
 // Dashboard page - redirect to static file
 app.get('/dashboard', (c) => c.redirect('/static/dashboard.html'));
@@ -274,11 +274,14 @@ app.get('/', (c) => {
                     
                     <!-- Center: Navigation Menu -->
                     <div class="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+                        <a href="/" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                            <i class="fas fa-home mr-2"></i>홈
+                        </a>
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
                         <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
-                            <i class="fas fa-star mr-2"></i>원데이 클래스
+                            <i class="fas fa-star mr-2"></i>힐링 체험
                         </a>
                         <a href="/workshops" id="workshop-menu" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center" style="display: none;">
                             <i class="fas fa-spa mr-2"></i>워크샵
@@ -435,7 +438,7 @@ app.get('/', (c) => {
             <div class="container mx-auto px-6">
                 <div class="text-center mb-16">
                     <h2 class="text-4xl font-bold text-gray-800 mb-4">인기 클래스</h2>
-                    <p class="text-xl text-gray-600">가장 사랑받는 원데이 클래스를 만나보세요</p>
+                    <p class="text-xl text-gray-600">가장 사랑받는 힐링 체험을 만나보세요</p>
                 </div>
                 <div id="popular-classes" class="grid md:grid-cols-3 gap-8">
                     <!-- 클래스 카드 1 -->
@@ -854,7 +857,7 @@ app.get('/', (c) => {
                 const token = localStorage.getItem('token');
                 const workshopMenu = document.getElementById('workshop-menu');
                 
-                // 원데이 클래스는 항상 표시 (HTML에서 기본 표시)
+                // 힐링 체험은 항상 표시 (HTML에서 기본 표시)
                 // 워크샵은 B2B 사용자에게만 표시
                 if (workshopMenu) {
                     if (token) {

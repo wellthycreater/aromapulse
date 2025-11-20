@@ -54,6 +54,45 @@ function switchCategory(category) {
   filterAndRenderProducts();
 }
 
+// 검색 기능
+function searchProducts() {
+  const searchTerm = document.getElementById('search-input').value.toLowerCase();
+  const gridEl = document.getElementById('products-grid');
+  gridEl.innerHTML = '';
+  
+  let products = allProducts;
+  
+  // 카테고리 필터
+  if (currentCategory !== 'all') {
+    products = products.filter(p => p.concept === currentCategory);
+  }
+  
+  // 검색 필터
+  if (searchTerm) {
+    products = products.filter(p => 
+      p.name.toLowerCase().includes(searchTerm) || 
+      (p.description && p.description.toLowerCase().includes(searchTerm))
+    );
+  }
+  
+  if (products.length === 0) {
+    document.getElementById('empty-state').style.display = 'block';
+    return;
+  }
+  
+  document.getElementById('empty-state').style.display = 'none';
+  
+  products.forEach(product => {
+    const card = createProductCard(product);
+    gridEl.appendChild(card);
+  });
+}
+
+// 스크롤 함수
+function scrollToProducts() {
+  document.getElementById('products-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // 제품 필터링 및 렌더링
 function filterAndRenderProducts() {
   let products = allProducts;
@@ -66,12 +105,6 @@ function filterAndRenderProducts() {
   const gridEl = document.getElementById('products-grid');
   gridEl.innerHTML = '';
   
-  // 제품 개수 업데이트
-  const countEl = document.getElementById('product-count');
-  if (countEl) {
-    countEl.textContent = products.length;
-  }
-  
   if (products.length === 0) {
     document.getElementById('empty-state').style.display = 'block';
     return;
@@ -79,10 +112,8 @@ function filterAndRenderProducts() {
   
   document.getElementById('empty-state').style.display = 'none';
   
-  products.forEach((product, index) => {
+  products.forEach(product => {
     const card = createProductCard(product);
-    card.style.animationDelay = `${index * 0.1}s`;
-    card.classList.add('fade-in-up');
     gridEl.appendChild(card);
   });
 }
@@ -90,55 +121,37 @@ function filterAndRenderProducts() {
 // 제품 카드 생성
 function createProductCard(product) {
   const card = document.createElement('div');
-  card.className = 'product-card bg-white rounded-3xl shadow-xl overflow-hidden relative group';
+  card.className = 'product-card bg-white rounded-2xl shadow-lg overflow-hidden fade-in';
   
   const thumbnailUrl = product.thumbnail_image || 'https://via.placeholder.com/400x400?text=No+Image';
   
   const conceptBadge = product.concept === 'refresh'
-    ? '<div class="absolute top-5 left-5 z-10"><span class="px-5 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-black rounded-full shadow-2xl badge-glow flex items-center space-x-2"><i class="fas fa-spray-can"></i><span>리프레시</span></span></div>'
-    : '<div class="absolute top-5 left-5 z-10"><span class="px-5 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-black rounded-full shadow-2xl badge-glow flex items-center space-x-2"><i class="fas fa-heart-pulse"></i><span>증상 케어</span></span></div>';
-  
-  const stockOverlay = product.stock > 0 
-    ? '' 
-    : '<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 backdrop-blur-sm flex items-center justify-center z-20"><div class="text-center"><span class="bg-red-500 text-white px-8 py-4 rounded-2xl font-black text-xl shadow-2xl inline-block"><i class="fas fa-times-circle mr-2"></i>품절</span></div></div>';
+    ? '<span class="absolute top-3 left-3 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg">✨ 리프레시</span>'
+    : '<span class="absolute top-3 left-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold rounded-full shadow-lg">💊 증상 케어</span>';
   
   card.innerHTML = `
-    <div class="relative overflow-hidden h-72 bg-gradient-to-br from-purple-50 to-pink-50">
-      <img src="${thumbnailUrl}" alt="${product.name}" class="w-full h-full object-cover transition-all duration-700 group-hover:scale-125 group-hover:rotate-3">
+    <div class="relative overflow-hidden group">
+      <img src="${thumbnailUrl}" alt="${product.name}" class="w-full h-72 object-cover group-hover:scale-110 transition duration-500">
       ${conceptBadge}
-      ${stockOverlay}
-      <div class="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
     </div>
     <div class="p-6">
-      <h3 class="font-black text-xl mb-3 text-gray-800 line-clamp-2 group-hover:text-purple-600 transition-colors duration-300 leading-tight">${product.name}</h3>
-      <p class="text-sm text-gray-500 mb-5 line-clamp-2 leading-relaxed">${product.description || '프리미엄 아로마 제품으로 특별한 힐링을 경험하세요.'}</p>
-      
-      <div class="flex items-baseline justify-between mb-6 pb-5 border-b-2 border-gray-100">
-        <div class="flex items-baseline space-x-1">
-          <span class="text-4xl font-black price-tag">${product.price.toLocaleString()}</span>
-          <span class="text-lg text-gray-500 font-semibold">원</span>
-        </div>
+      <h3 class="font-bold text-xl mb-3 text-gray-800 line-clamp-2 group-hover:text-purple-600 transition">${product.name}</h3>
+      <p class="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">${product.description || '향기로운 경험을 선사하는 특별한 제품입니다.'}</p>
+      <div class="flex items-center justify-between mb-5">
+        <span class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">${product.price.toLocaleString()}원</span>
         ${product.stock > 0 
-          ? `<div class="flex items-center space-x-2 text-green-600 bg-green-50 px-4 py-2 rounded-full">
-              <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span class="text-xs font-bold">재고 있음</span>
-            </div>`
-          : `<div class="flex items-center space-x-2 text-red-600 bg-red-50 px-4 py-2 rounded-full">
-              <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span class="text-xs font-bold">품절</span>
-            </div>`
+          ? `<span class="text-sm px-3 py-1 bg-green-100 text-green-700 rounded-full font-semibold"><i class="fas fa-check-circle mr-1"></i>재고 있음</span>`
+          : `<span class="text-sm px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold"><i class="fas fa-times-circle mr-1"></i>품절</span>`
         }
       </div>
-      
-      <div class="grid grid-cols-2 gap-3">
-        <button onclick="viewProductDetail(${product.id})" class="bg-gray-100 text-gray-700 px-5 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
-          <i class="fas fa-search-plus"></i>
-          <span>상세</span>
+      <div class="flex gap-3">
+        <button onclick="viewProductDetail(${product.id})" class="flex-1 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl font-semibold hover:bg-gray-200 transition">
+          <i class="fas fa-info-circle mr-2"></i>상세보기
         </button>
         <button onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''} 
-          class="btn-primary text-white px-5 py-4 rounded-2xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2">
-          <i class="fas fa-shopping-cart"></i>
-          <span>담기</span>
+          class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+          <i class="fas fa-cart-plus mr-2"></i>담기
         </button>
       </div>
     </div>
@@ -198,10 +211,9 @@ function toggleCart() {
 function updateCartUI() {
   const cartItemsEl = document.getElementById('cart-items');
   const cartCountEl = document.getElementById('cart-count');
-  const emptyCartEl = document.getElementById('empty-cart');
-  const cartSummaryEl = document.getElementById('cart-summary');
-  const subtotalEl = document.getElementById('subtotal');
-  const totalEl = document.getElementById('total');
+  const cartTotalEl = document.getElementById('cart-total');
+  const cartEmptyEl = document.getElementById('cart-empty');
+  const cartFooterEl = document.getElementById('cart-footer');
   
   // 장바구니 개수
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -209,44 +221,41 @@ function updateCartUI() {
   
   // 장바구니 비어있음
   if (cart.length === 0) {
-    cartItemsEl.innerHTML = '';
-    emptyCartEl.style.display = 'block';
-    cartSummaryEl.style.display = 'none';
+    cartItemsEl.style.display = 'none';
+    cartEmptyEl.style.display = 'block';
+    cartFooterEl.style.display = 'none';
+    cartTotalEl.textContent = '0원';
     return;
   }
   
-  emptyCartEl.style.display = 'none';
-  cartSummaryEl.style.display = 'block';
+  cartItemsEl.style.display = 'block';
+  cartEmptyEl.style.display = 'none';
+  cartFooterEl.style.display = 'block';
   
   // 장바구니 아이템 렌더링
   cartItemsEl.innerHTML = '';
-  let subtotal = 0;
+  let total = 0;
   
   cart.forEach((item, index) => {
-    subtotal += item.price * item.quantity;
+    total += item.price * item.quantity;
     
     const itemEl = document.createElement('div');
-    itemEl.className = 'flex items-center gap-4 p-5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300';
+    itemEl.className = 'flex items-center gap-4 border-b pb-4';
     itemEl.innerHTML = `
-      <div class="relative">
-        <img src="${item.thumbnail_image || 'https://via.placeholder.com/80'}" alt="${item.name}" class="w-24 h-24 object-cover rounded-xl shadow-lg">
-        <div class="absolute -top-2 -right-2 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg">${item.quantity}</div>
-      </div>
+      <img src="${item.thumbnail_image || 'https://via.placeholder.com/80'}" alt="${item.name}" class="w-20 h-20 object-cover rounded-lg">
       <div class="flex-1">
-        <h4 class="font-black text-gray-800 mb-2 leading-tight">${item.name}</h4>
-        <p class="text-2xl font-black price-tag mb-3">${item.price.toLocaleString()}원</p>
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm">
-            <button onclick="updateQuantity(${index}, ${item.quantity - 1})" class="text-gray-500 hover:text-purple-600 transition-colors transform hover:scale-110">
-              <i class="fas fa-minus text-sm"></i>
-            </button>
-            <span class="font-black text-gray-800 min-w-[24px] text-center text-lg">${item.quantity}</span>
-            <button onclick="updateQuantity(${index}, ${item.quantity + 1})" class="text-gray-500 hover:text-purple-600 transition-colors transform hover:scale-110">
-              <i class="fas fa-plus text-sm"></i>
-            </button>
-          </div>
-          <button onclick="removeFromCart(${index})" class="ml-auto text-red-500 hover:text-red-700 transition-all transform hover:scale-110 p-2">
-            <i class="fas fa-trash-alt text-lg"></i>
+        <h4 class="font-semibold text-gray-800 mb-1">${item.name}</h4>
+        <p class="text-purple-600 font-bold">${item.price.toLocaleString()}원</p>
+        <div class="flex items-center gap-2 mt-2">
+          <button onclick="updateQuantity(${index}, ${item.quantity - 1})" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+            <i class="fas fa-minus"></i>
+          </button>
+          <span class="font-semibold">${item.quantity}</span>
+          <button onclick="updateQuantity(${index}, ${item.quantity + 1})" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+            <i class="fas fa-plus"></i>
+          </button>
+          <button onclick="removeFromCart(${index})" class="ml-auto text-red-500 hover:text-red-700">
+            <i class="fas fa-trash"></i>
           </button>
         </div>
       </div>
@@ -255,9 +264,7 @@ function updateCartUI() {
     cartItemsEl.appendChild(itemEl);
   });
   
-  // 합계 계산
-  subtotalEl.textContent = `${subtotal.toLocaleString()}원`;
-  totalEl.textContent = `${subtotal.toLocaleString()}원`;
+  cartTotalEl.textContent = `${total.toLocaleString()}원`;
 }
 
 // 수량 업데이트
@@ -324,20 +331,6 @@ function showNotification(message) {
   setTimeout(() => {
     notification.remove();
   }, 3000);
-}
-
-// 사용자 메뉴 처리
-function handleUserMenu() {
-  const token = localStorage.getItem('token');
-  
-  if (!token) {
-    // 로그인 안 되어 있으면 로그인 페이지로
-    window.location.href = '/login';
-    return;
-  }
-  
-  // 로그인 되어 있으면 프로필 페이지로
-  window.location.href = '/profile';
 }
 
 // 제품 섹션으로 스크롤

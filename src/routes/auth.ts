@@ -63,7 +63,13 @@ auth.post('/signup', async (c) => {
     const userAgent = c.req.header('User-Agent') || '';
     const deviceInfo = parseUserAgent(userAgent);
     
-    // 사용자 생성 (디바이스 정보 포함)
+    // 부모 동의 정보 추출 (미성년자인 경우)
+    const parent_name = body.parent_name || null;
+    const parent_phone = body.parent_phone || null;
+    const parent_email = body.parent_email || null;
+    const is_minor = body.selectedUserType === 'B2C_student_middle_high' || false;
+    
+    // 사용자 생성 (디바이스 정보 및 부모 정보 포함)
     const result = await c.env.DB.prepare(
       `INSERT INTO users (
         email, password_hash, name, phone, user_type,
@@ -71,9 +77,10 @@ auth.post('/signup', async (c) => {
         b2b_category, b2b_business_name, b2b_business_number, b2b_address,
         company_role, company_size, department,
         oauth_provider,
-        device_type, device_os, device_browser
+        device_type, device_os, device_browser,
+        parent_name, parent_phone, parent_email, parent_consent_date, is_minor
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       email,
       password_hash,
@@ -96,7 +103,13 @@ auth.post('/signup', async (c) => {
       // Device info (automatically detected from User-Agent)
       deviceInfo.device_type,
       deviceInfo.os,
-      deviceInfo.browser
+      deviceInfo.browser,
+      // Parent consent info (for minors)
+      parent_name,
+      parent_phone,
+      parent_email,
+      is_minor && parent_name ? new Date().toISOString() : null,
+      is_minor ? 1 : 0
     ).run();
     
     // 생성된 사용자 정보 조회

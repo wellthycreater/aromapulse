@@ -2324,6 +2324,14 @@ async function loadDeviceStats() {
         
         const data = await response.json();
         
+        // Debug: Check what data we're receiving
+        console.log('[Device Stats] API Response:', {
+            hasCombined: !!data.combined,
+            combinedLength: data.combined?.length || 0,
+            hasDevices: !!data.devices,
+            devicesLength: data.devices?.length || 0
+        });
+        
         if ((!data.devices || data.devices.length === 0) && (!data.os || data.os.length === 0) && (!data.combined || data.combined.length === 0)) {
             ctx.parentElement.innerHTML = `
                 <div class="text-center py-8">
@@ -2347,10 +2355,13 @@ async function loadDeviceStats() {
         
         // Use combined stats if available (most accurate)
         if (data.combined && data.combined.length > 0) {
+            console.log('[Device Stats] Using COMBINED data');
             data.combined.forEach(item => {
                 const deviceType = (item.device_type || '').toLowerCase();
                 const os = (item.device_os || '').toLowerCase();
                 const count = parseInt(item.count) || 0;
+                
+                console.log(`  Processing: type="${deviceType}", os="${os}", count=${count}`);
                 
                 if (deviceType === 'mobile') {
                     if (os.includes('android')) {
@@ -2361,22 +2372,48 @@ async function loadDeviceStats() {
                 } else if (deviceType === 'tablet') {
                     if (os.includes('android')) {
                         categories['Android Tablet'] += count;
+                        console.log(`    → Android Tablet: ${categories['Android Tablet']}`);
                     } else if (os.includes('ios') || os.includes('ipad')) {
                         categories['iPad'] += count;
+                        console.log(`    → iPad: ${categories['iPad']}`);
                     }
                 } else if (deviceType === 'desktop') {
                     categories['Desktop'] += count;
                 }
             });
+            console.log('[Device Stats] Final categories:', categories);
         } else if (data.devices && data.devices.length > 0) {
-            // Fallback if no combined data
+            console.log('[Device Stats] Using FALLBACK data (devices only)');
+            // Fallback: Try to use OS data if available
+            const osMap = {};
+            if (data.os && data.os.length > 0) {
+                data.os.forEach(item => {
+                    osMap[item.device_os] = parseInt(item.count) || 0;
+                });
+            }
+            
             data.devices.forEach(item => {
                 const deviceType = item.device_type;
                 const count = parseInt(item.count) || 0;
                 
+                console.log(`  Fallback processing: type="${deviceType}", count=${count}`);
+                
                 if (deviceType === 'tablet') {
-                    // Default to iPad if no OS info
-                    categories['iPad'] += count;
+                    // Try to determine OS from separate os data
+                    const iosCount = osMap['iOS'] || 0;
+                    const androidCount = osMap['Android'] || 0;
+                    const total = iosCount + androidCount;
+                    
+                    if (total > 0) {
+                        // Distribute proportionally
+                        const iosRatio = iosCount / total;
+                        categories['iPad'] += Math.round(count * iosRatio);
+                        categories['Android Tablet'] += Math.round(count * (1 - iosRatio));
+                    } else {
+                        // No OS data, split 50/50
+                        categories['iPad'] += Math.round(count * 0.5);
+                        categories['Android Tablet'] += Math.round(count * 0.5);
+                    }
                 } else if (deviceType === 'desktop') {
                     categories['Desktop'] += count;
                 } else if (deviceType === 'mobile') {
@@ -2385,6 +2422,7 @@ async function loadDeviceStats() {
                     categories['iOS'] += Math.round(count * 0.4);
                 }
             });
+            console.log('[Device Stats] Fallback final categories:', categories);
         }
         
         // Filter out categories with 0 count
@@ -2445,7 +2483,15 @@ async function loadDeviceStats() {
                 plugins: {
                     legend: {
                         display: true,
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 11
+                            },
+                            padding: 10,
+                            boxWidth: 12,
+                            boxHeight: 12
+                        }
                     },
                     tooltip: {
                         callbacks: {

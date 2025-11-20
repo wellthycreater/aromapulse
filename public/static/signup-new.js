@@ -5,38 +5,160 @@ let signupData = {
     subType: ''
 };
 
-// 사용자 유형 선택
-function selectUserType(type) {
-    const cards = document.querySelectorAll('.user-type-card');
-    cards.forEach(card => {
-        card.classList.remove('selected');
-    });
+// 메인 타입 선택 (B2C / B2B)
+function selectMainType(type) {
+    document.getElementById('step-1-1').classList.add('hidden');
     
-    const radios = document.querySelectorAll(`input[name="user_type"]`);
-    radios.forEach(radio => {
-        if (radio.value.startsWith(type)) {
-            radio.closest('.user-type-card').classList.add('selected');
+    if (type === 'B2C') {
+        document.getElementById('step-1-2-b2c').classList.remove('hidden');
+    } else if (type === 'B2B') {
+        document.getElementById('step-1-2-b2b').classList.remove('hidden');
+    }
+    
+    signupData.mainType = type;
+}
+
+// 메인 타입 선택으로 돌아가기
+function backToMainType() {
+    document.getElementById('step-1-1').classList.remove('hidden');
+    document.getElementById('step-1-2-b2c').classList.add('hidden');
+    document.getElementById('step-1-2-b2b').classList.add('hidden');
+    
+    // 선택 초기화
+    document.querySelectorAll('input[name="stress_type"]').forEach(radio => radio.checked = false);
+    document.querySelectorAll('input[name="user_type"]').forEach(radio => radio.checked = false);
+    document.getElementById('daily-category').classList.add('hidden');
+    document.getElementById('work-category').classList.add('hidden');
+    document.getElementById('daily-select').value = '';
+    document.getElementById('work-select').value = '';
+}
+
+// 카테고리 선택 표시
+function showCategorySelect(type) {
+    document.getElementById('daily-category').classList.add('hidden');
+    document.getElementById('work-category').classList.add('hidden');
+    
+    // 다른 타입의 select 초기화
+    if (type === 'daily') {
+        document.getElementById('work-select').value = '';
+        document.getElementById('work-select').removeAttribute('name');
+        document.getElementById('daily-select').setAttribute('name', 'user_type');
+        document.getElementById('daily-category').classList.remove('hidden');
+        
+        // 셀렉트 변경 이벤트 리스너 추가 (중·고등학생 선택 시 부모 동의 섹션 표시)
+        const dailySelect = document.getElementById('daily-select');
+        if (!dailySelect.hasAttribute('data-listener-added')) {
+            dailySelect.addEventListener('change', function() {
+                checkMinorConsent(this.value);
+            });
+            dailySelect.setAttribute('data-listener-added', 'true');
         }
-    });
+    } else if (type === 'work') {
+        document.getElementById('daily-select').value = '';
+        document.getElementById('daily-select').removeAttribute('name');
+        document.getElementById('work-select').setAttribute('name', 'user_type');
+        document.getElementById('work-category').classList.remove('hidden');
+    }
+}
+
+// 미성년자 선택 확인
+function checkMinorConsent(userType) {
+    // Step 2가 아직 표시되지 않았으면 저장만 하고 리턴
+    if (currentStep !== 2) {
+        signupData.isMinor = (userType === 'B2C_student_middle_high');
+        return;
+    }
+    
+    const parentConsentSection = document.getElementById('parent-consent-section');
+    
+    if (userType === 'B2C_student_middle_high') {
+        parentConsentSection.classList.remove('hidden');
+        // 부모 동의 필드를 필수로 설정
+        document.getElementById('parent_name').setAttribute('required', 'required');
+        document.getElementById('parent_phone').setAttribute('required', 'required');
+        document.getElementById('parent_consent_check').setAttribute('required', 'required');
+        signupData.isMinor = true;
+    } else {
+        parentConsentSection.classList.add('hidden');
+        // 부모 동의 필드 필수 해제
+        document.getElementById('parent_name').removeAttribute('required');
+        document.getElementById('parent_phone').removeAttribute('required');
+        document.getElementById('parent_consent_check').removeAttribute('required');
+        signupData.isMinor = false;
+    }
 }
 
 // 다음 단계
 function nextStep() {
     if (currentStep === 1) {
         // Step 1 검증
-        const selectedType = document.querySelector('input[name="user_type"]:checked');
-        if (!selectedType) {
-            showNotification('사용자 유형을 선택해주세요.', 'error');
-            return;
+        let selectedType;
+        
+        // B2C인 경우 select 값 확인
+        if (signupData.mainType === 'B2C') {
+            const stressType = document.querySelector('input[name="stress_type"]:checked');
+            if (!stressType) {
+                showNotification('스트레스 유형을 선택해주세요.', 'error');
+                return;
+            }
+            
+            if (stressType.value === 'daily') {
+                const dailySelect = document.getElementById('daily-select');
+                if (!dailySelect.value) {
+                    showNotification('세부 카테고리를 선택해주세요.', 'error');
+                    return;
+                }
+                selectedType = { value: dailySelect.value };
+            } else if (stressType.value === 'work') {
+                const workSelect = document.getElementById('work-select');
+                if (!workSelect.value) {
+                    showNotification('직군을 선택해주세요.', 'error');
+                    return;
+                }
+                selectedType = { value: workSelect.value };
+            }
+        } else {
+            // B2B인 경우 라디오 버튼 확인
+            selectedType = document.querySelector('input[name="user_type"]:checked');
+            if (!selectedType) {
+                showNotification('비즈니스 유형을 선택해주세요.', 'error');
+                return;
+            }
         }
         
-        const [userType, subType] = selectedType.value.split('_');
+        const [userType, ...subTypeParts] = selectedType.value.split('_');
         signupData.userType = userType;
-        signupData.subType = subType;
+        signupData.subType = subTypeParts.join('_');
+        signupData.selectedUserType = selectedType.value;
         
     } else if (currentStep === 2) {
         // Step 2 검증
         const form = document.getElementById('basic-info-form');
+        
+        // 미성년자인 경우 부모 동의 체크
+        if (signupData.isMinor || signupData.selectedUserType === 'B2C_student_middle_high') {
+            const parentName = document.getElementById('parent_name').value;
+            const parentPhone = document.getElementById('parent_phone').value;
+            const parentConsent = document.getElementById('parent_consent_check').checked;
+            
+            if (!parentName || !parentPhone) {
+                showNotification('법정대리인 정보를 입력해주세요.', 'error');
+                return;
+            }
+            
+            if (!parentConsent) {
+                showNotification('법정대리인 동의 확인을 체크해주세요.', 'error');
+                return;
+            }
+            
+            // 전화번호 형식 검증
+            const phonePattern = /^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}$/;
+            if (!phonePattern.test(parentPhone)) {
+                showNotification('법정대리인 연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)', 'error');
+                return;
+            }
+        }
+        
         if (!form.checkValidity()) {
             form.reportValidity();
             return;
@@ -77,6 +199,13 @@ function updateStepDisplay() {
     // 현재 step 표시
     document.getElementById(`step-${currentStep}`).classList.add('active');
     
+    // Step 2로 넘어갈 때 미성년자인 경우 부모 동의 섹션 표시
+    if (currentStep === 2) {
+        setTimeout(() => {
+            checkMinorConsent(signupData.selectedUserType);
+        }, 100);
+    }
+    
     // Progress indicators 업데이트
     for (let i = 1; i <= 3; i++) {
         const indicator = document.getElementById(`step-indicator-${i}`);
@@ -106,6 +235,11 @@ function updateStepDisplay() {
         document.getElementById('progress-line-2').style.width = '100%';
     } else {
         document.getElementById('progress-line-2').style.width = '0%';
+    }
+    
+    // Step 2로 전환될 때 부모 동의 섹션 체크
+    if (currentStep === 2 && signupData.selectedUserType) {
+        checkMinorConsent(signupData.selectedUserType);
     }
     
     // 페이지 상단으로 스크롤

@@ -3,32 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>제품 쇼핑몰 - 아로마펄스</title>
+    <title>쇼핑 - 아로마펄스</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+        
+        * {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .product-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(124, 58, 237, 0.3);
+        }
+        
+        .product-card:hover img {
+            transform: scale(1.15) rotate(2deg);
+        }
+        
+        .category-btn {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .category-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%) scaleX(0);
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .category-btn.active::after {
+            transform: translateX(-50%) scaleX(1);
+        }
+        
+        .category-btn.active {
+            color: #7c3aed;
+            font-weight: 700;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-gradient::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 4s infinite;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .badge-glow {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+        }
+        
+        .price-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .cart-badge {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .7;
+            }
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gradient-to-br from-purple-50 via-white to-pink-50 min-h-screen">
     <!-- Header -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <nav class="container mx-auto px-4 py-4">
+    <header class="glass-effect sticky top-0 z-50 shadow-xl">
+        <nav class="container mx-auto px-6 py-5">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-8">
-                    <a href="/" class="text-2xl font-bold text-purple-600">
-                        <i class="fas fa-spa mr-2"></i>아로마펄스
+                    <a href="/" class="flex items-center space-x-3 group">
+                        <img src="/static/logo-light.png" alt="아로마펄스" class="h-14 transition-transform group-hover:scale-110">
                     </a>
                     <div class="hidden md:flex space-x-6">
-                        <a href="/shop.html" class="text-gray-700 hover:text-purple-600 font-semibold">제품</a>
-                        <a href="/dashboard" class="text-gray-700 hover:text-purple-600">대시보드</a>
+                        <a href="/" class="text-gray-700 hover:text-purple-600 font-semibold transition-all duration-300 flex items-center group">
+                            <i class="fas fa-home mr-2 group-hover:scale-110 transition-transform"></i>홈
+                        </a>
+                        <a href="/shop" class="text-purple-600 font-bold flex items-center relative">
+                            <i class="fas fa-shopping-bag mr-2"></i>쇼핑
+                            <span class="absolute -bottom-1 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></span>
+                        </a>
+                        <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition-all duration-300 flex items-center group">
+                            <i class="fas fa-star mr-2 group-hover:scale-110 transition-transform"></i>힐링 체험
+                        </a>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <button onclick="toggleCart()" class="relative text-gray-700 hover:text-purple-600">
-                        <i class="fas fa-shopping-cart text-2xl"></i>
-                        <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                <div class="flex items-center space-x-5">
+                    <button onclick="toggleCart()" class="relative text-gray-700 hover:text-purple-600 transition-all duration-300 transform hover:scale-110">
+                        <i class="fas fa-shopping-cart text-3xl"></i>
+                        <span id="cart-count" class="cart-badge absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg">0</span>
                     </button>
-                    <button onclick="toggleUserMenu()" class="text-gray-700 hover:text-purple-600">
-                        <i class="fas fa-user-circle text-2xl"></i>
+                    <button id="user-menu-btn" onclick="handleUserMenu()" class="text-gray-700 hover:text-purple-600 transition-all duration-300 transform hover:scale-110">
+                        <i class="fas fa-user-circle text-3xl"></i>
                     </button>
                 </div>
             </div>
@@ -36,120 +192,173 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-16">
-        <div class="container mx-auto px-4 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4">
-                <i class="fas fa-heart mr-3"></i>향기로 치유하는 삶
-            </h1>
-            <p class="text-xl md:text-2xl mb-8">증상 케어부터 일상 리프레시까지, 아로마펄스와 함께</p>
-            <div class="flex justify-center space-x-4">
-                <button onclick="scrollToProducts()" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100">
-                    제품 둘러보기
+    <section class="hero-gradient text-white py-32 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full filter blur-3xl floating"></div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 bg-pink-300 rounded-full filter blur-3xl floating" style="animation-delay: 1s;"></div>
+        </div>
+        
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="max-w-4xl mx-auto text-center">
+                <div class="inline-block mb-8 px-6 py-2 bg-white/20 backdrop-blur-lg rounded-full text-sm font-semibold">
+                    <i class="fas fa-sparkles mr-2"></i>프리미엄 아로마 컬렉션
+                </div>
+                <h1 class="text-6xl md:text-7xl font-black mb-6 leading-tight">
+                    향기로운<br/>
+                    <span class="bg-gradient-to-r from-yellow-200 to-pink-200 bg-clip-text text-transparent">치유의 순간</span>
+                </h1>
+                <p class="text-2xl md:text-3xl mb-12 opacity-95 font-light">
+                    당신만의 특별한 아로마 솔루션을 만나보세요
+                </p>
+                <button onclick="scrollToProducts()" class="bg-white text-purple-600 px-10 py-5 rounded-full font-bold text-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 inline-flex items-center space-x-3">
+                    <span>제품 둘러보기</span>
+                    <i class="fas fa-arrow-down animate-bounce"></i>
                 </button>
             </div>
         </div>
     </section>
 
-    <div class="container mx-auto px-4 py-12">
-        <!-- 카테고리 탭 -->
-        <div class="mb-8">
-            <div class="flex justify-center space-x-4 border-b border-gray-200 pb-4">
-                <button onclick="switchCategory('all')" id="cat-all" class="category-btn px-6 py-3 font-bold text-purple-600 border-b-4 border-purple-600">
-                    <i class="fas fa-th-large mr-2"></i>전체
+    <!-- Category Tabs -->
+    <div class="glass-effect sticky top-[89px] z-40 border-b border-purple-100">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex justify-center items-center space-x-4 md:space-x-12">
+                <button onclick="switchCategory('all')" id="cat-all" class="category-btn active px-6 py-3 font-bold text-gray-500 hover:text-purple-600 transition-all duration-300 flex items-center space-x-2">
+                    <i class="fas fa-th-large text-xl"></i>
+                    <span>전체</span>
                 </button>
-                <button onclick="switchCategory('symptom_care')" id="cat-symptom_care" class="category-btn px-6 py-3 font-bold text-gray-500 hover:text-purple-600">
-                    <i class="fas fa-heart-pulse mr-2"></i>증상 케어
+                <button onclick="switchCategory('symptom_care')" id="cat-symptom_care" class="category-btn px-6 py-3 font-bold text-gray-500 hover:text-purple-600 transition-all duration-300 flex items-center space-x-2">
+                    <i class="fas fa-heart-pulse text-xl"></i>
+                    <span>증상 케어</span>
                 </button>
-                <button onclick="switchCategory('refresh')" id="cat-refresh" class="category-btn px-6 py-3 font-bold text-gray-500 hover:text-purple-600">
-                    <i class="fas fa-spray-can mr-2"></i>리프레시
+                <button onclick="switchCategory('refresh')" id="cat-refresh" class="category-btn px-6 py-3 font-bold text-gray-500 hover:text-purple-600 transition-all duration-300 flex items-center space-x-2">
+                    <i class="fas fa-spray-can text-xl"></i>
+                    <span>리프레시</span>
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- 제품 그리드 -->
-        <div id="products-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <!-- Products Section -->
+    <div id="products-section" class="container mx-auto px-6 py-16">
+        <!-- Product Count & Sort -->
+        <div class="flex justify-between items-center mb-12">
+            <div class="text-center flex-1">
+                <h2 class="text-3xl font-black text-gray-800 mb-2">프리미엄 제품</h2>
+                <p class="text-gray-600">
+                    총 <span id="product-count" class="text-4xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">0</span>개의 제품
+                </p>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             <!-- 제품 카드들이 동적으로 추가됩니다 -->
         </div>
 
         <!-- Loading -->
-        <div id="loading" class="text-center py-12">
-            <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
-            <p class="text-gray-600">제품을 불러오는 중...</p>
+        <div id="loading" class="text-center py-32">
+            <div class="inline-block">
+                <div class="w-20 h-20 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-6"></div>
+                <p class="text-gray-600 text-xl font-semibold">제품을 불러오는 중...</p>
+            </div>
         </div>
 
         <!-- Empty State -->
-        <div id="empty-state" class="text-center py-12" style="display: none;">
-            <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
-            <p class="text-gray-600 text-lg">등록된 제품이 없습니다</p>
+        <div id="empty-state" class="text-center py-32" style="display: none;">
+            <div class="inline-block">
+                <i class="fas fa-box-open text-9xl text-gray-300 mb-8"></i>
+                <p class="text-gray-600 text-2xl font-bold mb-3">등록된 제품이 없습니다</p>
+                <p class="text-gray-500 text-lg">곧 멋진 제품들이 준비될 예정입니다</p>
+            </div>
         </div>
     </div>
 
-    <!-- 장바구니 사이드바 -->
-    <div id="cart-sidebar" class="hidden fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl z-50 overflow-y-auto">
-        <div class="p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">
-                    <i class="fas fa-shopping-cart mr-2"></i>장바구니
+    <!-- Cart Sidebar -->
+    <div id="cart-sidebar" class="hidden fixed inset-y-0 right-0 w-full md:w-[480px] glass-effect shadow-2xl z-50 overflow-y-auto transform transition-transform duration-300">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-8 pb-6 border-b-2 border-purple-100">
+                <h2 class="text-3xl font-black text-gray-800 flex items-center">
+                    <i class="fas fa-shopping-cart mr-3 text-purple-600"></i>장바구니
                 </h2>
-                <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
+                <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700 transition-all hover:rotate-90 transform duration-300">
+                    <i class="fas fa-times text-3xl"></i>
                 </button>
             </div>
 
-            <div id="cart-items" class="space-y-4 mb-6">
+            <div id="cart-items" class="space-y-4 mb-8">
                 <!-- 장바구니 아이템들이 동적으로 추가됩니다 -->
             </div>
 
-            <div class="border-t pt-4">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-lg font-bold">총 금액</span>
-                    <span class="text-2xl font-bold text-purple-600" id="cart-total">0원</span>
+            <div id="empty-cart" class="text-center py-20" style="display: none;">
+                <i class="fas fa-shopping-cart text-8xl text-gray-300 mb-6"></i>
+                <p class="text-gray-500 text-xl font-semibold">장바구니가 비어있습니다</p>
+                <p class="text-gray-400 mt-2">마음에 드는 제품을 담아보세요</p>
+            </div>
+
+            <div id="cart-summary" class="border-t-2 border-purple-100 pt-8" style="display: none;">
+                <div class="space-y-4 mb-8">
+                    <div class="flex justify-between text-gray-600 text-lg">
+                        <span>상품 금액</span>
+                        <span id="subtotal" class="font-semibold">0원</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600 text-lg">
+                        <span>배송비</span>
+                        <span id="shipping" class="font-semibold text-green-600">무료</span>
+                    </div>
+                    <div class="flex justify-between text-2xl font-black text-gray-800 pt-6 border-t-2 border-gray-200">
+                        <span>총 결제 금액</span>
+                        <span id="total" class="price-tag text-3xl">0원</span>
+                    </div>
                 </div>
-                <button onclick="proceedToCheckout()" class="w-full bg-purple-600 text-white py-4 rounded-lg font-bold hover:bg-purple-700">
-                    <i class="fas fa-credit-card mr-2"></i>결제하기
+                
+                <button onclick="checkout()" class="w-full btn-primary text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-credit-card mr-3"></i>결제하기
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Overlay -->
-    <div id="cart-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" onclick="toggleCart()"></div>
+    <div id="cart-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40 transition-opacity duration-300" onclick="toggleCart()"></div>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-br from-gray-900 to-purple-900 text-white py-16 mt-32">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <h3 class="text-2xl font-black mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">아로마펄스</h3>
+                    <p class="text-gray-400 leading-relaxed">향기로운 힐링 여정</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-lg">바로가기</h4>
+                    <ul class="space-y-3 text-gray-400">
+                        <li><a href="/" class="hover:text-white transition-colors duration-300 flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>홈</a></li>
+                        <li><a href="/shop" class="hover:text-white transition-colors duration-300 flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>쇼핑</a></li>
+                        <li><a href="/oneday-classes" class="hover:text-white transition-colors duration-300 flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>힐링 체험</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-lg">고객센터</h4>
+                    <p class="text-gray-400">by 웰씨코리아</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-lg">소셜 미디어</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-300 transform hover:scale-110">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-300 transform hover:scale-110">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 AromaPulse. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
     <script src="/static/shop.js"></script>
-
-    <!-- 사이드톡 AI 챗봇 -->
-    <script src="https://pages.sidetalk.ai/sidetalk.js"></script>
-    <script>
-    SidetalkAI('init', {
-        siteKey: '2836b61bcbfd435c0e1a407bf6ce71885c532aba4c648de494338d3942f565c1',
-        buttonText: 'AI 상담',
-        buttonBottom: '20px',
-        buttonRight: '20px',
-        position: 'fixed'
-    });
-    
-    // 추가 보장: 챗봇 버튼이 로드된 후 스타일 강제 적용
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            const selectors = [
-                '#sidetalk-button',
-                '[class*="sidetalk"]',
-                '[id*="sidetalk"]',
-                'iframe[src*="sidetalk"]'
-            ];
-            
-            for (let selector of selectors) {
-                const element = document.querySelector(selector);
-                if (element) {
-                    element.style.position = 'fixed';
-                    element.style.bottom = '20px';
-                    element.style.right = '20px';
-                    element.style.zIndex = '999999';
-                    break;
-                }
-            }
-        }, 2000);
-    });
-    </script>
 </body>
 </html>
