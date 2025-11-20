@@ -3,6 +3,35 @@ import type { Bindings } from '../types';
 
 const admin = new Hono<{ Bindings: Bindings }>();
 
+// 개발 연구소 비밀번호 검증
+admin.post('/verify-research-password', async (c) => {
+  try {
+    const { password } = await c.req.json();
+    
+    if (!password) {
+      return c.json({ error: '비밀번호를 입력해주세요' }, 400);
+    }
+    
+    const correctPassword = c.env.RESEARCH_LAB_PASSWORD || 'aromapulse2025!';
+    
+    if (password === correctPassword) {
+      return c.json({ 
+        success: true,
+        message: '인증 성공' 
+      });
+    } else {
+      return c.json({ 
+        success: false,
+        message: '비밀번호가 올바르지 않습니다' 
+      }, 401);
+    }
+    
+  } catch (error) {
+    console.error('Verify research password error:', error);
+    return c.json({ error: '비밀번호 검증 실패' }, 500);
+  }
+});
+
 // 리뷰/댓글 태깅 (수동)
 admin.post('/tag-review', async (c) => {
   try {

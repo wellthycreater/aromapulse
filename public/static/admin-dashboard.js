@@ -4969,3 +4969,157 @@ function renderPerformanceCharts() {
         });
     }
 }
+
+// ====================
+// Research Lab Password Protection
+// ====================
+
+// Check if research lab is already verified in this session
+function isResearchLabVerified() {
+    return sessionStorage.getItem('researchLabVerified') === 'true';
+}
+
+// Override switchMainTab to check password for research lab
+const originalSwitchMainTab = switchMainTab;
+switchMainTab = function(tabName) {
+    if (tabName === 'research') {
+        if (!isResearchLabVerified()) {
+            openResearchPasswordModal();
+            return;
+        }
+    }
+    originalSwitchMainTab(tabName);
+};
+
+// Open research password modal
+function openResearchPasswordModal() {
+    const modal = document.getElementById('researchPasswordModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Reset modal state
+        document.getElementById('researchPassword').value = '';
+        document.getElementById('researchPasswordError').classList.add('hidden');
+        document.getElementById('researchPasswordSuccess').classList.add('hidden');
+        document.getElementById('verifyResearchBtn').disabled = false;
+        // Focus on input
+        setTimeout(() => {
+            document.getElementById('researchPassword').focus();
+        }, 100);
+    }
+}
+
+// Close research password modal
+function closeResearchPasswordModal() {
+    const modal = document.getElementById('researchPasswordModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Verify research lab password
+async function verifyResearchPassword() {
+    const passwordInput = document.getElementById('researchPassword');
+    const password = passwordInput.value.trim();
+    const errorDiv = document.getElementById('researchPasswordError');
+    const errorText = document.getElementById('researchPasswordErrorText');
+    const successDiv = document.getElementById('researchPasswordSuccess');
+    const verifyBtn = document.getElementById('verifyResearchBtn');
+
+    // Validation
+    if (!password) {
+        errorText.textContent = '비밀번호를 입력해주세요.';
+        errorDiv.classList.remove('hidden');
+        successDiv.classList.add('hidden');
+        passwordInput.focus();
+        return;
+    }
+
+    // Disable button during verification
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>인증 중...';
+    errorDiv.classList.add('hidden');
+    successDiv.classList.add('hidden');
+
+    try {
+        const response = await fetch('/api/admin/verify-research-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Success - store verification in sessionStorage
+            sessionStorage.setItem('researchLabVerified', 'true');
+            
+            // Show success message
+            successDiv.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+
+            // Close modal and switch to research tab after a short delay
+            setTimeout(() => {
+                closeResearchPasswordModal();
+                originalSwitchMainTab('research');
+            }, 1000);
+        } else {
+            // Failed - show error message
+            errorText.textContent = data.message || '비밀번호가 올바르지 않습니다.';
+            errorDiv.classList.remove('hidden');
+            successDiv.classList.add('hidden');
+            
+            // Re-enable button
+            verifyBtn.disabled = false;
+            verifyBtn.innerHTML = '<i class="fas fa-unlock mr-2"></i>인증하기';
+            
+            // Clear input and focus
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+    } catch (error) {
+        console.error('Research password verification error:', error);
+        errorText.textContent = '네트워크 오류가 발생했습니다. 다시 시도해주세요.';
+        errorDiv.classList.remove('hidden');
+        successDiv.classList.add('hidden');
+        
+        // Re-enable button
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<i class="fas fa-unlock mr-2"></i>인증하기';
+    }
+}
+
+// Add visual indicator to research tab button
+function updateResearchTabIndicator() {
+    const researchTabBtn = document.querySelector('[data-tab="research"]');
+    if (researchTabBtn) {
+        if (isResearchLabVerified()) {
+            // Add verified badge if not already present
+            if (!researchTabBtn.querySelector('.verified-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'verified-badge ml-2 text-xs text-green-600';
+                badge.innerHTML = '<i class="fas fa-check-circle"></i>';
+                researchTabBtn.appendChild(badge);
+            }
+        } else {
+            // Remove verified badge if present
+            const badge = researchTabBtn.querySelector('.verified-badge');
+            if (badge) {
+                badge.remove();
+            }
+        }
+    }
+}
+
+// Update indicator on page load and when verification changes
+document.addEventListener('DOMContentLoaded', updateResearchTabIndicator);
+
+// Close modal when clicking outside
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('researchPasswordModal');
+    if (modal && e.target === modal) {
+        closeResearchPasswordModal();
+    }
+});
