@@ -9,10 +9,19 @@ let signupData = {
 function selectUserType(type) {
     const radios = document.querySelectorAll(`input[name="user_type"]`);
     radios.forEach(radio => {
+        const card = radio.closest('.border-2');
         if (radio.value.startsWith(type)) {
-            radio.closest('.border-2').classList.add('border-teal-500');
+            card.classList.add('card-selected');
+            if (type === 'B2C') {
+                card.classList.add('border-purple-500');
+                card.classList.remove('border-gray-200');
+            } else {
+                card.classList.add('border-pink-500');
+                card.classList.remove('border-gray-200');
+            }
         } else {
-            radio.closest('.border-2').classList.remove('border-teal-500');
+            card.classList.remove('card-selected', 'border-purple-500', 'border-pink-500');
+            card.classList.add('border-gray-200');
         }
     });
 }
@@ -82,9 +91,14 @@ function updateStepDisplay() {
     document.querySelectorAll('.step-label').forEach(label => {
         const step = parseInt(label.dataset.step);
         if (step === currentStep) {
-            label.classList.add('text-teal-600');
+            label.classList.remove('text-gray-600');
+            label.classList.add('text-purple-600', 'font-extrabold');
+        } else if (step < currentStep) {
+            label.classList.remove('text-gray-600', 'font-extrabold');
+            label.classList.add('text-purple-400');
         } else {
-            label.classList.remove('text-teal-600');
+            label.classList.remove('text-purple-600', 'text-purple-400', 'font-extrabold');
+            label.classList.add('text-gray-600');
         }
     });
 }
@@ -98,10 +112,12 @@ function generateDetailForm() {
         if (signupData.subType === 'daily') {
             // 일상 스트레스 - 학생/구직자/양육자
             html = `
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">일상 스트레스 유형 *</label>
-                        <select name="daily_stress_category" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
+                        <label class="block text-sm font-bold mb-3 text-gray-700">
+                            <i class="fas fa-heart mr-2 text-purple-500"></i>일상 스트레스 유형 *
+                        </label>
+                        <select name="daily_stress_category" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 transition">
                             <option value="">선택하세요</option>
                             <optgroup label="학생">
                                 <option value="student_middle">중학생</option>
