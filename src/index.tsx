@@ -293,6 +293,9 @@ app.get('/', (c) => {
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
+                        <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                            <i class="fas fa-star mr-2"></i>힐링 체험
+                        </a>
                         <a href="/local-studios" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-map-marker-alt mr-2"></i>공방 찾기
                         </a>
