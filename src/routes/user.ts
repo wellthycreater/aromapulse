@@ -61,7 +61,8 @@ user.get('/profile', async (c) => {
         b2b_address, b2b_company_size, b2b_department, 
         b2b_position, b2b_business_type, b2b_independent_type,
         b2b_inquiry_type,
-        created_at, last_login_at
+        created_at, last_login_at,
+        b2b_address as address
       FROM users 
       WHERE id = ?
     `).bind(userId).first();
@@ -112,6 +113,11 @@ user.put('/profile', async (c) => {
     if (data.profile_image !== undefined) {
       updateFields.push('profile_image = ?');
       updateValues.push(data.profile_image || null);
+    }
+    // address 필드는 b2b_address로 매핑
+    if (data.address !== undefined) {
+      updateFields.push('b2b_address = ?');
+      updateValues.push(data.address || null);
     }
     
     // B2C 정보
@@ -190,7 +196,8 @@ user.put('/profile', async (c) => {
         b2b_address, b2b_company_size, b2b_department, 
         b2b_position, b2b_business_type, b2b_independent_type,
         b2b_inquiry_type,
-        created_at, last_login_at
+        created_at, last_login_at,
+        b2b_address as address
       FROM users 
       WHERE id = ?
     `).bind(userId).first();

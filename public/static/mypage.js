@@ -31,8 +31,8 @@ function checkAuth() {
 
 // 사용자 정보 로드
 async function loadUserInfo() {
-    const user = checkAuth();
-    if (!user) return;
+    const tokenUser = checkAuth();
+    if (!tokenUser) return;
     
     try {
         const token = localStorage.getItem('token');
@@ -42,40 +42,47 @@ async function loadUserInfo() {
             }
         });
         
-        if (!response.ok) throw new Error('Failed to load user info');
+        if (!response.ok) {
+            console.error('Failed to load user info, status:', response.status);
+            throw new Error('Failed to load user info');
+        }
         
         const data = await response.json();
+        console.log('사용자 정보 로드 성공:', data);
+        
+        // API 응답의 user 객체 사용
+        const user = data.user || data;
         
         // 사이드바 정보 업데이트
-        document.getElementById('sidebar-user-name').textContent = data.name || user.name || '사용자';
-        document.getElementById('sidebar-user-email').textContent = data.email || user.email || '';
+        document.getElementById('sidebar-user-name').textContent = user.name || tokenUser.name || '사용자';
+        document.getElementById('sidebar-user-email').textContent = user.email || tokenUser.email || '';
         
         // 프로필 이니셜 설정
-        const initial = (data.name || user.name || 'U').charAt(0).toUpperCase();
+        const initial = (user.name || tokenUser.name || 'U').charAt(0).toUpperCase();
         document.getElementById('profile-initial').textContent = initial;
         
         // 프로필 이미지가 있으면 표시
-        if (data.profile_image) {
-            document.getElementById('profile-image-preview').src = data.profile_image;
+        if (user.profile_image) {
+            document.getElementById('profile-image-preview').src = user.profile_image;
             document.getElementById('profile-image-preview').classList.remove('hidden');
             document.getElementById('profile-initial').style.display = 'none';
         }
         
         // 프로필 폼 채우기
-        document.getElementById('profile-name').value = data.name || '';
-        document.getElementById('profile-email').value = data.email || '';
-        document.getElementById('profile-phone').value = data.phone || '';
-        document.getElementById('profile-address').value = data.address || '';
+        document.getElementById('profile-name').value = user.name || '';
+        document.getElementById('profile-email').value = user.email || '';
+        document.getElementById('profile-phone').value = user.phone || '';
+        document.getElementById('profile-address').value = user.address || user.b2b_address || '';
         
     } catch (error) {
         console.error('Failed to load user info:', error);
         // 토큰에서 기본 정보 사용
-        document.getElementById('sidebar-user-name').textContent = user.name || '사용자';
-        document.getElementById('sidebar-user-email').textContent = user.email || '';
-        document.getElementById('profile-initial').textContent = (user.name || 'U').charAt(0).toUpperCase();
+        document.getElementById('sidebar-user-name').textContent = tokenUser.name || '사용자';
+        document.getElementById('sidebar-user-email').textContent = tokenUser.email || '';
+        document.getElementById('profile-initial').textContent = (tokenUser.name || 'U').charAt(0).toUpperCase();
         
-        document.getElementById('profile-name').value = user.name || '';
-        document.getElementById('profile-email').value = user.email || '';
+        document.getElementById('profile-name').value = tokenUser.name || '';
+        document.getElementById('profile-email').value = tokenUser.email || '';
     }
 }
 
@@ -145,7 +152,15 @@ async function updateProfile(event) {
     const phone = document.getElementById('profile-phone').value;
     const address = document.getElementById('profile-address').value;
     
+    // 입력값 검증
+    if (!name || name.trim() === '') {
+        alert('이름을 입력해주세요');
+        return;
+    }
+    
     try {
+        console.log('프로필 업데이트 시작:', { name, phone, address });
+        
         const response = await fetch('/api/user/profile', {
             method: 'PUT',
             headers: {
@@ -155,14 +170,28 @@ async function updateProfile(event) {
             body: JSON.stringify({ name, phone, address })
         });
         
-        if (!response.ok) throw new Error('Failed to update profile');
+        const data = await response.json();
+        console.log('프로필 업데이트 응답:', data);
         
-        alert('프로필이 업데이트되었습니다');
-        loadUserInfo();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to update profile');
+        }
+        
+        alert('프로필이 업데이트되었습니다 ✅');
+        
+        // 업데이트된 정보 다시 로드
+        await loadUserInfo();
+        
+        // 사이드바 정보도 업데이트
+        if (data.user) {
+            document.getElementById('sidebar-user-name').textContent = data.user.name || name;
+            const initial = (data.user.name || name).charAt(0).toUpperCase();
+            document.getElementById('profile-initial').textContent = initial;
+        }
         
     } catch (error) {
         console.error('Failed to update profile:', error);
-        alert('프로필 업데이트에 실패했습니다');
+        alert('프로필 업데이트에 실패했습니다: ' + error.message);
     }
 }
 
@@ -384,23 +413,24 @@ async function changePassword(event) {
     
     try {
         const response = await fetch('/api/user/change-password', {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                currentPassword,
-                newPassword
+                current_password: currentPassword,
+                new_password: newPassword
             })
         });
         
+        const data = await response.json();
+        
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to change password');
+            throw new Error(data.error || 'Failed to change password');
         }
         
-        alert('비밀번호가 변경되었습니다');
+        alert('비밀번호가 변경되었습니다 ✅');
         document.getElementById('current-password').value = '';
         document.getElementById('new-password').value = '';
         document.getElementById('confirm-password').value = '';
