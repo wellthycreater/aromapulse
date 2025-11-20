@@ -74,22 +74,23 @@ env.NAVER_CALLBACK_URL ("(hidden)")          Environment Variable      local
    - JWT 토큰 발급 및 쿠키 저장
    - 홈페이지로 리다이렉트
 
-## 📦 프로덕션 배포 준비
+## 📦 프로덕션 배포 완료 ✅
 
-### Cloudflare Pages Secrets 등록 필요
-프로덕션 환경에 배포 시 다음 명령어로 시크릿을 등록해야 합니다:
+### Cloudflare Pages Secrets 등록 완료
+프로덕션 환경에 다음 시크릿이 등록되었습니다:
 
 ```bash
-# 네이버 OAuth 시크릿 등록
-npx wrangler pages secret put NAVER_CLIENT_ID --project-name aromapulse
-# 입력: 1Zgx1OqFN3YgnBS0UjzE
-
-npx wrangler pages secret put NAVER_CLIENT_SECRET --project-name aromapulse
-# 입력: yyCj07vE2o
-
-npx wrangler pages secret put NAVER_CALLBACK_URL --project-name aromapulse
-# 입력: https://www.aromapulse.kr/api/auth/naver/callback
+✅ NAVER_CLIENT_ID: 1Zgx1OqFN3YgnBS0UjzE (Value Encrypted)
+✅ NAVER_CLIENT_SECRET: yyCj07vE2o (Value Encrypted)
+✅ NAVER_CALLBACK_URL: https://www.aromapulse.kr/api/auth/naver/callback (Value Encrypted)
 ```
+
+### 배포 정보
+- **배포 일시**: 2025-11-20
+- **배포 URL**: https://a4ea8db3.aromapulse.pages.dev
+- **커스텀 도메인**: https://www.aromapulse.kr
+- **환경**: Production (main branch)
+- **상태**: ✅ 활성
 
 ## 🔐 보안 고려사항
 
