@@ -7,7 +7,7 @@ import {
   getKakaoAuthUrl, getKakaoAccessToken, getKakaoUserInfo,
   generateState
 } from '../utils/oauth';
-import { logUserLogin } from '../utils/device-detection';
+import { logUserLogin, parseUserAgent } from '../utils/device-detection';
 
 const auth = new Hono<{ Bindings: Bindings }>();
 
@@ -59,16 +59,21 @@ auth.post('/signup', async (c) => {
     // 비밀번호 해싱
     const password_hash = await hashPassword(password);
     
-    // 사용자 생성
+    // 디바이스 정보 추출 (서버 측에서 자동 감지)
+    const userAgent = c.req.header('User-Agent') || '';
+    const deviceInfo = parseUserAgent(userAgent);
+    
+    // 사용자 생성 (디바이스 정보 포함)
     const result = await c.env.DB.prepare(
       `INSERT INTO users (
         email, password_hash, name, phone, user_type,
         b2c_category, b2c_subcategory,
         b2b_category, b2b_business_name, b2b_business_number, b2b_address,
         company_role, company_size, department,
-        oauth_provider
+        oauth_provider,
+        device_type, device_os, device_browser
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       email,
       password_hash,
@@ -87,7 +92,11 @@ auth.post('/signup', async (c) => {
       company_role || null,
       company_size || null,
       department || null,
-      'email' // OAuth provider for email/password signup
+      'email', // OAuth provider for email/password signup
+      // Device info (automatically detected from User-Agent)
+      deviceInfo.device_type,
+      deviceInfo.os,
+      deviceInfo.browser
     ).run();
     
     // 생성된 사용자 정보 조회

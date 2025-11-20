@@ -5,6 +5,63 @@ let signupData = {
     subType: ''
 };
 
+// 디바이스 정보 감지 함수
+function detectDevice() {
+    const ua = navigator.userAgent;
+    let deviceType = 'desktop';
+    let deviceOS = 'Unknown';
+    let deviceBrowser = 'Unknown';
+    
+    // Detect device type
+    if (/Mobile|Android|iPhone|iPod/i.test(ua)) {
+        deviceType = 'mobile';
+    } else if (/iPad|Tablet/i.test(ua)) {
+        deviceType = 'tablet';
+    }
+    
+    // Detect OS
+    if (/Android/i.test(ua)) {
+        deviceOS = 'Android';
+    } else if (/iPhone|iPad|iPod/i.test(ua)) {
+        deviceOS = 'iOS';
+    } else if (/Windows/i.test(ua)) {
+        deviceOS = 'Windows';
+    } else if (/Mac/i.test(ua)) {
+        deviceOS = 'macOS';
+    } else if (/Linux/i.test(ua)) {
+        deviceOS = 'Linux';
+    }
+    
+    // Detect Browser
+    if (/Chrome/i.test(ua) && !/Edge|Edg/i.test(ua)) {
+        deviceBrowser = 'Chrome';
+    } else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) {
+        deviceBrowser = 'Safari';
+    } else if (/Firefox/i.test(ua)) {
+        deviceBrowser = 'Firefox';
+    } else if (/Edge|Edg/i.test(ua)) {
+        deviceBrowser = 'Edge';
+    } else if (/Opera|OPR/i.test(ua)) {
+        deviceBrowser = 'Opera';
+    } else if (/Samsung/i.test(ua)) {
+        deviceBrowser = 'Samsung Internet';
+    }
+    
+    return {
+        device_type: deviceType,
+        device_os: deviceOS,
+        device_browser: deviceBrowser,
+        device_model: navigator.platform || 'Unknown'
+    };
+}
+
+// 페이지 로드 시 디바이스 정보 저장
+document.addEventListener('DOMContentLoaded', function() {
+    const deviceInfo = detectDevice();
+    signupData.deviceInfo = deviceInfo;
+    console.log('🔍 Detected device:', deviceInfo);
+});
+
 // 사용자 유형 선택
 function selectUserType(type) {
     const radios = document.querySelectorAll(`input[name="user_type"]`);

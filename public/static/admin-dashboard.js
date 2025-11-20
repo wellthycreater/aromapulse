@@ -2324,7 +2324,7 @@ async function loadDeviceStats() {
         
         const data = await response.json();
         
-        if (!data.devices || data.devices.length === 0) {
+        if ((!data.devices || data.devices.length === 0) && (!data.os || data.os.length === 0)) {
             ctx.parentElement.innerHTML = `
                 <div class="text-center py-8">
                     <i class="fas fa-inbox text-gray-400 text-3xl mb-2"></i>
@@ -2335,14 +2335,92 @@ async function loadDeviceStats() {
             return;
         }
         
-        const labels = data.devices.map(d => getDeviceLabel(d.device_type));
-        const counts = data.devices.map(d => d.count);
-        const colors = [
-            'rgba(147, 51, 234, 0.8)',
-            'rgba(59, 130, 246, 0.8)',
-            'rgba(16, 185, 129, 0.8)',
-            'rgba(245, 158, 11, 0.8)'
-        ];
+        // Combine device type and OS data to create detailed categories
+        // Categories: Android (mobile), iOS (mobile/tablet), Desktop (Windows/macOS/Linux), Tablet
+        const categories = {
+            'Android': 0,
+            'iOS': 0,
+            'Desktop': 0,
+            'Tablet': 0
+        };
+        
+        // Count from OS data (more accurate)
+        if (data.os && data.os.length > 0) {
+            data.os.forEach(item => {
+                const os = item.os.toLowerCase();
+                const count = parseInt(item.count) || 0;
+                
+                if (os.includes('android')) {
+                    categories['Android'] += count;
+                } else if (os.includes('ios') || os.includes('iphone') || os.includes('ipad')) {
+                    // Check if it's iPad (tablet) or iPhone (mobile)
+                    if (os.includes('ipad')) {
+                        categories['Tablet'] += count;
+                    } else {
+                        categories['iOS'] += count;
+                    }
+                } else if (os.includes('windows') || os.includes('mac') || os.includes('linux')) {
+                    categories['Desktop'] += count;
+                }
+            });
+        }
+        
+        // Fallback to device_type if OS data is incomplete
+        if (data.devices && data.devices.length > 0) {
+            data.devices.forEach(item => {
+                const deviceType = item.device_type;
+                const count = parseInt(item.count) || 0;
+                
+                // Only use device_type data if category is still 0
+                if (deviceType === 'tablet' && categories['Tablet'] === 0) {
+                    categories['Tablet'] += count;
+                } else if (deviceType === 'desktop' && categories['Desktop'] === 0) {
+                    categories['Desktop'] += count;
+                } else if (deviceType === 'mobile') {
+                    // If we don't have OS data, split mobile between Android and iOS
+                    if (categories['Android'] === 0 && categories['iOS'] === 0) {
+                        // Estimate: 60% Android, 40% iOS in general market
+                        categories['Android'] += Math.round(count * 0.6);
+                        categories['iOS'] += Math.round(count * 0.4);
+                    }
+                }
+            });
+        }
+        
+        // Filter out categories with 0 count
+        const labels = [];
+        const counts = [];
+        const colors = [];
+        const colorMap = {
+            'Android': 'rgba(60, 186, 84, 0.8)',      // Green
+            'iOS': 'rgba(0, 122, 255, 0.8)',          // Blue
+            'Desktop': 'rgba(147, 51, 234, 0.8)',     // Purple
+            'Tablet': 'rgba(245, 158, 11, 0.8)'       // Orange
+        };
+        const iconMap = {
+            'Android': '📱 Android',
+            'iOS': '🍎 iOS',
+            'Desktop': '💻 Desktop',
+            'Tablet': '📱 Tablet'
+        };
+        
+        Object.keys(categories).forEach(key => {
+            if (categories[key] > 0) {
+                labels.push(iconMap[key]);
+                counts.push(categories[key]);
+                colors.push(colorMap[key]);
+            }
+        });
+        
+        if (labels.length === 0) {
+            ctx.parentElement.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-inbox text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-gray-400 text-sm">디바이스 통계가 없습니다</p>
+                </div>
+            `;
+            return;
+        }
         
         if (deviceStatsChart) {
             deviceStatsChart.destroy();
@@ -2366,6 +2444,17 @@ async function loadDeviceStats() {
                     legend: {
                         display: true,
                         position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value}명 (${percentage}%)`;
+                            }
+                        }
                     }
                 }
             }
