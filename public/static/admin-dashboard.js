@@ -4313,19 +4313,24 @@ function renderO2OConversionChart(data) {
         return;
     }
     
-    if (!data.funnel_metrics || data.funnel_metrics.length === 0) {
-        console.warn('⚠️ No funnel_metrics data');
+    // Use sns_conversion_rate data instead of funnel_metrics
+    if (!data.sns_conversion_rate || data.sns_conversion_rate.length === 0) {
+        console.warn('⚠️ No sns_conversion_rate data');
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><p class="text-gray-400">데이터 없음</p></div>';
         return;
     }
     
-    const validData = data.funnel_metrics.filter(item => item.referral_source && item.conversion_rate);
-    if (validData.length === 0) return;
+    const validData = data.sns_conversion_rate.filter(item => item.channel && item.click_to_conversion_rate !== undefined);
+    if (validData.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-8"><p class="text-gray-400">데이터 없음</p></div>';
+        return;
+    }
     
     const labels = validData.map(item => {
         const map = { 'blog': '블로그', 'instagram': '인스타그램', 'youtube': '유튜브' };
-        return map[item.referral_source] || item.referral_source;
+        return map[item.channel] || item.channel;
     });
-    const rates = validData.map(item => parseFloat(item.conversion_rate) || 0);
+    const rates = validData.map(item => parseFloat(item.click_to_conversion_rate) || 0);
     
     if (o2oConversionChart) o2oConversionChart.destroy();
     
@@ -4336,7 +4341,11 @@ function renderO2OConversionChart(data) {
             datasets: [{
                 label: '전환율 (%)',
                 data: rates,
-                backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',   // blog - blue
+                    'rgba(236, 72, 153, 0.8)',   // instagram - pink
+                    'rgba(239, 68, 68, 0.8)'     // youtube - red
+                ],
                 borderWidth: 0
             }]
         },
@@ -4344,13 +4353,34 @@ function renderO2OConversionChart(data) {
             responsive: true,
             maintainAspectRatio: true,
             scales: {
-                y: { beginAtZero: true, title: { display: true, text: '전환율 (%)' } }
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: '전환율 (%)' },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(2) + '%';
+                        }
+                    }
+                }
             },
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const item = validData[context.dataIndex];
+                            return [
+                                `전환율: ${context.parsed.y.toFixed(2)}%`,
+                                `총 클릭: ${item.total_clicks}회`,
+                                `전환: ${item.conversions}건`
+                            ];
+                        }
+                    }
+                }
             }
         }
     });
+    console.log('✅ O2O conversion rate chart rendered with', validData.length, 'channels');
 }
 
 // Render Daily SNS Trend Chart
