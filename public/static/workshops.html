@@ -341,5 +341,75 @@
 
     <script src="/static/activity-tracker.js"></script>
     <script src="/static/workshops.js"></script>
+    
+    <!-- 로그인 상태 확인 및 UI 업데이트 -->
+    <script>
+        function updateAuthUI() {
+            const token = localStorage.getItem('token');
+            const authButtons = document.getElementById('auth-buttons');
+            const userMenu = document.getElementById('user-menu');
+            
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    
+                    // 토큰 만료 체크
+                    if (payload.exp && payload.exp * 1000 < Date.now()) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        return;
+                    }
+                    
+                    // 로그인 상태 UI 표시
+                    authButtons.classList.add('hidden');
+                    userMenu.classList.remove('hidden');
+                    
+                    // 사용자 정보 표시
+                    const userName = payload.name || '사용자';
+                    const userInitial = userName.charAt(0).toUpperCase();
+                    
+                    document.getElementById('user-name').textContent = userName;
+                    document.getElementById('user-initial').textContent = userInitial;
+                    
+                } catch (e) {
+                    console.error('Token parse error:', e);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                }
+            }
+        }
+        
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            alert('로그아웃되었습니다.');
+            location.reload();
+        }
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAuthUI();
+            
+            // 프로필 버튼 클릭 이벤트
+            const profileBtn = document.getElementById('profile-btn');
+            if (profileBtn) {
+                profileBtn.addEventListener('click', toggleProfileDropdown);
+            }
+            
+            // 드롭다운 외부 클릭 시 닫기
+            document.addEventListener('click', function(e) {
+                const profileBtn = document.getElementById('profile-btn');
+                const dropdown = document.getElementById('profile-dropdown');
+                if (profileBtn && dropdown && !profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
