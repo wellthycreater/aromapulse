@@ -151,6 +151,17 @@ app.get('/workshops', (c) => c.redirect('/static/workshops'));
 app.get('/oneday-classes', (c) => c.redirect('/static/classes'));
 app.get('/classes', (c) => c.redirect('/static/classes'));
 
+// Local studios page - redirect to static file (로컬 공방 검색 및 예약)
+app.get('/local-studios', (c) => c.redirect('/static/local-studios.html'));
+app.get('/studios', (c) => c.redirect('/static/local-studios.html'));
+
+// Studio detail page - redirect to static file with ID
+app.get('/studio-detail', (c) => c.redirect('/static/studio-detail.html' + (c.req.url.includes('?') ? c.req.url.substring(c.req.url.indexOf('?')) : '')));
+app.get('/studio/:id', (c) => {
+  const id = c.req.param('id');
+  return c.redirect(`/static/studio-detail.html?id=${id}`);
+});
+
 // Workshop detail page - redirect to static file with ID
 app.get('/workshop/:id', (c) => {
   const id = c.req.param('id');
@@ -371,6 +382,11 @@ app.get('/', (c) => {
                             <i class="fas fa-shopping-bag mr-2"></i>
                             제품 둘러보기
                         </button>
+                        <button onclick="location.href='/local-studios'" 
+                                class="bg-pink-600 text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-pink-700 transition transform hover:scale-105">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            공방 찾기
+                        </button>
                         <button onclick="location.href='/workshops'" 
                                 class="bg-purple-800 bg-opacity-50 backdrop-blur text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-opacity-70 transition">
                             <i class="fas fa-spa mr-2"></i>
@@ -403,7 +419,11 @@ app.get('/', (c) => {
                             <i class="fas fa-map-marker-alt text-white text-3xl"></i>
                         </div>
                         <h3 class="text-2xl font-bold mb-4 text-gray-800">로컬 공방 연결</h3>
-                        <p class="text-gray-600 leading-relaxed">지역 기반 향기 공방과<br/>직접 만나는 특별한 경험</p>
+                        <p class="text-gray-600 leading-relaxed mb-6">지역 기반 향기 공방과<br/>직접 만나는 특별한 경험</p>
+                        <button onclick="location.href='/local-studios'" 
+                            class="bg-pink-600 text-white px-6 py-3 rounded-full hover:bg-pink-700 transition font-semibold">
+                            <i class="fas fa-search-location mr-2"></i>내 주변 공방 찾기
+                        </button>
                     </div>
                     <div class="product-card bg-gradient-to-br from-indigo-50 to-white p-8 rounded-2xl shadow-lg text-center">
                         <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">

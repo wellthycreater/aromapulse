@@ -199,11 +199,24 @@ function renderUsers() {
     // 가입일 포맷
     const createdAt = new Date(user.created_at).toLocaleDateString('ko-KR');
     
+    // 소셜 로그인 아이콘
+    let oauthBadge = '';
+    if (user.oauth_provider === 'naver') {
+      oauthBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"><i class="fas fa-n mr-1"></i>네이버</span>';
+    } else if (user.oauth_provider === 'kakao') {
+      oauthBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full"><i class="fas fa-comment mr-1"></i>카카오</span>';
+    } else if (user.oauth_provider === 'google') {
+      oauthBadge = '<span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"><i class="fab fa-google mr-1"></i>구글</span>';
+    } else {
+      oauthBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full"><i class="fas fa-envelope mr-1"></i>이메일</span>';
+    }
+    
     row.innerHTML = `
       <td class="px-4 py-3 text-sm">${user.id}</td>
       <td class="px-4 py-3 text-sm font-semibold">${user.name}</td>
       <td class="px-4 py-3 text-sm text-gray-600">${user.email}</td>
       <td class="px-4 py-3 text-sm">${typeBadge}</td>
+      <td class="px-4 py-3 text-sm">${oauthBadge}</td>
       <td class="px-4 py-3 text-sm text-gray-600">${createdAt}</td>
       <td class="px-4 py-3 text-sm">${statusBadge}</td>
       <td class="px-4 py-3 text-sm">${roleBadge}</td>

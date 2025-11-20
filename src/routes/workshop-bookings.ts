@@ -32,7 +32,7 @@ const bookings = new Hono<{ Bindings: Bindings }>();
  */
 bookings.get('/search-nearby', async (c: Context) => {
   try {
-    const { lat, lng, radius } = c.req.query();
+    const { lat, lng, radius, type } = c.req.query();
 
     if (!lat || !lng) {
       return c.json({ error: '위도와 경도를 제공해주세요' }, 400);
@@ -46,18 +46,30 @@ bookings.get('/search-nearby', async (c: Context) => {
       return c.json({ error: '유효하지 않은 좌표입니다' }, 400);
     }
 
-    // Get all active workshops with coordinates
-    const result = await c.env.DB.prepare(`
+    // Build query with optional type filter
+    let query = `
       SELECT 
         id, title, description, category, location, address, 
         detailed_address, postal_code, latitude, longitude,
         price, duration, max_participants, image_url,
-        contact_phone, contact_email, provider_id
+        contact_phone, contact_email, provider_id, type
       FROM workshops 
       WHERE is_active = 1 
         AND latitude IS NOT NULL 
         AND longitude IS NOT NULL
-    `).all();
+    `;
+    
+    const params: any[] = [];
+    if (type) {
+      query += ` AND type = ?`;
+      params.push(type);
+    }
+
+    // Get all active workshops with coordinates
+    const stmt = params.length > 0 
+      ? c.env.DB.prepare(query).bind(...params)
+      : c.env.DB.prepare(query);
+    const result = await stmt.all();
 
     if (!result.results || result.results.length === 0) {
       return c.json({
@@ -102,7 +114,7 @@ bookings.get('/search-nearby', async (c: Context) => {
  */
 bookings.get('/search-by-region', async (c: Context) => {
   try {
-    const { region, radius } = c.req.query();
+    const { region, radius, type } = c.req.query();
 
     if (!region) {
       return c.json({ error: '지역명을 제공해주세요' }, 400);
@@ -115,18 +127,30 @@ bookings.get('/search-by-region', async (c: Context) => {
 
     const radiusKm = radius ? parseFloat(radius) : 50;
 
-    // Get all active workshops with coordinates
-    const result = await c.env.DB.prepare(`
+    // Build query with optional type filter
+    let query = `
       SELECT 
         id, title, description, category, location, address,
         detailed_address, postal_code, latitude, longitude,
         price, duration, max_participants, image_url,
-        contact_phone, contact_email, provider_id
+        contact_phone, contact_email, provider_id, type
       FROM workshops 
       WHERE is_active = 1 
         AND latitude IS NOT NULL 
         AND longitude IS NOT NULL
-    `).all();
+    `;
+    
+    const params: any[] = [];
+    if (type) {
+      query += ` AND type = ?`;
+      params.push(type);
+    }
+
+    // Get all active workshops with coordinates
+    const stmt = params.length > 0 
+      ? c.env.DB.prepare(query).bind(...params)
+      : c.env.DB.prepare(query);
+    const result = await stmt.all();
 
     if (!result.results || result.results.length === 0) {
       return c.json({
