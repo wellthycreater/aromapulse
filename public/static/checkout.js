@@ -1,6 +1,6 @@
 // Checkout JavaScript - 간단한 토스페이먼츠 결제창 방식
 let cart = [];
-const BASE_DELIVERY_FEE = 3000; // 기본 배송비
+const BASE_DELIVERY_FEE = 0; // 기본 배송비 (테스트용: 0원, 프로덕션: 3000원)
 const FREE_DELIVERY_THRESHOLD = 50000; // 무료 배송 기준 금액 (5만원)
 
 // 토스페이먼츠 클라이언트 키 (테스트 키 - 테스트 결제)

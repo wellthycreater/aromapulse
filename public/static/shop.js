@@ -3,8 +3,8 @@ let allProducts = [];
 let cart = [];
 let currentCategory = 'all';
 
-// 배송비 설정
-const BASE_DELIVERY_FEE = 3000; // 기본 배송비
+// 배송비 설정 (개발/테스트용: 무료)
+const BASE_DELIVERY_FEE = 0; // 기본 배송비 (테스트용: 0원, 프로덕션: 3000원)
 const FREE_DELIVERY_THRESHOLD = 50000; // 무료 배송 기준 금액 (5만원)
 
 // 페이지 로드 시 초기화
