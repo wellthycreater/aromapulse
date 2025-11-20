@@ -1,6 +1,7 @@
 // Checkout JavaScript - 간단한 토스페이먼츠 결제창 방식
 let cart = [];
-const DELIVERY_FEE = 3000;
+const BASE_DELIVERY_FEE = 3000; // 기본 배송비
+const FREE_DELIVERY_THRESHOLD = 50000; // 무료 배송 기준 금액 (5만원)
 
 // 토스페이먼츠 클라이언트 키 (테스트 키 - 테스트 결제)
 // 실제 aromapulse 계정의 테스트 키
@@ -115,6 +116,7 @@ function loadCartFromLocalStorage() {
 function renderOrderSummary() {
   const orderItemsEl = document.getElementById('order-items');
   const subtotalEl = document.getElementById('subtotal');
+  const deliveryFeeEl = document.getElementById('delivery-fee');
   const totalAmountEl = document.getElementById('total-amount');
   
   orderItemsEl.innerHTML = '';
@@ -133,9 +135,19 @@ function renderOrderSummary() {
     orderItemsEl.appendChild(itemEl);
   });
   
-  const totalAmount = subtotal + DELIVERY_FEE;
+  // 배송비 계산 (5만원 이상 무료)
+  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : BASE_DELIVERY_FEE;
+  const totalAmount = subtotal + deliveryFee;
   
   subtotalEl.textContent = `${subtotal.toLocaleString()}원`;
+  
+  // 배송비 표시 업데이트
+  if (deliveryFee === 0) {
+    deliveryFeeEl.innerHTML = '<span class="text-green-600 font-bold">무료</span>';
+  } else {
+    deliveryFeeEl.textContent = `${deliveryFee.toLocaleString()}원`;
+  }
+  
   totalAmountEl.textContent = `${totalAmount.toLocaleString()}원`;
 }
 
@@ -205,7 +217,8 @@ async function processPayment() {
   
   try {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const totalAmount = subtotal + DELIVERY_FEE;
+    const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : BASE_DELIVERY_FEE;
+    const totalAmount = subtotal + deliveryFee;
     
     // 주문번호를 백엔드에서 미리 발급받기
     console.log('📋 주문번호 발급 요청 중...');
@@ -257,7 +270,7 @@ async function processPayment() {
       })),
       product_amount: subtotal,
       total_amount: subtotal,
-      delivery_fee: DELIVERY_FEE,
+      delivery_fee: deliveryFee,
       final_amount: totalAmount
     };
     
