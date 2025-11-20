@@ -3,6 +3,10 @@ let allProducts = [];
 let cart = [];
 let currentCategory = 'all';
 
+// 배송비 설정
+const BASE_DELIVERY_FEE = 3000; // 기본 배송비
+const FREE_DELIVERY_THRESHOLD = 50000; // 무료 배송 기준 금액 (5만원)
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
   loadProducts();
@@ -255,9 +259,24 @@ function updateCartUI() {
     cartItemsEl.appendChild(itemEl);
   });
   
-  // 합계 계산
+  // 배송비 계산 (5만원 이상 무료)
+  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : BASE_DELIVERY_FEE;
+  const total = subtotal + deliveryFee;
+  
+  // UI 업데이트
   subtotalEl.textContent = `${subtotal.toLocaleString()}원`;
-  totalEl.textContent = `${subtotal.toLocaleString()}원`;
+  
+  // 배송비 표시
+  const shippingEl = document.getElementById('shipping');
+  if (shippingEl) {
+    if (deliveryFee === 0) {
+      shippingEl.innerHTML = '<span class="text-green-600 font-bold">무료</span>';
+    } else {
+      shippingEl.innerHTML = `<span class="text-gray-600">${deliveryFee.toLocaleString()}원</span>`;
+    }
+  }
+  
+  totalEl.textContent = `${total.toLocaleString()}원`;
 }
 
 // 수량 업데이트
