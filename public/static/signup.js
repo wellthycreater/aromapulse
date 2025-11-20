@@ -104,17 +104,16 @@ function generateDetailForm() {
                         <select name="daily_stress_category" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
                             <option value="">선택하세요</option>
                             <optgroup label="학생">
+                                <option value="student_middle">중학생</option>
                                 <option value="student_high">고등학생</option>
                                 <option value="student_college">대학생</option>
                                 <option value="student_graduate">대학원생</option>
                             </optgroup>
-                            <optgroup label="구직자">
-                                <option value="job_seeker_exam">고시 준비생</option>
+                            <optgroup label="구직자/취준생">
                                 <option value="job_seeker_new">신규 졸업자</option>
-                                <option value="job_seeker_career">경력 전환 희망자</option>
-                                <option value="job_seeker_parttime">파트타임 구직자</option>
-                                <option value="job_seeker_short">단기 구직자</option>
+                                <option value="job_seeker_career">경력 전환자</option>
                                 <option value="job_seeker_long">장기 구직자</option>
+                                <option value="job_seeker_exam">고시 준비자</option>
                             </optgroup>
                             <optgroup label="양육자">
                                 <option value="caregiver_working_mom">워킹맘</option>
@@ -131,18 +130,26 @@ function generateDetailForm() {
             html = `
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">업종 *</label>
+                        <label class="block text-sm font-semibold mb-2">직무 스트레스 업종 *</label>
                         <select name="work_industry" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
                             <option value="">선택하세요</option>
-                            <option value="it_developer">IT 개발자</option>
-                            <option value="design_planning">디자인 기획</option>
-                            <option value="education_teacher">교육 강사</option>
-                            <option value="medical_welfare">의료 복지</option>
-                            <option value="service_customer">서비스 고객 응대</option>
-                            <option value="manufacturing_production">제조 생산</option>
-                            <option value="public_admin">공공 행정</option>
-                            <option value="sales_marketing">영업 마케팅</option>
-                            <option value="research_tech">연구 기술</option>
+                            <optgroup label="직장인 직무 스트레스">
+                                <option value="it_developer">💻 IT·개발자 (장시간 코딩, 야근, 기술 변화 압박)</option>
+                                <option value="design_planning">🎨 디자인·기획 (창의성 압박, 클라이언트 요구, 데드라인)</option>
+                                <option value="education_teacher">👩‍🏫 교육·강사 (감정노동, 학생 관리, 평가 부담)</option>
+                                <option value="medical_welfare">⚕️ 의료·복지 (생명 책임, 긴 근무시간, 감정노동)</option>
+                                <option value="service_customer">🤝 서비스·고객응대 (고객 컴플레인, 반복 업무, 감정노동)</option>
+                                <option value="manufacturing_production">🏭 제조·생산 (육체노동, 안전 압박, 야간근무)</option>
+                                <option value="public_admin">🏛️ 공공·행정 (민원 대응, 규정 준수, 평가 압박)</option>
+                                <option value="sales_marketing">📊 영업·마케팅 (실적 압박, 고객 관리, 경쟁 심화)</option>
+                                <option value="research_tech">🔬 연구·기술 (논문 압박, 연구비 확보, 성과 증명)</option>
+                            </optgroup>
+                            <optgroup label="독립 직군">
+                                <option value="independent_self_employed">🏪 자영업자 (매출 불안, 장시간 운영, 인력 관리)</option>
+                                <option value="independent_freelancer">💼 프리랜서 (불규칙 수입, 고객 확보, 자기관리)</option>
+                                <option value="independent_startup">🚀 창업자/스타트업 (자금 압박, 사업 불확실성, 경쟁)</option>
+                                <option value="independent_creator">📹 크리에이터/인플루언서 (콘텐츠 제작 압박, 조회수, 수익 불안)</option>
+                            </optgroup>
                         </select>
                     </div>
                     

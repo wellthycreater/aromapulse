@@ -235,7 +235,7 @@ async function loadDashboard() {
 async function loadUsers() {
     console.log('👥 Loading users...');
     
-    // Sample data for fallback
+    // Sample data for fallback - Updated with new categories
     const sampleUsers = [
         {
             id: 1,
@@ -245,8 +245,9 @@ async function loadUsers() {
             oauth_provider: 'kakao',
             referral_source: 'instagram',
             user_type: 'B2C',
-            b2c_category: 'work_stress',
-            occupation: 'office_it',
+            b2c_category: 'work',
+            b2c_subcategory: 'it_developer',
+            work_position: '백엔드 개발자',
             shipping_address: '서울특별시 강남구 테헤란로 123',
             role: 'user',
             created_at: '2024-01-15T09:30:00Z',
@@ -260,8 +261,8 @@ async function loadUsers() {
             oauth_provider: 'naver',
             referral_source: 'blog',
             user_type: 'B2C',
-            b2c_category: 'daily_stress',
-            life_situation: 'parent',
+            b2c_category: 'daily',
+            b2c_subcategory: 'caregiver_working_mom',
             shipping_address: '서울특별시 송파구 올림픽로 456',
             role: 'user',
             created_at: '2024-01-20T14:20:00Z',
@@ -276,7 +277,9 @@ async function loadUsers() {
             referral_source: 'google',
             user_type: 'B2B',
             b2b_category: 'company',
-            company_size: '50_to_100',
+            b2b_company_name: '테크스타트업',
+            b2b_company_size: 'small',
+            b2b_department: '인사팀',
             shipping_address: '경기도 성남시 분당구 판교역로 789',
             role: 'user',
             created_at: '2024-02-01T10:15:00Z',
@@ -290,8 +293,9 @@ async function loadUsers() {
             oauth_provider: 'google',
             referral_source: 'youtube',
             user_type: 'B2C',
-            b2c_category: 'work_stress',
-            occupation: 'service_retail',
+            b2c_category: 'work',
+            b2c_subcategory: 'independent_freelancer',
+            work_position: 'UX 디자이너',
             shipping_address: '부산광역시 해운대구 센텀중앙로 321',
             role: 'user',
             created_at: '2024-02-10T16:45:00Z',
@@ -306,9 +310,89 @@ async function loadUsers() {
             referral_source: 'direct',
             user_type: 'B2B',
             b2b_category: 'independent',
+            b2b_independent_type: 'creator_influencer',
+            b2b_shop_type: '뷰티 크리에이터',
             shipping_address: '인천광역시 연수구 컨벤시아대로 654',
             role: 'user',
             created_at: '2024-02-15T11:30:00Z',
+            is_active: 1
+        },
+        {
+            id: 6,
+            name: '강태윤',
+            email: 'taeyoon.kang@student.ac.kr',
+            phone: '010-6789-0123',
+            oauth_provider: 'kakao',
+            referral_source: 'instagram',
+            user_type: 'B2C',
+            b2c_category: 'daily',
+            b2c_subcategory: 'student_college',
+            shipping_address: '대전광역시 유성구 대학로 111',
+            role: 'user',
+            created_at: '2024-02-20T09:00:00Z',
+            is_active: 1
+        },
+        {
+            id: 7,
+            name: '윤미래',
+            email: 'mirae.yoon@example.com',
+            phone: '010-7890-1234',
+            oauth_provider: 'naver',
+            referral_source: 'blog',
+            user_type: 'B2C',
+            b2c_category: 'daily',
+            b2c_subcategory: 'job_seeker_new',
+            shipping_address: '광주광역시 북구 첨단과기로 222',
+            role: 'user',
+            created_at: '2024-02-25T11:15:00Z',
+            is_active: 1
+        },
+        {
+            id: 8,
+            name: '한도현',
+            email: 'dohyun.han@shop.com',
+            phone: '010-8901-2345',
+            oauth_provider: 'email',
+            referral_source: 'direct',
+            user_type: 'B2B',
+            b2b_category: 'shop',
+            b2b_shop_name: '한스 에스테틱',
+            b2b_shop_type: '향수숍',
+            shipping_address: '서울특별시 종로구 인사동길 333',
+            role: 'user',
+            created_at: '2024-03-01T14:30:00Z',
+            is_active: 1
+        },
+        {
+            id: 9,
+            name: '서하은',
+            email: 'haeun.seo@example.com',
+            phone: '010-9012-3456',
+            oauth_provider: 'google',
+            referral_source: 'youtube',
+            user_type: 'B2C',
+            b2c_category: 'work',
+            b2c_subcategory: 'design_planning',
+            work_position: 'UI/UX 기획자',
+            shipping_address: '대구광역시 수성구 동대구로 444',
+            role: 'user',
+            created_at: '2024-03-05T10:20:00Z',
+            is_active: 1
+        },
+        {
+            id: 10,
+            name: '임준서',
+            email: 'junseo.lim@example.com',
+            phone: '010-0123-4567',
+            oauth_provider: 'kakao',
+            referral_source: 'instagram',
+            user_type: 'B2C',
+            b2c_category: 'work',
+            b2c_subcategory: 'independent_startup',
+            work_position: '스타트업 대표',
+            shipping_address: '서울특별시 서초구 서초대로 555',
+            role: 'user',
+            created_at: '2024-03-10T16:00:00Z',
             is_active: 1
         }
     ];
@@ -369,10 +453,49 @@ async function loadUsers() {
             // Sub-category details
             let subCategory = '-';
             if (user.user_type === 'B2C') {
-                if (user.b2c_category === 'daily_stress') {
+                // B2C category display with subcategory
+                const subcategoryMap = {
+                    // Work stress categories
+                    'it_developer': '💻 IT·개발자',
+                    'design_planning': '🎨 디자인·기획',
+                    'education_teacher': '👩‍🏫 교육·강사',
+                    'medical_welfare': '⚕️ 의료·복지',
+                    'service_customer': '🤝 서비스·고객응대',
+                    'manufacturing_production': '🏭 제조·생산',
+                    'public_admin': '🏛️ 공공·행정',
+                    'sales_marketing': '📊 영업·마케팅',
+                    'research_tech': '🔬 연구·기술',
+                    'independent_self_employed': '🏪 자영업자',
+                    'independent_freelancer': '💼 프리랜서',
+                    'independent_startup': '🚀 창업자/스타트업',
+                    'independent_creator': '📹 크리에이터/인플루언서',
+                    // Daily stress categories
+                    'student_middle': '중학생',
+                    'student_high': '고등학생',
+                    'student_college': '대학생',
+                    'student_graduate': '대학원생',
+                    'job_seeker_new': '신규 졸업자',
+                    'job_seeker_career': '경력 전환자',
+                    'job_seeker_long': '장기 구직자',
+                    'job_seeker_exam': '고시 준비자',
+                    'caregiver_working_mom': '워킹맘',
+                    'caregiver_working_dad': '워킹대디',
+                    'caregiver_fulltime': '전업 양육자',
+                    'caregiver_single': '한부모'
+                };
+                
+                if (user.b2c_category === 'daily' || user.b2c_category === 'daily_stress') {
                     subCategory = '<span class="text-xs text-purple-600">일상 스트레스</span>';
-                } else if (user.b2c_category === 'work_stress') {
+                    if (user.b2c_subcategory) {
+                        const subcategoryLabel = subcategoryMap[user.b2c_subcategory] || user.b2c_subcategory;
+                        subCategory += `<br><span class="text-xs text-gray-500">${subcategoryLabel}</span>`;
+                    }
+                } else if (user.b2c_category === 'work' || user.b2c_category === 'work_stress') {
                     subCategory = '<span class="text-xs text-blue-600">직무 스트레스</span>';
+                    if (user.b2c_subcategory) {
+                        const subcategoryLabel = subcategoryMap[user.b2c_subcategory] || user.b2c_subcategory;
+                        subCategory += `<br><span class="text-xs text-gray-500">${subcategoryLabel}</span>`;
+                    }
                 }
             } else if (user.user_type === 'B2B') {
                 // B2B category icons and labels
@@ -550,10 +673,49 @@ async function loadUsers() {
             
             let subCategory = '-';
             if (user.user_type === 'B2C') {
-                if (user.b2c_category === 'daily_stress') {
+                // B2C category display with subcategory
+                const subcategoryMap = {
+                    // Work stress categories
+                    'it_developer': '💻 IT·개발자',
+                    'design_planning': '🎨 디자인·기획',
+                    'education_teacher': '👩‍🏫 교육·강사',
+                    'medical_welfare': '⚕️ 의료·복지',
+                    'service_customer': '🤝 서비스·고객응대',
+                    'manufacturing_production': '🏭 제조·생산',
+                    'public_admin': '🏛️ 공공·행정',
+                    'sales_marketing': '📊 영업·마케팅',
+                    'research_tech': '🔬 연구·기술',
+                    'independent_self_employed': '🏪 자영업자',
+                    'independent_freelancer': '💼 프리랜서',
+                    'independent_startup': '🚀 창업자/스타트업',
+                    'independent_creator': '📹 크리에이터/인플루언서',
+                    // Daily stress categories
+                    'student_middle': '중학생',
+                    'student_high': '고등학생',
+                    'student_college': '대학생',
+                    'student_graduate': '대학원생',
+                    'job_seeker_new': '신규 졸업자',
+                    'job_seeker_career': '경력 전환자',
+                    'job_seeker_long': '장기 구직자',
+                    'job_seeker_exam': '고시 준비자',
+                    'caregiver_working_mom': '워킹맘',
+                    'caregiver_working_dad': '워킹대디',
+                    'caregiver_fulltime': '전업 양육자',
+                    'caregiver_single': '한부모'
+                };
+                
+                if (user.b2c_category === 'daily' || user.b2c_category === 'daily_stress') {
                     subCategory = '<span class="text-xs text-purple-600">일상 스트레스</span>';
-                } else if (user.b2c_category === 'work_stress') {
+                    if (user.b2c_subcategory) {
+                        const subcategoryLabel = subcategoryMap[user.b2c_subcategory] || user.b2c_subcategory;
+                        subCategory += `<br><span class="text-xs text-gray-500">${subcategoryLabel}</span>`;
+                    }
+                } else if (user.b2c_category === 'work' || user.b2c_category === 'work_stress') {
                     subCategory = '<span class="text-xs text-blue-600">직무 스트레스</span>';
+                    if (user.b2c_subcategory) {
+                        const subcategoryLabel = subcategoryMap[user.b2c_subcategory] || user.b2c_subcategory;
+                        subCategory += `<br><span class="text-xs text-gray-500">${subcategoryLabel}</span>`;
+                    }
                 }
             } else if (user.user_type === 'B2B') {
                 if (user.b2b_category === 'independent') {
@@ -2833,6 +2995,22 @@ function renderB2cWorkStressChart(data) {
     }
     
     const occupationMap = {
+        // 직장인 직무 스트레스
+        'it_developer': '💻 IT·개발자',
+        'design_planning': '🎨 디자인·기획',
+        'education_teacher': '👩‍🏫 교육·강사',
+        'medical_welfare': '⚕️ 의료·복지',
+        'service_customer': '🤝 서비스·고객응대',
+        'manufacturing_production': '🏭 제조·생산',
+        'public_admin': '🏛️ 공공·행정',
+        'sales_marketing': '📊 영업·마케팅',
+        'research_tech': '🔬 연구·기술',
+        // 독립 직군
+        'independent_self_employed': '🏪 자영업자',
+        'independent_freelancer': '💼 프리랜서',
+        'independent_startup': '🚀 창업자/스타트업',
+        'independent_creator': '📹 크리에이터/인플루언서',
+        // Legacy support
         'office_it': '사무직/IT',
         'service_retail': '서비스/판매직',
         'medical_care': '의료/돌봄',
@@ -3800,6 +3978,22 @@ function renderWorkStressDetailed(data) {
     }
     
     const occupationMap = {
+        // 직장인 직무 스트레스
+        'it_developer': '💻 IT·개발자',
+        'design_planning': '🎨 디자인·기획',
+        'education_teacher': '👩‍🏫 교육·강사',
+        'medical_welfare': '⚕️ 의료·복지',
+        'service_customer': '🤝 서비스·고객응대',
+        'manufacturing_production': '🏭 제조·생산',
+        'public_admin': '🏛️ 공공·행정',
+        'sales_marketing': '📊 영업·마케팅',
+        'research_tech': '🔬 연구·기술',
+        // 독립 직군
+        'independent_self_employed': '🏪 자영업자',
+        'independent_freelancer': '💼 프리랜서',
+        'independent_startup': '🚀 창업자/스타트업',
+        'independent_creator': '📹 크리에이터/인플루언서',
+        // Legacy support
         'office_it': '사무직/IT',
         'service_retail': '서비스/판매직',
         'medical_care': '의료/돌봄',
@@ -3851,6 +4045,22 @@ function renderDailyStressDetailed(data) {
     }
     
     const lifeSituationMap = {
+        // 학생
+        'student_middle': '중학생',
+        'student_high': '고등학생',
+        'student_college': '대학생',
+        'student_graduate': '대학원생',
+        // 구직자/취준생
+        'job_seeker_new': '신규 졸업자',
+        'job_seeker_career': '경력 전환자',
+        'job_seeker_long': '장기 구직자',
+        'job_seeker_exam': '고시 준비자',
+        // 양육자
+        'caregiver_working_mom': '워킹맘',
+        'caregiver_working_dad': '워킹대디',
+        'caregiver_fulltime': '전업 양육자',
+        'caregiver_single': '한부모',
+        // Legacy support
         'student': '학생',
         'parent': '육아맘/대디',
         'homemaker': '주부',
