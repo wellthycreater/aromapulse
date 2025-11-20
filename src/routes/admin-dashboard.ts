@@ -183,65 +183,7 @@ adminDashboard.get('/device-stats', async (c) => {
     const { DB } = c.env;
     
     try {
-      // Try to get data from user_login_logs first (more accurate for recent activity)
-      const loginDeviceStats = await DB.prepare(`
-        SELECT 
-          device_type,
-          COUNT(*) as count
-        FROM user_login_logs
-        WHERE login_at >= datetime('now', '-30 days')
-        GROUP BY device_type
-        ORDER BY count DESC
-      `).all();
-      
-      const loginBrowserStats = await DB.prepare(`
-        SELECT 
-          browser,
-          COUNT(*) as count
-        FROM user_login_logs
-        WHERE login_at >= datetime('now', '-30 days')
-          AND browser IS NOT NULL
-        GROUP BY browser
-        ORDER BY count DESC
-        LIMIT 5
-      `).all();
-      
-      const loginOsStats = await DB.prepare(`
-        SELECT 
-          os,
-          COUNT(*) as count
-        FROM user_login_logs
-        WHERE login_at >= datetime('now', '-30 days')
-          AND os IS NOT NULL
-        GROUP BY os
-        ORDER BY count DESC
-        LIMIT 5
-      `).all();
-      
-      // If login logs have data, also get combined stats from login logs
-      if (loginDeviceStats.results && loginDeviceStats.results.length > 0) {
-        const loginCombinedStats = await DB.prepare(`
-          SELECT 
-            device_type,
-            os as device_os,
-            COUNT(*) as count
-          FROM user_login_logs
-          WHERE login_at >= datetime('now', '-30 days')
-            AND device_type IS NOT NULL 
-            AND os IS NOT NULL
-          GROUP BY device_type, os
-          ORDER BY count DESC
-        `).all();
-        
-        return c.json({
-          devices: loginDeviceStats.results || [],
-          browsers: loginBrowserStats.results || [],
-          os: loginOsStats.results || [],
-          combined: loginCombinedStats.results || []
-        });
-      }
-      
-      // Fallback to users table if no login logs
+      // Always get data from users table (most complete data)
       const userDeviceStats = await DB.prepare(`
         SELECT 
           device_type,
@@ -286,12 +228,71 @@ adminDashboard.get('/device-stats', async (c) => {
         ORDER BY count DESC
       `).all();
       
+      // If we have users data, return it
+      if (userDeviceStats.results && userDeviceStats.results.length > 0) {
+        return c.json({
+          devices: userDeviceStats.results || [],
+          browsers: userBrowserStats.results || [],
+          os: userOsStats.results || [],
+          combined: combinedStats.results || []
+        });
+      }
+      
+      // Fallback: Try to get data from user_login_logs (for recent activity)
+      const loginDeviceStats = await DB.prepare(`
+        SELECT 
+          device_type,
+          COUNT(*) as count
+        FROM user_login_logs
+        WHERE login_at >= datetime('now', '-30 days')
+        GROUP BY device_type
+        ORDER BY count DESC
+      `).all();
+      
+      const loginBrowserStats = await DB.prepare(`
+        SELECT 
+          browser,
+          COUNT(*) as count
+        FROM user_login_logs
+        WHERE login_at >= datetime('now', '-30 days')
+          AND browser IS NOT NULL
+        GROUP BY browser
+        ORDER BY count DESC
+        LIMIT 5
+      `).all();
+      
+      const loginOsStats = await DB.prepare(`
+        SELECT 
+          os,
+          COUNT(*) as count
+        FROM user_login_logs
+        WHERE login_at >= datetime('now', '-30 days')
+          AND os IS NOT NULL
+        GROUP BY os
+        ORDER BY count DESC
+        LIMIT 5
+      `).all();
+      
+      const loginCombinedStats = await DB.prepare(`
+        SELECT 
+          device_type,
+          os as device_os,
+          COUNT(*) as count
+        FROM user_login_logs
+        WHERE login_at >= datetime('now', '-30 days')
+          AND device_type IS NOT NULL 
+          AND os IS NOT NULL
+        GROUP BY device_type, os
+        ORDER BY count DESC
+      `).all();
+      
       return c.json({
-        devices: userDeviceStats.results || [],
-        browsers: userBrowserStats.results || [],
-        os: userOsStats.results || [],
-        combined: combinedStats.results || []
+        devices: loginDeviceStats.results || [],
+        browsers: loginBrowserStats.results || [],
+        os: loginOsStats.results || [],
+        combined: loginCombinedStats.results || []
       });
+
       
     } catch (error) {
       console.error('Device stats query error:', error);
