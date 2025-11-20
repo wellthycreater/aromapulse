@@ -31,6 +31,7 @@ import adminWorkshopsRoutes from './routes/admin-workshops';
 import adminClassesRoutes from './routes/admin-classes';
 import loginLogsRoutes from './routes/login-logs';
 import userAnalyticsRoutes from './routes/user-analytics';
+import workshopBookingsRoutes from './routes/workshop-bookings';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -70,6 +71,7 @@ app.route('/api/oneday-classes', onedayClassesRoutes);
 app.route('/api/workshop-quotes', workshopQuotesRoutes);
 app.route('/api/login-logs', loginLogsRoutes);
 app.route('/api/user-analytics', userAnalyticsRoutes);
+app.route('/api/workshop-bookings', workshopBookingsRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
