@@ -268,14 +268,35 @@ function generateDetailForm() {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-semibold mb-2">매장 유형</label>
-                        <select name="b2b_shop_type" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
+                        <label class="block text-sm font-semibold mb-2">매장 유형 *</label>
+                        <select name="b2b_shop_type" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500">
                             <option value="">선택하세요</option>
-                            <option value="향수숍">향수/향기 전문점</option>
-                            <option value="라이프스타일">라이프스타일 편집샵</option>
-                            <option value="카페">카페/음료점</option>
-                            <option value="요가">요가/명상 센터</option>
-                            <option value="기타">기타</option>
+                            <optgroup label="뷰티 & 웰니스">
+                                <option value="에스테틱">🧖‍♀️ 에스테틱 (피부관리)</option>
+                                <option value="미용실">💇 미용실 (헤어샵)</option>
+                                <option value="네일샵">💅 네일샵</option>
+                                <option value="스파">🛁 스파/마사지</option>
+                                <option value="요가">🧘 요가/명상 센터</option>
+                            </optgroup>
+                            <optgroup label="라이프스타일">
+                                <option value="향수숍">🌸 향수/향기 전문점</option>
+                                <option value="라이프스타일">🏠 라이프스타일 편집샵</option>
+                                <option value="카페">☕ 카페/음료점</option>
+                                <option value="베이커리">🥐 베이커리/디저트</option>
+                                <option value="플라워">💐 플라워샵</option>
+                            </optgroup>
+                            <optgroup label="로컬 공방">
+                                <option value="공방_캔들">🕯️ 캔들 공방</option>
+                                <option value="공방_향수">🧴 향수 공방</option>
+                                <option value="공방_비누">🧼 비누/화장품 공방</option>
+                                <option value="공방_아로마">🌿 아로마테라피 공방</option>
+                                <option value="공방_기타">🎨 기타 공방</option>
+                            </optgroup>
+                            <optgroup label="기타">
+                                <option value="호텔">🏨 호텔/리조트</option>
+                                <option value="상업시설">🏢 상업 시설 (백화점, 쇼핑몰)</option>
+                                <option value="기타">✨ 기타</option>
+                            </optgroup>
                         </select>
                     </div>
                     
