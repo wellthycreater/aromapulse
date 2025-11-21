@@ -1561,22 +1561,25 @@ curl -X PUT https://your-domain/api/user/change-password \
 ---
 
 **마지막 업데이트**: 2025-11-21  
-**버전**: 1.7.5 - Device Tracking in Admin Users Panel  
-**상태**: ✅ 회원 관리 디바이스 추적 기능 완료 및 프로덕션 배포 완료  
+**버전**: 1.7.5 - Device Tracking in Admin Dashboard & Users Panel  
+**상태**: ✅ 관리자 대시보드 및 회원 관리 디바이스 추적 완료  
 **회사명**: 웰씨코리아 (Wellthy Korea)  
 **결제 방식**: 토스페이먼츠 라이브 키 (실제 결제 가능)  
 **챗봇 서비스**: 사이드톡 AI (Sidetalk AI)  
-**배포 상태**: ✅ 프로덕션 배포 완료 (DB 마이그레이션 포함)  
+**배포 상태**: ✅ 프로덕션 배포 완료 (관리자 대시보드 포함)  
 **개발 환경 URL**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai  
 **프로덕션 URL**: https://www.aromapulse.kr  
-**최신 배포**: https://e7520537.aromapulse.pages.dev
+**최신 배포**: https://f68b02eb.aromapulse.pages.dev
 
 ## 🆕 최신 업데이트 (v1.7.5) - 회원 관리 디바이스 추적 (2025-11-21)
 
 ### ✅ 완료된 작업
 
-**1. 회원 관리 패널 디바이스 정보 추적** ✅
-- **기능**: 관리자 회원 관리 페이지에서 사용자별 접속 디바이스 정보 확인
+**1. 관리자 대시보드 및 회원 관리 디바이스 추적** ✅
+- **기능**: 관리자 대시보드와 회원 관리 페이지에서 사용자별 접속 디바이스 정보 확인
+- **적용 페이지**:
+  - `/static/admin-dashboard` - 관리자 메인 대시보드의 회원 관리 탭
+  - `/static/admin-users.html` - 전용 회원 관리 페이지
 - **추가된 컬럼**:
   - 디바이스 타입 배지: 모바일/태블릿/데스크톱 (아이콘 + 색상)
   - OS/브라우저 정보: 운영체제 및 브라우저 표시
