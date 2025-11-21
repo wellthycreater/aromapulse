@@ -784,7 +784,7 @@ async function searchUsers() {
         
         if (users.length === 0) {
             tbody.innerHTML = `
-                <tr><td colspan="11" class="px-6 py-8 text-center text-gray-500">
+                <tr><td colspan="12" class="px-6 py-8 text-center text-gray-500">
                     검색 결과가 없습니다.
                 </td></tr>
             `;
@@ -809,29 +809,44 @@ async function searchUsers() {
             const providerLabel = providerLabels[provider] || provider;
             const providerColor = providerColors[provider] || 'gray';
             
-            // Address formatting (B2B uses b2b_address, B2C might not have address)
-            const address = user.b2b_address || '-';
-            const shortAddress = address.length > 30 ? address.substring(0, 30) + '...' : address;
+            // Device type badge
+            let deviceBadge = '';
+            if (user.last_device_type === 'mobile') {
+                deviceBadge = '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"><i class="fas fa-mobile-alt mr-1"></i>모바일</span>';
+            } else if (user.last_device_type === 'tablet') {
+                deviceBadge = '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"><i class="fas fa-tablet-alt mr-1"></i>태블릿</span>';
+            } else if (user.last_device_type === 'desktop') {
+                deviceBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full"><i class="fas fa-desktop mr-1"></i>PC</span>';
+            } else {
+                deviceBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">-</span>';
+            }
+            
+            // OS/Browser info
+            const osInfo = user.last_os || '-';
+            const browserInfo = user.last_browser || '-';
+            const osBrowserText = osInfo !== '-' ? `${osInfo}<br/><small class="text-gray-500">${browserInfo}</small>` : '-';
             
             return `
             <tr class="border-b hover:bg-gray-50 transition">
-                <td class="px-6 py-4 text-sm">
+                <td class="px-4 py-3 text-sm">${user.id}</td>
+                <td class="px-4 py-3 text-sm">
                     <span class="px-2 py-1 bg-${providerColor}-100 text-${providerColor}-800 rounded-full text-xs font-semibold">
                         ${providerLabel}
                     </span>
                 </td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900">${user.name || '-'}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">${user.email}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">${user.phone || '-'}</td>
-                <td class="px-6 py-4 text-sm text-gray-600" title="${address}">${shortAddress}</td>
-                <td class="px-6 py-4 text-sm">
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">${user.name || '-'}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${user.email}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${user.phone || '-'}</td>
+                <td class="px-4 py-3 text-sm">
                     <span class="px-2 py-1 bg-${user.user_type === 'B2C' ? 'blue' : 'purple'}-100 text-${user.user_type === 'B2C' ? 'blue' : 'purple'}-800 rounded-full text-xs">
                         ${user.user_type === 'B2C' ? '개인' : '기업'}
                     </span>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-600">${user.role || 'user'}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">${formatDate(user.created_at)}</td>
-                <td class="px-6 py-4 text-sm">
+                <td class="px-4 py-3 text-sm">${deviceBadge}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${osBrowserText}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${user.role || 'user'}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${formatDate(user.created_at)}</td>
+                <td class="px-4 py-3 text-sm">
                     <span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">
                         ${user.is_active ? '활성' : '비활성'}
                     </span>
