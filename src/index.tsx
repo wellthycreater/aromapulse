@@ -299,8 +299,8 @@ app.get('/', (c) => {
                         <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-star mr-2"></i>힐링 체험
                         </a>
-                        <!-- B2B 전용 워크샵 메뉴 (로그인 시 B2B 사용자에게만 표시) -->
-                        <a href="/workshops" id="workshop-menu" class="hidden text-gray-700 hover:text-purple-600 font-semibold transition items-center">
+                        <!-- 워크샵 메뉴 (모든 사용자에게 표시, 접근은 B2B만) -->
+                        <a href="/workshops" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-briefcase mr-2"></i>워크샵
                         </a>
                     </div>
@@ -1092,32 +1092,6 @@ app.get('/', (c) => {
                 
                 // Load popular products
                 loadPopularProducts();
-                
-                // 메뉴 가시성 제어
-                const token = localStorage.getItem('token');
-                const workshopMenu = document.getElementById('workshop-menu');
-                
-                // 힐링 체험은 항상 표시 (HTML에서 기본 표시)
-                // 워크샵은 B2B 사용자에게만 표시
-                if (workshopMenu) {
-                    if (token) {
-                        try {
-                            const payload = JSON.parse(atob(token.split('.')[1]));
-                            // B2B 사용자는 워크샵 메뉴 표시
-                            if (payload.userType === 'B2B') {
-                                workshopMenu.style.display = 'flex';
-                            } else {
-                                workshopMenu.style.display = 'none';
-                            }
-                        } catch (e) {
-                            // 토큰 파싱 실패 시 워크샵 숨김
-                            workshopMenu.style.display = 'none';
-                        }
-                    } else {
-                        // 로그인하지 않은 경우 워크샵 숨김
-                        workshopMenu.style.display = 'none';
-                    }
-                }
             });
         </script>
 

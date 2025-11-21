@@ -91,8 +91,8 @@
                     <a href="/shop" class="text-gray-700 hover:text-green-600 font-medium transition flex items-center">
                         <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                     </a>
-                    <!-- B2B 전용 워크샵 메뉴 -->
-                    <a href="/workshops" id="workshop-menu" class="hidden text-gray-700 hover:text-green-600 font-medium transition items-center">
+                    <!-- 워크샵 메뉴 (모든 사용자에게 표시, 접근은 B2B만) -->
+                    <a href="/workshops" class="text-gray-700 hover:text-green-600 font-medium transition flex items-center">
                         <i class="fas fa-briefcase mr-2"></i>워크샵
                     </a>
                     <a href="/classes" class="text-green-600 font-bold flex items-center">
@@ -379,13 +379,6 @@
                     
                     document.getElementById('user-name').textContent = userName;
                     document.getElementById('user-initial').textContent = userInitial;
-                    
-                    // B2B 사용자에게 워크샵 메뉴 표시
-                    const workshopMenu = document.getElementById('workshop-menu');
-                    if (workshopMenu && payload.userType === 'B2B') {
-                        workshopMenu.classList.remove('hidden');
-                        workshopMenu.classList.add('flex');
-                    }
                     
                 } catch (e) {
                     console.error('Token parse error:', e);
