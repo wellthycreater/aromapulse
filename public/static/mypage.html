@@ -60,8 +60,8 @@
         }
         
         .profile-avatar {
-            background: linear-gradient(135deg, #BFCFC1 0%, #CFC7F2 100%);
-            box-shadow: 0 4px 16px rgba(191, 207, 193, 0.3);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
         }
         
         input:focus, textarea:focus {
@@ -89,9 +89,6 @@
                     <a href="/" class="text-gray-600 hover:text-gray-900 font-medium transition text-sm">
                         <i class="fas fa-home mr-2"></i>홈
                     </a>
-                    <a href="/shop" class="text-gray-600 hover:text-gray-900 font-medium transition text-sm">
-                        <i class="fas fa-shopping-bag mr-2"></i>쇼핑
-                    </a>
                     <a href="/oneday-classes" class="text-gray-600 hover:text-gray-900 font-medium transition text-sm">
                         <i class="fas fa-star mr-2"></i>힐링 체험
                     </a>
@@ -114,13 +111,18 @@
                     <!-- Profile Summary -->
                     <div class="text-center mb-8">
                         <div class="relative inline-block mb-4">
-                            <div class="w-20 h-20 profile-avatar rounded-full flex items-center justify-center text-white text-2xl font-semibold cursor-pointer transition-transform hover:scale-105" onclick="document.getElementById('profile-image-input').click()">
+                            <div class="w-20 h-20 profile-avatar rounded-full flex items-center justify-center text-white text-2xl font-semibold cursor-pointer transition-transform hover:scale-105 relative overflow-hidden" onclick="document.getElementById('profile-image-input').click()">
                                 <span id="profile-initial">U</span>
-                                <img id="profile-image-preview" src="" alt="프로필" class="w-20 h-20 rounded-full object-cover hidden">
+                                <img id="profile-image-preview" src="" alt="프로필" class="absolute inset-0 w-full h-full object-cover hidden">
                             </div>
                             <input type="file" id="profile-image-input" accept="image/*" class="hidden" onchange="handleProfileImageUpload(event)">
-                            <button onclick="document.getElementById('profile-image-input').click()" class="absolute -bottom-1 -right-1 w-7 h-7 bg-white border-2 border-gray-100 rounded-full text-gray-600 flex items-center justify-center hover:bg-gray-50 transition shadow-sm">
+                            <!-- 이미지 업로드 버튼 -->
+                            <button onclick="document.getElementById('profile-image-input').click()" class="absolute -bottom-1 -right-1 w-7 h-7 bg-white border-2 border-gray-100 rounded-full text-gray-600 flex items-center justify-center hover:bg-gray-50 transition shadow-sm" title="이미지 변경">
                                 <i class="fas fa-camera text-xs"></i>
+                            </button>
+                            <!-- 이미지 삭제 버튼 (이미지가 있을 때만 표시) -->
+                            <button id="remove-image-btn" onclick="removeProfileImage()" class="hidden absolute -bottom-1 -left-1 w-7 h-7 bg-red-500 border-2 border-white rounded-full text-white flex items-center justify-center hover:bg-red-600 transition shadow-sm" title="이미지 삭제">
+                                <i class="fas fa-times text-xs"></i>
                             </button>
                         </div>
                         <h3 id="sidebar-user-name" class="text-lg font-semibold text-gray-800 mb-1">사용자</h3>

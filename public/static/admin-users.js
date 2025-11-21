@@ -211,12 +211,31 @@ function renderUsers() {
       oauthBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full"><i class="fas fa-envelope mr-1"></i>이메일</span>';
     }
     
+    // 디바이스 정보
+    let deviceBadge = '';
+    if (user.last_device_type === 'mobile') {
+      deviceBadge = '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"><i class="fas fa-mobile-alt mr-1"></i>모바일</span>';
+    } else if (user.last_device_type === 'tablet') {
+      deviceBadge = '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"><i class="fas fa-tablet-alt mr-1"></i>태블릿</span>';
+    } else if (user.last_device_type === 'desktop') {
+      deviceBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full"><i class="fas fa-desktop mr-1"></i>PC</span>';
+    } else {
+      deviceBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">-</span>';
+    }
+    
+    // OS/브라우저 정보
+    const osInfo = user.last_os || '-';
+    const browserInfo = user.last_browser || '-';
+    const osBrowserText = osInfo !== '-' ? `${osInfo}<br/><small class="text-gray-500">${browserInfo}</small>` : '-';
+    
     row.innerHTML = `
       <td class="px-4 py-3 text-sm">${user.id}</td>
       <td class="px-4 py-3 text-sm font-semibold">${user.name}</td>
       <td class="px-4 py-3 text-sm text-gray-600">${user.email}</td>
       <td class="px-4 py-3 text-sm">${typeBadge}</td>
       <td class="px-4 py-3 text-sm">${oauthBadge}</td>
+      <td class="px-4 py-3 text-sm">${deviceBadge}</td>
+      <td class="px-4 py-3 text-sm text-gray-600">${osBrowserText}</td>
       <td class="px-4 py-3 text-sm text-gray-600">${createdAt}</td>
       <td class="px-4 py-3 text-sm">${statusBadge}</td>
       <td class="px-4 py-3 text-sm">${roleBadge}</td>

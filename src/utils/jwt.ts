@@ -13,6 +13,7 @@ export async function generateToken(user: Partial<User>, secret: string): Promis
   const payload = {
     userId: user.id,
     email: user.email,
+    name: user.name,
     userType: user.user_type,
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7일 유효
@@ -78,7 +79,10 @@ async function sign(data: string, secret: string): Promise<string> {
 function base64urlEncode(input: string | ArrayBuffer): string {
   let str: string;
   if (typeof input === 'string') {
-    str = btoa(unescape(encodeURIComponent(input)));
+    // UTF-8 인코딩을 위해 TextEncoder 사용
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(input);
+    str = btoa(String.fromCharCode(...bytes));
   } else {
     str = btoa(String.fromCharCode(...new Uint8Array(input)));
   }
@@ -91,5 +95,12 @@ function base64urlDecode(input: string): string {
   while (input.length % 4) {
     input += '=';
   }
-  return decodeURIComponent(escape(atob(input)));
+  // UTF-8 디코딩을 위해 TextDecoder 사용
+  const binary = atob(input);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const decoder = new TextDecoder();
+  return decoder.decode(bytes);
 }

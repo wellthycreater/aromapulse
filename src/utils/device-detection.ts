@@ -88,6 +88,7 @@ export async function logUserLogin(
     // Generate session ID
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
     
+    // Log to user_login_logs table
     await db.prepare(`
       INSERT INTO user_login_logs (
         user_id, email, device_type, os, browser, browser_version,
@@ -105,6 +106,25 @@ export async function logUserLogin(
       loginMethod,
       'success',
       sessionId
+    ).run();
+    
+    // Update users table with latest device info
+    await db.prepare(`
+      UPDATE users SET
+        last_device_type = ?,
+        last_os = ?,
+        last_browser = ?,
+        last_ip = ?,
+        last_user_agent = ?,
+        last_login_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      deviceInfo.device_type,
+      deviceInfo.os,
+      deviceInfo.browser,
+      ipAddress,
+      userAgent,
+      userId
     ).run();
   } catch (error) {
     console.error('Failed to log user login:', error);

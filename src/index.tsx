@@ -279,17 +279,23 @@ app.get('/', (c) => {
     <body class="bg-gray-50">
         <!-- Header -->
         <header class="glass-effect shadow-lg sticky top-0 z-50">
-            <nav class="container mx-auto px-6 py-4">
-                <div class="grid grid-cols-3 items-center">
-                    <!-- Left: Logo -->
-                    <div class="flex justify-start">
-                        <a href="/" class="flex items-center space-x-3">
-                            <img src="/static/logo-light.png" alt="아로마펄스" class="h-16 logo-image">
+            <nav class="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+                <div class="flex md:grid md:grid-cols-3 items-center justify-between">
+                    <!-- Left: Mobile Menu Button + Logo -->
+                    <div class="flex items-center justify-start space-x-3">
+                        <!-- Mobile Menu Button (Only on Mobile) -->
+                        <button id="mobile-menu-btn" class="md:hidden text-gray-700 hover:text-purple-600 p-2">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                        
+                        <!-- Logo -->
+                        <a href="/" class="flex items-center">
+                            <img src="/static/logo-light.png" alt="아로마펄스" class="h-10 sm:h-12 md:h-16 logo-image">
                         </a>
                     </div>
                     
-                    <!-- Center: Navigation Menu -->
-                    <div class="flex items-center justify-center space-x-8">
+                    <!-- Center: Navigation Menu (Desktop Only) -->
+                    <div class="hidden md:flex items-center justify-center space-x-8">
                         <a href="/" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-home mr-2"></i>홈
                         </a>
@@ -298,10 +304,6 @@ app.get('/', (c) => {
                         </a>
                         <a href="/oneday-classes" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-star mr-2"></i>힐링 체험
-                        </a>
-                        <!-- 워크샵 메뉴 (모든 사용자에게 표시, 접근은 B2B만) -->
-                        <a href="/workshops" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
-                            <i class="fas fa-briefcase mr-2"></i>워크샵
                         </a>
                     </div>
                     
@@ -323,11 +325,11 @@ app.get('/', (c) => {
                         </div>
                         
                         <!-- 비로그인 상태 -->
-                        <div id="auth-buttons" class="flex items-center space-x-4">
-                            <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800 font-semibold transition">
+                        <div id="auth-buttons" class="flex items-center space-x-2 sm:space-x-4">
+                            <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800 font-semibold transition text-sm sm:text-base">
                                 로그인
                             </button>
-                            <button onclick="location.href='/signup'" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition transform hover:scale-105">
+                            <button onclick="location.href='/signup'" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-full hover:shadow-lg transition transform hover:scale-105 text-sm sm:text-base whitespace-nowrap">
                                 회원가입
                             </button>
                         </div>
@@ -340,8 +342,9 @@ app.get('/', (c) => {
                             </a>
                             <div class="relative">
                                 <button id="profile-btn" class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition">
-                                    <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-bold">
+                                    <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-bold relative overflow-hidden">
                                         <span id="user-initial">U</span>
+                                        <img id="user-profile-image" src="" alt="프로필" class="absolute inset-0 w-full h-full object-cover hidden">
                                     </div>
                                     <span id="user-name" class="font-semibold hidden md:block">사용자</span>
                                     <i class="fas fa-chevron-down text-sm"></i>
@@ -367,30 +370,54 @@ app.get('/', (c) => {
             </nav>
         </header>
 
+        <!-- Mobile Menu Overlay -->
+        <div id="mobile-menu-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" onclick="closeMobileMenu()"></div>
+        <div id="mobile-menu" class="hidden fixed top-0 right-0 w-64 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-xl font-bold text-gray-800">메뉴</h3>
+                    <button onclick="closeMobileMenu()" class="text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <nav class="space-y-4">
+                    <a href="/" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                        <i class="fas fa-home mr-3"></i>홈
+                    </a>
+                    <a href="/shop" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                        <i class="fas fa-shopping-bag mr-3"></i>쇼핑
+                    </a>
+                    <a href="/oneday-classes" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                        <i class="fas fa-star mr-3"></i>힐링 체험
+                    </a>
+                </nav>
+            </div>
+        </div>
+
         <!-- Hero Section -->
-        <section class="hero-gradient text-white py-24 relative overflow-hidden">
+        <section class="hero-gradient text-white py-16 sm:py-20 md:py-24 relative overflow-hidden">
             <div class="absolute inset-0 opacity-10">
                 <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
                 <div class="absolute bottom-20 right-20 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>
             </div>
-            <div class="container mx-auto px-6 relative z-10">
+            <div class="container mx-auto px-4 sm:px-6 relative z-10">
                 <div class="text-center max-w-4xl mx-auto fade-in-up">
-                    <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
                         향기로 시작하는<br/>
                         <span class="text-yellow-300">행복한 변화</span>
                     </h1>
-                    <p class="text-xl md:text-2xl mb-10 text-purple-100">
-                        불면, 우울, 불안을 위한 전문 아로마 솔루션<br/>
-                        당신의 일상에 평온함을 더합니다
+                    <p class="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 text-purple-100 px-4">
+                        불면, 우울, 불안을 위한 전문 아로마 솔루션<br class="hidden sm:block"/>
+                        <span class="sm:hidden"> </span>당신의 일상에 평온함을 더합니다
                     </p>
-                    <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
                         <button onclick="location.href='/shop'" 
-                                class="bg-white text-purple-600 px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
+                                class="bg-white text-purple-600 px-8 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold hover:shadow-2xl transition transform hover:scale-105 whitespace-nowrap">
                             <i class="fas fa-shopping-bag mr-2"></i>
                             제품 둘러보기
                         </button>
                         <button onclick="location.href='/local-studios'" 
-                                class="bg-pink-600 text-white px-10 py-4 rounded-full text-lg font-bold border-2 border-white hover:bg-pink-700 transition transform hover:scale-105">
+                                class="bg-pink-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold border-2 border-white hover:bg-pink-700 transition transform hover:scale-105 whitespace-nowrap">
                             <i class="fas fa-map-marker-alt mr-2"></i>
                             공방 찾기
                         </button>
@@ -402,54 +429,54 @@ app.get('/', (c) => {
 
 
         <!-- Features -->
-        <section class="py-20 bg-white">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-4">왜 아로마펄스인가요?</h2>
-                    <p class="text-xl text-gray-600">전문성과 신뢰를 바탕으로 한 향기 케어</p>
+        <section class="py-12 sm:py-16 md:py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="text-center mb-10 sm:mb-12 md:mb-16">
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4 px-4">왜 아로마펄스인가요?</h2>
+                    <p class="text-base sm:text-lg md:text-xl text-gray-600 px-4">전문성과 신뢰를 바탕으로 한 향기 케어</p>
                 </div>
-                <div class="grid md:grid-cols-3 gap-10">
-                    <div class="product-card bg-gradient-to-br from-purple-50 to-white p-8 rounded-2xl shadow-lg text-center">
-                        <div class="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-user-md text-white text-3xl"></i>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-10">
+                    <div class="product-card bg-gradient-to-br from-purple-50 to-white p-6 sm:p-8 rounded-2xl shadow-lg text-center">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                            <i class="fas fa-user-md text-white text-2xl sm:text-3xl"></i>
                         </div>
-                        <h3 class="text-2xl font-bold mb-4 text-gray-800">전문성 기반</h3>
-                        <p class="text-gray-600 leading-relaxed">증상별 맞춤 아로마 솔루션으로<br/>효과적인 케어를 제공합니다</p>
+                        <h3 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">전문성 기반</h3>
+                        <p class="text-sm sm:text-base text-gray-600 leading-relaxed">증상별 맞춤 아로마 솔루션으로<br/>효과적인 케어를 제공합니다</p>
                     </div>
-                    <div class="product-card bg-gradient-to-br from-pink-50 to-white p-8 rounded-2xl shadow-lg text-center">
-                        <div class="w-20 h-20 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-map-marker-alt text-white text-3xl"></i>
+                    <div class="product-card bg-gradient-to-br from-pink-50 to-white p-6 sm:p-8 rounded-2xl shadow-lg text-center">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                            <i class="fas fa-map-marker-alt text-white text-2xl sm:text-3xl"></i>
                         </div>
-                        <h3 class="text-2xl font-bold mb-4 text-gray-800">로컬 공방 연결</h3>
-                        <p class="text-gray-600 leading-relaxed mb-6">지역 기반 향기 공방과<br/>직접 만나는 특별한 경험</p>
+                        <h3 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">로컬 공방 연결</h3>
+                        <p class="text-sm sm:text-base text-gray-600 leading-relaxed mb-4 sm:mb-6">지역 기반 향기 공방과<br/>직접 만나는 특별한 경험</p>
                         <button onclick="location.href='/local-studios'" 
-                            class="bg-pink-600 text-white px-6 py-3 rounded-full hover:bg-pink-700 transition font-semibold">
+                            class="bg-pink-600 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full hover:bg-pink-700 transition font-semibold text-sm sm:text-base whitespace-nowrap">
                             <i class="fas fa-search-location mr-2"></i>내 주변 공방 찾기
                         </button>
                     </div>
-                    <div class="product-card bg-gradient-to-br from-indigo-50 to-white p-8 rounded-2xl shadow-lg text-center">
-                        <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-star text-white text-3xl"></i>
+                    <div class="product-card bg-gradient-to-br from-indigo-50 to-white p-6 sm:p-8 rounded-2xl shadow-lg text-center">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                            <i class="fas fa-star text-white text-2xl sm:text-3xl"></i>
                         </div>
-                        <h3 class="text-2xl font-bold mb-4 text-gray-800">실제 후기 기반</h3>
-                        <p class="text-gray-600 leading-relaxed">사용자 경험 데이터를 바탕으로<br/>신뢰할 수 있는 제품 추천</p>
+                        <h3 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">실제 후기 기반</h3>
+                        <p class="text-sm sm:text-base text-gray-600 leading-relaxed">사용자 경험 데이터를 바탕으로<br/>신뢰할 수 있는 제품 추천</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Popular Products Section -->
-        <section class="py-20 bg-gradient-to-br from-purple-50 to-pink-50">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-4">인기 제품</h2>
-                    <p class="text-xl text-gray-600">가장 사랑받는 아로마 제품을 만나보세요</p>
+        <section class="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-purple-50 to-pink-50">
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="text-center mb-10 sm:mb-12 md:mb-16">
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4 px-4">인기 제품</h2>
+                    <p class="text-base sm:text-lg md:text-xl text-gray-600 px-4">가장 사랑받는 아로마 제품을 만나보세요</p>
                 </div>
-                <div id="popular-products" class="grid md:grid-cols-3 gap-8">
+                <div id="popular-products" class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                     <!-- 제품들이 동적으로 로드됩니다 -->
                 </div>
-                <div class="text-center mt-12">
-                    <button onclick="location.href='/shop'" class="bg-purple-600 text-white px-10 py-4 rounded-full text-lg font-bold hover:shadow-lg transition transform hover:scale-105">
+                <div class="text-center mt-8 sm:mt-10 md:mt-12">
+                    <button onclick="location.href='/shop'" class="bg-purple-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold hover:shadow-lg transition transform hover:scale-105 whitespace-nowrap">
                         <i class="fas fa-arrow-right mr-2"></i>
                         모든 제품 보기
                     </button>
@@ -458,13 +485,13 @@ app.get('/', (c) => {
         </section>
 
         <!-- Popular Classes Section -->
-        <section class="py-20 bg-white">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-4">인기 클래스</h2>
-                    <p class="text-xl text-gray-600">가장 사랑받는 힐링 체험을 만나보세요</p>
+        <section class="py-12 sm:py-16 md:py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="text-center mb-10 sm:mb-12 md:mb-16">
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4 px-4">인기 클래스</h2>
+                    <p class="text-base sm:text-lg md:text-xl text-gray-600 px-4">가장 사랑받는 힐링 체험을 만나보세요</p>
                 </div>
-                <div id="popular-classes" class="grid md:grid-cols-3 gap-8">
+                <div id="popular-classes" class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                     <!-- 클래스 카드 1 -->
                     <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition">
                         <div class="h-48 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
@@ -1025,7 +1052,7 @@ app.get('/', (c) => {
             }
             
             // 로그인 상태 확인 및 UI 업데이트
-            function updateAuthUI() {
+            async function updateAuthUI() {
                 const token = localStorage.getItem('token');
                 const authButtons = document.getElementById('auth-buttons');
                 const userMenu = document.getElementById('user-menu');
@@ -1047,12 +1074,40 @@ app.get('/', (c) => {
                         userMenu.classList.remove('hidden');
                         userMenu.classList.add('flex');
                         
-                        // 사용자 정보 표시
-                        const userName = payload.name || '사용자';
+                        // 항상 API에서 사용자 정보 가져오기 (JWT name 사용 안함)
+                        let userName = '사용자';
+                        let profileImage = null;
+                        try {
+                            const response = await fetch('/api/user/profile', {
+                                headers: {
+                                    'Authorization': \`Bearer \${token}\`
+                                }
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                userName = data.user?.name || '사용자';
+                                profileImage = data.user?.profile_image;
+                            }
+                        } catch (err) {
+                            console.error('Failed to fetch user profile:', err);
+                        }
+                        
                         const userInitial = userName.charAt(0).toUpperCase();
                         
                         document.getElementById('user-name').textContent = userName;
                         document.getElementById('user-initial').textContent = userInitial;
+                        
+                        // 프로필 이미지 표시
+                        const profileImageEl = document.getElementById('user-profile-image');
+                        const initialEl = document.getElementById('user-initial');
+                        if (profileImage) {
+                            profileImageEl.src = profileImage;
+                            profileImageEl.classList.remove('hidden');
+                            initialEl.classList.add('hidden');
+                        } else {
+                            profileImageEl.classList.add('hidden');
+                            initialEl.classList.remove('hidden');
+                        }
                         
                         // 장바구니 개수 표시
                         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -1070,8 +1125,66 @@ app.get('/', (c) => {
                 }
             }
             
+            // 동적 CSS 로드 함수 (홈페이지용)
+            async function loadDynamicProfileStyles() {
+                try {
+                    console.log('🎨 홈페이지 - 동적 CSS 로딩 시작...');
+                    const response = await fetch('/api/user/mypage-styles?v=' + Date.now());
+                    
+                    if (!response.ok) {
+                        throw new Error(\`API 응답 실패: \${response.status}\`);
+                    }
+                    
+                    const css = await response.text();
+                    console.log('📦 CSS 받음:', css.length, '바이트');
+                    
+                    // 홈페이지의 프로필 아바타에도 스타일 적용
+                    const homePageCSS = css + \`
+                        /* 홈페이지 프로필 아바타 */
+                        #profile-btn > div {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                        }
+                    \`;
+                    
+                    // 기존 동적 스타일 제거
+                    const oldStyle = document.getElementById('dynamic-profile-styles');
+                    if (oldStyle) {
+                        oldStyle.remove();
+                    }
+                    
+                    // 새 스타일 주입
+                    const styleTag = document.createElement('style');
+                    styleTag.id = 'dynamic-profile-styles';
+                    styleTag.textContent = homePageCSS;
+                    document.head.appendChild(styleTag);
+                    
+                    console.log('✅ 홈페이지 - 동적 CSS 로드 성공!');
+                    return true;
+                } catch (error) {
+                    console.error('❌ 홈페이지 - 동적 CSS 로드 실패:', error);
+                    return false;
+                }
+            }
+            
+            // 모바일 메뉴 열기
+            function openMobileMenu() {
+                document.getElementById('mobile-menu-overlay').classList.remove('hidden');
+                document.getElementById('mobile-menu').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // 모바일 메뉴 닫기
+            function closeMobileMenu() {
+                document.getElementById('mobile-menu-overlay').classList.add('hidden');
+                document.getElementById('mobile-menu').classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+            
             // 페이지 로드 시 실행
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', async function() {
+                // 동적 CSS 먼저 로드
+                await loadDynamicProfileStyles();
+                
                 // 로그인 상태 체크 및 UI 업데이트
                 updateAuthUI();
                 
@@ -1079,6 +1192,12 @@ app.get('/', (c) => {
                 const profileBtn = document.getElementById('profile-btn');
                 if (profileBtn) {
                     profileBtn.addEventListener('click', toggleProfileDropdown);
+                }
+                
+                // 모바일 메뉴 버튼 클릭 이벤트
+                const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+                if (mobileMenuBtn) {
+                    mobileMenuBtn.addEventListener('click', openMobileMenu);
                 }
                 
                 // 드롭다운 외부 클릭 시 닫기

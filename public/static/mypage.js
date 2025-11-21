@@ -1,3 +1,37 @@
+// API로부터 동적 CSS 로드 (캐싱 우회)
+async function loadDynamicStyles() {
+    try {
+        console.log('🎨 동적 CSS 로딩 시작...');
+        const response = await fetch('/api/user/mypage-styles?v=' + Date.now());
+        
+        if (!response.ok) {
+            throw new Error(`API 응답 실패: ${response.status}`);
+        }
+        
+        const css = await response.text();
+        console.log('📦 CSS 받음:', css.length, '바이트');
+        
+        // 기존 동적 스타일 제거
+        const oldStyle = document.getElementById('dynamic-profile-styles');
+        if (oldStyle) {
+            oldStyle.remove();
+        }
+        
+        // 새 스타일 주입
+        const styleTag = document.createElement('style');
+        styleTag.id = 'dynamic-profile-styles';
+        styleTag.textContent = css;
+        document.head.appendChild(styleTag);
+        
+        console.log('✅ 동적 CSS 로드 성공!');
+        return true;
+    } catch (error) {
+        console.error('❌ 동적 CSS 로드 실패:', error);
+        console.error('상세:', error.message);
+        return false;
+    }
+}
+
 // 로그인 체크
 function checkAuth() {
     const token = localStorage.getItem('token');
@@ -62,10 +96,16 @@ async function loadUserInfo() {
         document.getElementById('profile-initial').textContent = initial;
         
         // 프로필 이미지가 있으면 표시
+        const removeBtn = document.getElementById('remove-image-btn');
         if (user.profile_image) {
             document.getElementById('profile-image-preview').src = user.profile_image;
             document.getElementById('profile-image-preview').classList.remove('hidden');
             document.getElementById('profile-initial').style.display = 'none';
+            // 삭제 버튼 표시
+            if (removeBtn) removeBtn.classList.remove('hidden');
+        } else {
+            // 이미지가 없으면 삭제 버튼 숨김
+            if (removeBtn) removeBtn.classList.add('hidden');
         }
         
         // 프로필 폼 채우기
@@ -86,14 +126,56 @@ async function loadUserInfo() {
     }
 }
 
+// 이미지 압축 함수
+function compressImage(file, maxWidth = 400, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // Canvas 생성
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // 최대 너비 제한
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // 이미지 그리기
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Base64로 변환 (JPEG, 품질 0.8)
+                const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                
+                console.log('원본 크기:', file.size, '바이트');
+                console.log('압축 후 크기:', compressedBase64.length, '바이트');
+                console.log('압축률:', ((1 - compressedBase64.length / file.size) * 100).toFixed(2) + '%');
+                
+                resolve(compressedBase64);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 // 프로필 이미지 업로드
-function handleProfileImageUpload(event) {
+async function handleProfileImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     
-    // 파일 크기 체크 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        alert('파일 크기는 5MB 이하여야 합니다');
+    // 파일 크기 체크 (10MB까지 허용 - 압축할 예정)
+    if (file.size > 10 * 1024 * 1024) {
+        alert('파일 크기는 10MB 이하여야 합니다');
         return;
     }
     
@@ -103,18 +185,104 @@ function handleProfileImageUpload(event) {
         return;
     }
     
-    // 미리보기 표시
-    const reader = new FileReader();
-    reader.onload = function(e) {
+    try {
+        console.log('이미지 압축 중...');
+        
+        // 이미지 자동 압축 (400px, 품질 0.8)
+        const compressedBase64 = await compressImage(file, 400, 0.8);
+        
+        // 미리보기 표시
         const preview = document.getElementById('profile-image-preview');
-        preview.src = e.target.result;
+        preview.src = compressedBase64;
         preview.classList.remove('hidden');
         document.getElementById('profile-initial').style.display = 'none';
-    };
-    reader.readAsDataURL(file);
+        
+        // 서버에 업로드
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/user/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+                profile_image: compressedBase64 
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('프로필 이미지 업로드 실패');
+        }
+        
+        const data = await response.json();
+        
+        // 새 토큰이 있으면 저장
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+        }
+        
+        alert('✅ 프로필 사진이 성공적으로 업데이트되었습니다!');
+        
+        // 삭제 버튼 표시
+        document.getElementById('remove-image-btn').classList.remove('hidden');
+        
+        // 사용자 정보 다시 로드
+        await loadUserInfo();
+        
+    } catch (error) {
+        console.error('프로필 이미지 업로드 실패:', error);
+        alert('❌ 프로필 사진 업로드에 실패했습니다');
+    }
+}
+
+// 프로필 이미지 삭제
+async function removeProfileImage() {
+    if (!confirm('프로필 사진을 삭제하시겠습니까?')) {
+        return;
+    }
     
-    // TODO: 실제 서버 업로드 로직
-    console.log('Profile image uploaded:', file.name);
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/user/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+                profile_image: null  // null로 설정하여 삭제
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('프로필 이미지 삭제 실패');
+        }
+        
+        const data = await response.json();
+        
+        // 새 토큰이 있으면 저장
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+        }
+        
+        // UI 업데이트
+        const preview = document.getElementById('profile-image-preview');
+        preview.src = '';
+        preview.classList.add('hidden');
+        document.getElementById('profile-initial').style.display = 'flex';
+        
+        // 삭제 버튼 숨김
+        document.getElementById('remove-image-btn').classList.add('hidden');
+        
+        alert('✅ 프로필 사진이 삭제되었습니다');
+        
+        // 사용자 정보 다시 로드
+        await loadUserInfo();
+        
+    } catch (error) {
+        console.error('프로필 이미지 삭제 실패:', error);
+        alert('❌ 프로필 사진 삭제에 실패했습니다');
+    }
 }
 
 // 탭 전환
@@ -164,23 +332,49 @@ async function updateProfile(event) {
     try {
         console.log('프로필 업데이트 시작:', { name, phone, address });
         
+        // 현재 사용자 정보에서 profile_image 가져오기
+        const currentProfileResponse = await fetch('/api/user/profile', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const currentProfile = await currentProfileResponse.json();
+        const currentProfileImage = currentProfile.user?.profile_image;
+        
+        // profile_image가 있으면 포함해서 전송 (유지)
+        const updateData = { name, phone, address };
+        if (currentProfileImage) {
+            updateData.profile_image = currentProfileImage;
+        }
+        
         const response = await fetch('/api/user/profile', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ name, phone, address })
+            body: JSON.stringify(updateData)
         });
+        
+        console.log('API 응답 상태:', response.status);
         
         const data = await response.json();
         console.log('프로필 업데이트 응답:', data);
+        console.log('응답 상세 정보:', JSON.stringify(data, null, 2));
         
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to update profile');
+            const errorMsg = data.error || `서버 오류 (${response.status})`;
+            const details = data.details ? `\n상세: ${data.details}` : '';
+            throw new Error(errorMsg + details);
         }
         
-        alert('프로필이 업데이트되었습니다 ✅');
+        // 새 토큰을 localStorage에 저장 (메인 페이지에서도 업데이트된 정보가 보이도록)
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            console.log('✅ 새 JWT 토큰 저장됨');
+        }
+        
+        alert('✅ 프로필이 성공적으로 업데이트되었습니다!');
         
         // 업데이트된 정보 다시 로드
         await loadUserInfo();
@@ -193,8 +387,16 @@ async function updateProfile(event) {
         }
         
     } catch (error) {
-        console.error('Failed to update profile:', error);
-        alert('프로필 업데이트에 실패했습니다: ' + error.message);
+        console.error('❌ 프로필 업데이트 실패:', error);
+        console.error('에러 상세:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        
+        // 사용자에게 명확한 에러 메시지 표시
+        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다';
+        alert(`❌ 프로필 업데이트 실패\n\n${errorMessage}\n\n브라우저 콘솔(F12)에서 자세한 정보를 확인하세요.`);
     }
 }
 
@@ -562,7 +764,11 @@ function getBookingStatusText(status) {
 }
 
 // 페이지 로드 시 실행
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // 동적 CSS 먼저 로드 (캐싱 우회)
+    await loadDynamicStyles();
+    
+    // 사용자 정보 및 데이터 로드
     loadUserInfo();
     loadOrders();
 });

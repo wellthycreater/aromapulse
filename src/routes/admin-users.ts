@@ -152,6 +152,7 @@ app.get('/', async (c) => {
       user_type, b2c_category, b2c_subcategory,
       b2b_category, b2b_business_name, b2b_address,
       oauth_provider, role,
+      last_device_type, last_os, last_browser, last_ip,
       created_at, updated_at, last_login_at, is_active
     FROM users WHERE 1=1`;
     const params: any[] = [];

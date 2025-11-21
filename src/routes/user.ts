@@ -4,6 +4,38 @@ import { verifyToken } from '../utils/jwt';
 
 const user = new Hono<{ Bindings: Bindings }>();
 
+// 공개 API: CSS 스타일 반환 (인증 불필요)
+user.get('/mypage-styles', async (c) => {
+  const css = `
+    /* 프로필 아바타 - 보라색 그라데이션 */
+    .profile-avatar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
+    }
+    
+    /* 더 강력한 선택자로 모든 경우 커버 */
+    div.profile-avatar,
+    .profile-avatar.rounded-full,
+    div[class*="profile-avatar"] {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      background-color: transparent !important;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
+    }
+    
+    /* 인라인 스타일도 강제 덮어쓰기 */
+    [onclick*="profile-image-input"] {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+  `;
+  
+  return c.text(css, 200, {
+    'Content-Type': 'text/css',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+});
+
 // 비밀번호 해싱 함수 (Web Crypto API 사용)
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -18,17 +50,32 @@ async function hashPassword(password: string): Promise<string> {
 async function authMiddleware(c: any, next: any) {
   const authHeader = c.req.header('Authorization');
   
+  console.log('🔐 Auth middleware - Authorization header:', authHeader ? 'Present' : 'Missing');
+  
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.error('❌ Auth failed: No Bearer token');
     return c.json({ error: '인증이 필요합니다' }, 401);
   }
   
   const token = authHeader.substring(7);
+  console.log('🎫 Token received (first 20 chars):', token.substring(0, 20) + '...');
+  
+  // JWT_SECRET 확인
+  if (!c.env.JWT_SECRET) {
+    console.error('❌ CRITICAL: JWT_SECRET is not set!');
+    return c.json({ error: 'JWT_SECRET 환경변수가 설정되지 않았습니다' }, 500);
+  }
+  
+  console.log('🔑 JWT_SECRET present:', c.env.JWT_SECRET ? 'Yes' : 'No');
   
   try {
     // JWT 토큰 검증
     const tokenData = await verifyToken(token, c.env.JWT_SECRET);
     
+    console.log('✅ Token verified successfully:', { userId: tokenData.userId, email: tokenData.email });
+    
     if (!tokenData || !tokenData.userId) {
+      console.error('❌ Invalid token data:', tokenData);
       return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
     }
     
@@ -38,7 +85,8 @@ async function authMiddleware(c: any, next: any) {
     
     await next();
   } catch (error: any) {
-    console.error('Token verification failed:', error.message);
+    console.error('❌ Token verification failed:', error.message);
+    console.error('Error stack:', error.stack);
     return c.json({ error: '토큰 인증 실패: ' + error.message }, 401);
   }
 }
@@ -58,9 +106,8 @@ user.get('/profile', async (c) => {
         profile_image,
         b2c_category, b2c_subcategory,
         b2b_category, b2b_business_name, b2b_business_number, 
-        b2b_address, b2b_company_size, b2b_department, 
-        b2b_position, b2b_business_type, b2b_independent_type,
-        b2b_inquiry_type,
+        b2b_address, company_size as b2b_company_size, 
+        department as b2b_department, position as b2b_position,
         created_at, last_login_at,
         b2b_address as address
       FROM users 
@@ -83,7 +130,10 @@ user.get('/profile', async (c) => {
 user.put('/profile', async (c) => {
   try {
     const userId = c.get('userId');
+    console.log('📝 Profile update request for user:', userId);
+    
     const data = await c.req.json();
+    console.log('📦 Update data received:', JSON.stringify(data));
     
     // 업데이트할 필드 목록
     const updateFields: string[] = [];
@@ -148,42 +198,31 @@ user.put('/profile', async (c) => {
       updateValues.push(data.b2b_address || null);
     }
     if (data.b2b_company_size !== undefined) {
-      updateFields.push('b2b_company_size = ?');
+      updateFields.push('company_size = ?');
       updateValues.push(data.b2b_company_size || null);
     }
     if (data.b2b_department !== undefined) {
-      updateFields.push('b2b_department = ?');
+      updateFields.push('department = ?');
       updateValues.push(data.b2b_department || null);
     }
     if (data.b2b_position !== undefined) {
-      updateFields.push('b2b_position = ?');
+      updateFields.push('position = ?');
       updateValues.push(data.b2b_position || null);
-    }
-    if (data.b2b_business_type !== undefined) {
-      updateFields.push('b2b_business_type = ?');
-      updateValues.push(data.b2b_business_type || null);
-    }
-    if (data.b2b_independent_type !== undefined) {
-      updateFields.push('b2b_independent_type = ?');
-      updateValues.push(data.b2b_independent_type || null);
-    }
-    if (data.b2b_inquiry_type !== undefined) {
-      updateFields.push('b2b_inquiry_type = ?');
-      updateValues.push(data.b2b_inquiry_type || null);
     }
     
     if (updateFields.length === 0) {
       return c.json({ error: '업데이트할 정보가 없습니다' }, 400);
     }
     
-    // updated_at 추가
-    updateFields.push('updated_at = CURRENT_TIMESTAMP');
-    
     // SQL 쿼리 생성 및 실행
     const sql = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
     updateValues.push(userId);
     
-    await c.env.DB.prepare(sql).bind(...updateValues).run();
+    console.log('🗄️ Executing SQL:', sql);
+    console.log('📊 SQL values:', updateValues);
+    
+    const result = await c.env.DB.prepare(sql).bind(...updateValues).run();
+    console.log('✅ SQL executed successfully:', result);
     
     // 업데이트된 사용자 정보 조회
     const updatedUser = await c.env.DB.prepare(`
@@ -193,23 +232,33 @@ user.put('/profile', async (c) => {
         profile_image,
         b2c_category, b2c_subcategory,
         b2b_category, b2b_business_name, b2b_business_number, 
-        b2b_address, b2b_company_size, b2b_department, 
-        b2b_position, b2b_business_type, b2b_independent_type,
-        b2b_inquiry_type,
+        b2b_address, company_size as b2b_company_size, 
+        department as b2b_department, position as b2b_position,
         created_at, last_login_at,
         b2b_address as address
       FROM users 
       WHERE id = ?
     `).bind(userId).first();
     
+    // 업데이트된 사용자 정보로 새 JWT 토큰 생성
+    const { generateToken } = await import('../utils/jwt');
+    const newToken = await generateToken(updatedUser as any, c.env.JWT_SECRET);
+    
     return c.json({ 
       message: '프로필이 성공적으로 업데이트되었습니다',
-      user: updatedUser 
+      user: updatedUser,
+      token: newToken  // 새 토큰 포함
     });
     
   } catch (error: any) {
-    console.error('프로필 수정 실패:', error);
-    return c.json({ error: '프로필 수정 실패' }, 500);
+    console.error('❌ 프로필 수정 실패:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    return c.json({ 
+      error: '프로필 수정 실패',
+      details: error.message,
+      stack: error.stack 
+    }, 500);
   }
 });
 
@@ -244,7 +293,7 @@ user.put('/change-password', async (c) => {
     // 새 비밀번호 해싱 및 업데이트
     const newPasswordHash = await hashPassword(new_password);
     await c.env.DB.prepare(
-      'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      'UPDATE users SET password_hash = ? WHERE id = ?'
     ).bind(newPasswordHash, userId).run();
     
     return c.json({ message: '비밀번호가 성공적으로 변경되었습니다' });

@@ -88,54 +88,13 @@
                     <a href="/" class="text-gray-700 hover:text-green-600 font-medium transition flex items-center">
                         <i class="fas fa-home mr-2"></i>홈
                     </a>
-                    <a href="/shop" class="text-gray-700 hover:text-green-600 font-medium transition flex items-center">
-                        <i class="fas fa-shopping-bag mr-2"></i>쇼핑
-                    </a>
-                    <!-- 워크샵 메뉴 (모든 사용자에게 표시, 접근은 B2B만) -->
-                    <a href="/workshops" class="text-gray-700 hover:text-green-600 font-medium transition flex items-center">
-                        <i class="fas fa-briefcase mr-2"></i>워크샵
-                    </a>
                     <a href="/classes" class="text-green-600 font-bold flex items-center">
                         <i class="fas fa-calendar-alt mr-2"></i>원데이 클래스
                     </a>
                 </div>
                 
-                <div class="flex items-center space-x-4">
-                    <!-- 비로그인 상태 -->
-                    <div id="auth-buttons" class="flex items-center space-x-4">
-                        <a href="/login" class="text-green-600 hover:text-green-800 font-semibold transition">
-                            로그인
-                        </a>
-                        <a href="/signup" class="gradient-green-teal text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transition transform hover:scale-105">
-                            회원가입
-                        </a>
-                    </div>
-                    
-                    <!-- 로그인 상태 (처음엔 숨김) -->
-                    <div id="user-menu" class="hidden relative">
-                        <button id="profile-btn" class="flex items-center space-x-2 text-gray-700 hover:text-green-600 transition">
-                            <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">
-                                <span id="user-initial">U</span>
-                            </div>
-                            <span id="user-name" class="font-semibold hidden md:block">사용자</span>
-                            <i class="fas fa-chevron-down text-sm"></i>
-                        </button>
-                        
-                        <!-- 드롭다운 메뉴 -->
-                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
-                            <a href="/mypage" class="block px-4 py-2 text-gray-800 hover:bg-green-50 transition">
-                                <i class="fas fa-user mr-2"></i>마이페이지
-                            </a>
-                            <a href="/shop" class="block px-4 py-2 text-gray-800 hover:bg-green-50 transition">
-                                <i class="fas fa-shopping-cart mr-2"></i>장바구니
-                            </a>
-                            <hr class="my-2">
-                            <button onclick="logout()" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition">
-                                <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <!-- Empty space for alignment -->
+                <div class="w-4"></div>
             </div>
         </nav>
     </header>
@@ -333,6 +292,130 @@
         </div>
     </section>
 
+    <!-- B2B Workshop Section -->
+    <section class="bg-white py-20 border-t-2 border-gray-100">
+        <div class="container mx-auto px-6">
+            <div class="max-w-5xl mx-auto">
+                <!-- Section Header -->
+                <div class="text-center mb-12">
+                    <div class="inline-block mb-4">
+                        <span class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full text-sm font-bold">
+                            <i class="fas fa-briefcase mr-2"></i>기업 고객 전용
+                        </span>
+                    </div>
+                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                        대규모 팀을 위한 워크샵
+                    </h2>
+                    <p class="text-xl text-gray-600">
+                        10명 이상 기업 팀빌딩 프로그램을 찾으시나요?
+                    </p>
+                </div>
+
+                <!-- Workshop Card -->
+                <div class="bg-gradient-to-br from-purple-50 via-pink-50 to-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all transform hover:scale-[1.02]">
+                    <div class="grid md:grid-cols-2 gap-8 p-8 md:p-12">
+                        <!-- Left: Info -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center">
+                                    <i class="fas fa-users text-white text-3xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-900">기업 워크샵</h3>
+                                    <p class="text-purple-600 font-semibold">B2B 전용 서비스</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4 mb-8">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-check-circle text-purple-600 text-xl mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">대규모 단체 가능</p>
+                                        <p class="text-sm text-gray-600">10명 이상 ~ 100명 이상 단체 프로그램</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-check-circle text-purple-600 text-xl mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">맞춤형 팀빌딩</p>
+                                        <p class="text-sm text-gray-600">기업 문화에 맞는 커스터마이징 프로그램</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-check-circle text-purple-600 text-xl mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">전문 진행</p>
+                                        <p class="text-sm text-gray-600">경험 많은 강사진의 체계적인 운영</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-check-circle text-purple-600 text-xl mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">견적 상담 가능</p>
+                                        <p class="text-sm text-gray-600">규모와 예산에 맞는 맞춤 견적</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: CTA -->
+                        <div class="flex flex-col justify-center">
+                            <div class="bg-white rounded-2xl p-8 shadow-lg">
+                                <div class="text-center mb-6">
+                                    <div class="text-6xl mb-4">🏢</div>
+                                    <h4 class="text-2xl font-bold text-gray-900 mb-2">기업 워크샵</h4>
+                                    <p class="text-gray-600">대규모 팀빌딩 프로그램</p>
+                                </div>
+                                
+                                <div class="space-y-3 mb-6">
+                                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <span class="text-gray-600">최소 인원</span>
+                                        <span class="font-bold text-purple-600">10명 이상</span>
+                                    </div>
+                                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <span class="text-gray-600">진행 시간</span>
+                                        <span class="font-bold text-gray-900">2-4시간</span>
+                                    </div>
+                                    <div class="flex items-center justify-between py-2">
+                                        <span class="text-gray-600">가격</span>
+                                        <span class="font-bold text-purple-600">견적 문의</span>
+                                    </div>
+                                </div>
+
+                                <button 
+                                    onclick="location.href='/workshops'" 
+                                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all transform hover:scale-105"
+                                >
+                                    <i class="fas fa-arrow-right mr-2"></i>
+                                    워크샵 자세히 보기
+                                </button>
+                                
+                                <p class="text-center text-sm text-gray-500 mt-4">
+                                    <i class="fas fa-lock mr-1"></i>
+                                    기업 고객 전용 서비스입니다
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notice -->
+                <div class="mt-8 bg-purple-50 border border-purple-200 rounded-xl p-6">
+                    <div class="flex items-start gap-4">
+                        <i class="fas fa-info-circle text-purple-600 text-2xl mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-gray-900 mb-2">워크샵 vs 원데이 클래스 차이점</p>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li><span class="font-semibold text-purple-600">원데이 클래스:</span> 1명~소규모 그룹 (개인/친구/가족)</li>
+                                <li><span class="font-semibold text-purple-600">기업 워크샵:</span> 10명 이상 대규모 단체 (기업 팀빌딩)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="gradient-bg text-white py-20">
         <div class="container mx-auto px-6 text-center">
@@ -351,74 +434,6 @@
     <script src="/static/activity-tracker.js"></script>
     <script src="/static/classes.js"></script>
     
-    <!-- 로그인 상태 확인 및 UI 업데이트 -->
-    <script>
-        function updateAuthUI() {
-            const token = localStorage.getItem('token');
-            const authButtons = document.getElementById('auth-buttons');
-            const userMenu = document.getElementById('user-menu');
-            
-            if (token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    
-                    // 토큰 만료 체크
-                    if (payload.exp && payload.exp * 1000 < Date.now()) {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
-                        return;
-                    }
-                    
-                    // 로그인 상태 UI 표시
-                    authButtons.classList.add('hidden');
-                    userMenu.classList.remove('hidden');
-                    
-                    // 사용자 정보 표시
-                    const userName = payload.name || '사용자';
-                    const userInitial = userName.charAt(0).toUpperCase();
-                    
-                    document.getElementById('user-name').textContent = userName;
-                    document.getElementById('user-initial').textContent = userInitial;
-                    
-                } catch (e) {
-                    console.error('Token parse error:', e);
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                }
-            }
-        }
-        
-        function toggleProfileDropdown() {
-            const dropdown = document.getElementById('profile-dropdown');
-            dropdown.classList.toggle('hidden');
-        }
-        
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            alert('로그아웃되었습니다.');
-            location.reload();
-        }
-        
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            updateAuthUI();
-            
-            // 프로필 버튼 클릭 이벤트
-            const profileBtn = document.getElementById('profile-btn');
-            if (profileBtn) {
-                profileBtn.addEventListener('click', toggleProfileDropdown);
-            }
-            
-            // 드롭다운 외부 클릭 시 닫기
-            document.addEventListener('click', function(e) {
-                const profileBtn = document.getElementById('profile-btn');
-                const dropdown = document.getElementById('profile-dropdown');
-                if (profileBtn && dropdown && !profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.classList.add('hidden');
-                }
-            });
-        });
-    </script>
+
 </body>
 </html>

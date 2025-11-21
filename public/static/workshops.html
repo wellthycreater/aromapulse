@@ -88,9 +88,6 @@
                     <a href="/" class="text-gray-700 hover:text-purple-600 font-medium transition flex items-center">
                         <i class="fas fa-home mr-2"></i>홈
                     </a>
-                    <a href="/shop" class="text-gray-700 hover:text-purple-600 font-medium transition flex items-center">
-                        <i class="fas fa-shopping-bag mr-2"></i>쇼핑
-                    </a>
                     <a href="/workshops" class="text-purple-600 font-bold flex items-center">
                         <i class="fas fa-briefcase mr-2"></i>워크샵
                     </a>
@@ -99,42 +96,8 @@
                     </a>
                 </div>
                 
-                <div class="flex items-center space-x-4">
-                    <!-- 비로그인 상태 -->
-                    <div id="auth-buttons" class="flex items-center space-x-4">
-                        <a href="/login" class="text-purple-600 hover:text-purple-800 font-semibold transition">
-                            로그인
-                        </a>
-                        <a href="/signup" class="gradient-pink-purple text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transition transform hover:scale-105">
-                            회원가입
-                        </a>
-                    </div>
-                    
-                    <!-- 로그인 상태 (처음엔 숨김) -->
-                    <div id="user-menu" class="hidden relative">
-                        <button id="profile-btn" class="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition">
-                            <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-bold">
-                                <span id="user-initial">U</span>
-                            </div>
-                            <span id="user-name" class="font-semibold hidden md:block">사용자</span>
-                            <i class="fas fa-chevron-down text-sm"></i>
-                        </button>
-                        
-                        <!-- 드롭다운 메뉴 -->
-                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
-                            <a href="/mypage" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
-                                <i class="fas fa-user mr-2"></i>마이페이지
-                            </a>
-                            <a href="/shop" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
-                                <i class="fas fa-shopping-cart mr-2"></i>장바구니
-                            </a>
-                            <hr class="my-2">
-                            <button onclick="logout()" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition">
-                                <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <!-- Empty space for alignment -->
+                <div class="w-4"></div>
             </div>
         </nav>
     </header>
@@ -348,85 +311,45 @@
     <script src="/static/activity-tracker.js"></script>
     <script src="/static/workshops.js"></script>
     
-    <!-- 로그인 상태 확인 및 UI 업데이트 -->
+    <!-- B2B 접근 제어 -->
     <script>
-        function updateAuthUI() {
+        // 페이지 로드 시 B2B 접근 권한 확인
+        document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
-            const authButtons = document.getElementById('auth-buttons');
-            const userMenu = document.getElementById('user-menu');
             
-            if (token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    
-                    // 토큰 만료 체크
-                    if (payload.exp && payload.exp * 1000 < Date.now()) {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
-                        location.href = '/login';
-                        return;
-                    }
-                    
-                    // B2B 사용자가 아니면 원데이 클래스로 리다이렉트
-                    if (payload.userType !== 'B2B') {
-                        alert('워크샵 서비스는 기업 고객 전용입니다.\n원데이 클래스를 이용해주세요.');
-                        location.href = '/oneday-classes';
-                        return;
-                    }
-                    
-                    // 로그인 상태 UI 표시
-                    authButtons.classList.add('hidden');
-                    userMenu.classList.remove('hidden');
-                    
-                    // 사용자 정보 표시
-                    const userName = payload.name || '사용자';
-                    const userInitial = userName.charAt(0).toUpperCase();
-                    
-                    document.getElementById('user-name').textContent = userName;
-                    document.getElementById('user-initial').textContent = userInitial;
-                    
-                } catch (e) {
-                    console.error('Token parse error:', e);
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                }
-            } else {
+            if (!token) {
                 // 비로그인 시 로그인 페이지로 리다이렉트
                 alert('워크샵 서비스는 로그인이 필요합니다.');
                 location.href = '/login';
-            }
-        }
-        
-        function toggleProfileDropdown() {
-            const dropdown = document.getElementById('profile-dropdown');
-            dropdown.classList.toggle('hidden');
-        }
-        
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            alert('로그아웃되었습니다.');
-            location.reload();
-        }
-        
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            updateAuthUI();
-            
-            // 프로필 버튼 클릭 이벤트
-            const profileBtn = document.getElementById('profile-btn');
-            if (profileBtn) {
-                profileBtn.addEventListener('click', toggleProfileDropdown);
+                return;
             }
             
-            // 드롭다운 외부 클릭 시 닫기
-            document.addEventListener('click', function(e) {
-                const profileBtn = document.getElementById('profile-btn');
-                const dropdown = document.getElementById('profile-dropdown');
-                if (profileBtn && dropdown && !profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.classList.add('hidden');
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                
+                // 토큰 만료 체크
+                if (payload.exp && payload.exp * 1000 < Date.now()) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    alert('로그인이 만료되었습니다.');
+                    location.href = '/login';
+                    return;
                 }
-            });
+                
+                // B2B 사용자가 아니면 원데이 클래스로 리다이렉트
+                if (payload.userType !== 'B2B') {
+                    alert('워크샵 서비스는 기업 고객 전용입니다.\n원데이 클래스를 이용해주세요.');
+                    location.href = '/oneday-classes';
+                    return;
+                }
+                
+            } catch (e) {
+                console.error('Token parse error:', e);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                alert('로그인 정보가 올바르지 않습니다.');
+                location.href = '/login';
+            }
         });
     </script>
 </body>
