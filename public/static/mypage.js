@@ -126,12 +126,15 @@ function showTab(tabName) {
     
     // 선택된 탭 표시
     document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+    document.getElementById(`tab-${tabName}`).classList.add('fade-in');
     
     // 메뉴 활성화 상태 변경
-    document.querySelectorAll('.tab-menu-item').forEach(item => {
-        item.classList.remove('active', 'bg-purple-50', 'font-bold');
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        item.classList.add('text-gray-600');
     });
-    event.target.closest('.tab-menu-item').classList.add('active', 'bg-purple-50', 'font-bold');
+    event.target.closest('.nav-item').classList.add('active');
+    event.target.closest('.nav-item').classList.remove('text-gray-600');
     
     // 탭별 데이터 로드
     if (tabName === 'orders') {
@@ -221,23 +224,23 @@ async function loadOrders() {
         
         ordersEmpty.style.display = 'none';
         ordersList.innerHTML = orders.map(order => `
-            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition card-hover">
+            <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <p class="text-sm text-gray-500">주문번호: ${order.order_id}</p>
+                        <p class="text-xs text-gray-500 mb-1">주문번호: ${order.order_id}</p>
                         <p class="text-xs text-gray-400">${new Date(order.created_at).toLocaleDateString('ko-KR')}</p>
                     </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${getOrderStatusClass(order.status)}">
+                    <span class="px-3 py-1.5 rounded-full text-xs font-medium ${getOrderStatusClass(order.status)}">
                         ${getOrderStatusText(order.status)}
                     </span>
                 </div>
                 <div class="mb-4">
-                    <h4 class="font-bold text-gray-800 mb-2">${order.product_name || '제품명'}</h4>
-                    <p class="text-sm text-gray-600">수량: ${order.quantity}개</p>
+                    <h4 class="font-semibold text-gray-800 mb-2 text-sm">${order.product_name || '제품명'}</h4>
+                    <p class="text-xs text-gray-500">수량: ${order.quantity}개</p>
                 </div>
-                <div class="flex justify-between items-center pt-4 border-t">
-                    <span class="text-lg font-bold text-purple-600">${order.total_amount?.toLocaleString()}원</span>
-                    <button onclick="viewOrderDetail('${order.order_id}')" class="px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition">
+                <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <span class="text-lg font-bold text-gray-800">${order.total_amount?.toLocaleString()}<span class="text-sm font-normal text-gray-500">원</span></span>
+                    <button onclick="viewOrderDetail('${order.order_id}')" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition text-sm font-medium">
                         상세보기
                     </button>
                 </div>
@@ -281,30 +284,28 @@ async function loadBookings(type = 'all') {
         
         bookingsEmpty.style.display = 'none';
         bookingsList.innerHTML = bookings.map(booking => `
-            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition card-hover">
+            <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 ${booking.type === 'workshop' ? 'bg-purple-100 text-purple-600' : 'bg-pink-100 text-pink-600'}">
+                        <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium mb-2 ${booking.type === 'workshop' ? 'bg-purple-50 text-purple-600' : 'bg-green-50 text-green-600'}">
                             ${booking.type === 'workshop' ? '워크샵' : '원데이 클래스'}
                         </span>
                         <p class="text-xs text-gray-400">예약일: ${new Date(booking.created_at).toLocaleDateString('ko-KR')}</p>
                     </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${getBookingStatusClass(booking.status)}">
+                    <span class="px-3 py-1.5 rounded-full text-xs font-medium ${getBookingStatusClass(booking.status)}">
                         ${getBookingStatusText(booking.status)}
                     </span>
                 </div>
                 <div class="mb-4">
-                    <h4 class="font-bold text-gray-800 mb-2">${booking.title || '프로그램명'}</h4>
-                    <p class="text-sm text-gray-600">
-                        <i class="fas fa-calendar mr-2"></i>${booking.date || '날짜 미정'}
-                    </p>
-                    <p class="text-sm text-gray-600">
-                        <i class="fas fa-users mr-2"></i>${booking.participants || 1}명
-                    </p>
+                    <h4 class="font-semibold text-gray-800 mb-3 text-sm">${booking.title || '프로그램명'}</h4>
+                    <div class="flex gap-4 text-xs text-gray-600">
+                        <span><i class="fas fa-calendar mr-1.5"></i>${booking.date || '날짜 미정'}</span>
+                        <span><i class="fas fa-users mr-1.5"></i>${booking.participants || 1}명</span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center pt-4 border-t">
-                    <span class="text-lg font-bold text-purple-600">${booking.amount?.toLocaleString() || '0'}원</span>
-                    <button onclick="viewBookingDetail('${booking.booking_id}')" class="px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition">
+                <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <span class="text-lg font-bold text-gray-800">${booking.amount?.toLocaleString() || '0'}<span class="text-sm font-normal text-gray-500">원</span></span>
+                    <button onclick="viewBookingDetail('${booking.booking_id}')" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition text-sm font-medium">
                         상세보기
                     </button>
                 </div>
@@ -351,24 +352,24 @@ async function loadConsultations() {
     
     consultationsEmpty.style.display = 'none';
     consultationsList.innerHTML = sampleConsultations.map(consultation => `
-        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition card-hover">
+        <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 ${consultation.type === 'chatbot' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}">
+                    <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium mb-2 ${consultation.type === 'chatbot' ? 'bg-blue-50 text-blue-600' : 'bg-teal-50 text-teal-600'}">
                         ${consultation.type === 'chatbot' ? 'AI 챗봇' : '고객지원'}
                     </span>
                     <p class="text-xs text-gray-400">${new Date(consultation.date).toLocaleDateString('ko-KR')}</p>
                 </div>
-                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                <span class="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                     완료
                 </span>
             </div>
             <div class="mb-4">
-                <h4 class="font-bold text-gray-800 mb-2">${consultation.title}</h4>
-                <p class="text-sm text-gray-600">${consultation.summary}</p>
+                <h4 class="font-semibold text-gray-800 mb-2 text-sm">${consultation.title}</h4>
+                <p class="text-xs text-gray-600 leading-relaxed">${consultation.summary}</p>
             </div>
-            <div class="flex justify-end pt-4 border-t">
-                <button onclick="viewConsultationDetail('${consultation.id}')" class="px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition">
+            <div class="flex justify-end pt-4 border-t border-gray-100">
+                <button onclick="viewConsultationDetail('${consultation.id}')" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition text-sm font-medium">
                     상세보기
                 </button>
             </div>
@@ -380,11 +381,11 @@ async function loadConsultations() {
 function filterBookings(type) {
     // 필터 버튼 스타일 업데이트
     document.querySelectorAll('.booking-filter-btn').forEach(btn => {
-        btn.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+        btn.classList.remove('text-gray-900', 'border-b-2', 'border-gray-800', 'font-medium');
         btn.classList.add('text-gray-500');
     });
     event.target.classList.remove('text-gray-500');
-    event.target.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+    event.target.classList.add('text-gray-900', 'border-b-2', 'border-gray-800', 'font-medium');
     
     loadBookings(type);
 }
@@ -520,13 +521,13 @@ function viewConsultationDetail(consultationId) {
 // 상태별 클래스 및 텍스트
 function getOrderStatusClass(status) {
     const classes = {
-        'pending': 'bg-yellow-100 text-yellow-700',
-        'paid': 'bg-blue-100 text-blue-700',
-        'shipped': 'bg-purple-100 text-purple-700',
-        'delivered': 'bg-green-100 text-green-700',
-        'cancelled': 'bg-red-100 text-red-700'
+        'pending': 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+        'paid': 'bg-blue-50 text-blue-700 border border-blue-200',
+        'shipped': 'bg-purple-50 text-purple-700 border border-purple-200',
+        'delivered': 'bg-green-50 text-green-700 border border-green-200',
+        'cancelled': 'bg-red-50 text-red-700 border border-red-200'
     };
-    return classes[status] || 'bg-gray-100 text-gray-700';
+    return classes[status] || 'bg-gray-50 text-gray-700 border border-gray-200';
 }
 
 function getOrderStatusText(status) {
@@ -542,12 +543,12 @@ function getOrderStatusText(status) {
 
 function getBookingStatusClass(status) {
     const classes = {
-        'pending': 'bg-yellow-100 text-yellow-700',
-        'confirmed': 'bg-green-100 text-green-700',
-        'completed': 'bg-blue-100 text-blue-700',
-        'cancelled': 'bg-red-100 text-red-700'
+        'pending': 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+        'confirmed': 'bg-green-50 text-green-700 border border-green-200',
+        'completed': 'bg-blue-50 text-blue-700 border border-blue-200',
+        'cancelled': 'bg-red-50 text-red-700 border border-red-200'
     };
-    return classes[status] || 'bg-gray-100 text-gray-700';
+    return classes[status] || 'bg-gray-50 text-gray-700 border border-gray-200';
 }
 
 function getBookingStatusText(status) {
