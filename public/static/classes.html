@@ -380,6 +380,13 @@
                     document.getElementById('user-name').textContent = userName;
                     document.getElementById('user-initial').textContent = userInitial;
                     
+                    // B2B 사용자에게 워크샵 메뉴 표시
+                    const workshopMenu = document.getElementById('workshop-menu');
+                    if (workshopMenu && payload.userType === 'B2B') {
+                        workshopMenu.classList.remove('hidden');
+                        workshopMenu.classList.add('flex');
+                    }
+                    
                 } catch (e) {
                     console.error('Token parse error:', e);
                     localStorage.removeItem('token');
