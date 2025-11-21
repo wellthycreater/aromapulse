@@ -1,104 +1,239 @@
-# 🎉 네이버 OAuth 프로덕션 배포 완료!
+# 🎉 v1.7.5 프로덕션 배포 완료!
 
-## ✅ 배포 완료 내역
+## ✅ 배포 완료 정보
 
-### 1. Cloudflare Pages Secrets 등록
-```
-✅ NAVER_CLIENT_ID: Value Encrypted
-✅ NAVER_CLIENT_SECRET: Value Encrypted  
-✅ NAVER_CALLBACK_URL: Value Encrypted
-```
-
-### 2. 프로덕션 배포 정보
-- **배포 시간**: 2025-11-20 06:01 (UTC)
-- **배포 ID**: a4ea8db3-12ac-4fc3-a78b-6f2e9b3655e2
-- **Git Commit**: b6e6b15
-- **Branch**: main (Production)
-
-### 3. 접속 URL
-- **커스텀 도메인**: https://www.aromapulse.kr
-- **Cloudflare URL**: https://a4ea8db3.aromapulse.pages.dev
-- **로그인 페이지**: https://www.aromapulse.kr/static/login.html
-
-## 🧪 배포 검증
-
-### OAuth 엔드포인트 테스트
-```bash
-✅ GET https://www.aromapulse.kr/api/auth/naver
-   → 302 Redirect to Naver Login Page
-   → Client ID 정상 확인: 1Zgx1OqFN3YgnBS0UjzE
-   → Callback URL 정상: https://www.aromapulse.kr/api/auth/naver/callback
-```
-
-### 환경 변수 확인
-```
-✅ NAVER_CLIENT_ID - 로드됨
-✅ NAVER_CLIENT_SECRET - 로드됨
-✅ NAVER_CALLBACK_URL - 로드됨
-```
-
-## 🎯 사용자 테스트 가능
-
-이제 프로덕션 환경에서 **네이버 로그인**이 정상 작동합니다!
-
-### 테스트 방법
-1. https://www.aromapulse.kr/static/login.html 접속
-2. "네이버로 시작하기" 버튼 클릭
-3. 네이버 로그인 페이지에서 인증
-4. 자동으로 홈페이지로 리다이렉트
-5. 로그인 상태 확인
-
-## 📊 전체 OAuth 제공자 현황
-
-### 등록된 OAuth 제공자
-1. ✅ **네이버** - 완전히 설정됨 (2025-11-20)
-   - Client ID: 1Zgx1OqFN3YgnBS0UjzE
-   - Callback: https://www.aromapulse.kr/api/auth/naver/callback
-
-2. ⚠️ **카카오** - 인증 정보 등록됨 (테스트 필요)
-   - 시크릿 등록됨
-   - 콜백 URL 확인 필요
-
-3. ⚠️ **구글** - 인증 정보 등록됨 (테스트 필요)
-   - 시크릿 등록됨
-   - 콜백 URL 확인 필요
-
-## 🔐 보안 설정
-
-### 구현된 보안 기능
-- ✅ State 파라미터 (CSRF 방지)
-- ✅ HttpOnly 쿠키 (XSS 방어)
-- ✅ SameSite=Lax (CSRF 추가 방어)
-- ✅ 환경 변수 암호화 (Cloudflare Secrets)
-- ✅ HTTPS 전용 (모든 통신 암호화)
-
-### JWT 토큰 설정
-- 만료 시간: 7일
-- 알고리즘: HS256
-- 쿠키 저장: HttpOnly + Secure
-
-## 📝 다음 단계 (선택사항)
-
-### 1. 카카오 로그인 테스트
-이미 시크릿이 등록되어 있으므로 바로 테스트 가능합니다.
-
-### 2. 구글 로그인 테스트
-이미 시크릿이 등록되어 있으므로 바로 테스트 가능합니다.
-
-### 3. 사용자 피드백 수집
-실제 사용자들의 로그인 경험 확인
-
-### 4. 로그인 통계 모니터링
-어떤 OAuth 제공자가 가장 많이 사용되는지 추적
-
-## 🎊 축하합니다!
-
-네이버 OAuth 로그인이 프로덕션 환경에서 완벽하게 작동하고 있습니다!
-
-사용자들이 이제 네이버 계정으로 간편하게 로그인할 수 있습니다! 🚀
+**배포 일시**: 2025-11-21  
+**버전**: v1.7.5 - Device Tracking in Admin Users Panel  
+**배포 ID**: e7520537  
+**프로덕션 URL**: https://www.aromapulse.kr  
+**직접 접속 URL**: https://e7520537.aromapulse.pages.dev
 
 ---
 
-**배포 완료 시간**: 2025-11-20 06:01 UTC  
-**담당자**: AI Assistant  
+## 🚀 배포된 기능
+
+### 디바이스 트래킹 기능
+- ✅ 회원 관리 페이지에 디바이스 정보 표시
+- ✅ 디바이스 타입 배지 (모바일/태블릿/데스크톱)
+- ✅ OS 및 브라우저 정보 표시
+- ✅ 로그인 시 자동 데이터 수집
+
+### 데이터베이스 마이그레이션
+- ✅ 프로덕션 D1 데이터베이스 업데이트 완료
+- ✅ `last_device_type`, `last_os`, `last_browser`, `last_ip`, `last_user_agent` 컬럼 추가
+
+---
+
+## 🔍 프로덕션 테스트 방법
+
+### 1. 관리자 대시보드 접속
+
+**URL**: https://www.aromapulse.kr/static/admin-dashboard
+
+**관리자 로그인:**
+- 이메일: `admin@test.com`
+- 비밀번호: `test`
+
+### 2. 회원 관리 페이지 확인
+
+**URL**: https://www.aromapulse.kr/static/admin-users.html
+
+**확인 사항:**
+- ✅ 회원 목록 테이블에 "디바이스" 컬럼 표시
+- ✅ 회원 목록 테이블에 "OS/브라우저" 컬럼 표시
+- ✅ 기존 사용자는 데이터 없음 (NULL) - 정상
+
+### 3. 실시간 데이터 수집 테스트
+
+**시나리오 A: 새 계정 로그인**
+1. 테스트 계정으로 로그인: `b2c@test.com` / `test`
+2. 로그아웃
+3. 관리자로 재로그인
+4. 회원 관리 페이지에서 해당 계정 확인
+5. **기대 결과**: 디바이스 정보가 자동으로 표시됨
+
+**시나리오 B: 다양한 디바이스 테스트**
+1. PC Chrome에서 로그인 → 🖥️ PC 배지 + Windows + Chrome
+2. iPhone Safari에서 로그인 → 📱 모바일 배지 + iOS + Safari
+3. iPad에서 로그인 → 📱 태블릿 배지 + iPadOS + Safari
+
+---
+
+## 📊 데이터 검증 (Cloudflare Console)
+
+### Cloudflare Dashboard에서 확인
+
+**접속**: https://dash.cloudflare.com → D1 → aromapulse-production → Console
+
+**확인 쿼리:**
+```sql
+-- 최근 로그인한 사용자의 디바이스 정보
+SELECT 
+  id,
+  email,
+  name,
+  last_device_type,
+  last_os,
+  last_browser,
+  last_login_at
+FROM users 
+WHERE last_device_type IS NOT NULL
+ORDER BY last_login_at DESC
+LIMIT 10;
+```
+
+**기대 결과:**
+- 로그인한 사용자들의 디바이스 정보가 자동으로 채워짐
+- 아직 로그인하지 않은 사용자는 NULL (정상)
+
+---
+
+## 🎯 배포 상태 요약
+
+### 코드 배포
+- ✅ 빌드 성공 (97 files)
+- ✅ Cloudflare Pages 업로드 완료
+- ✅ Worker 컴파일 성공
+- ✅ Routes 설정 적용
+
+### 데이터베이스
+- ✅ 로컬 DB 마이그레이션 완료
+- ✅ 프로덕션 DB 마이그레이션 완료
+- ✅ 5개 컬럼 추가 검증 완료
+
+### Git 관리
+- ✅ 5개 커밋 완료
+- ✅ README 업데이트
+- ✅ 마이그레이션 가이드 작성
+- ✅ 배포 문서 작성
+
+---
+
+## 📋 접속 URL 모음
+
+### 프로덕션 사이트
+- **메인**: https://www.aromapulse.kr
+- **관리자 대시보드**: https://www.aromapulse.kr/static/admin-dashboard
+- **회원 관리**: https://www.aromapulse.kr/static/admin-users.html
+
+### Cloudflare Pages
+- **최신 배포**: https://e7520537.aromapulse.pages.dev
+- **대시보드**: https://e7520537.aromapulse.pages.dev/static/admin-dashboard
+- **회원 관리**: https://e7520537.aromapulse.pages.dev/static/admin-users.html
+
+### 개발 환경
+- **로컬 서버**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai
+
+---
+
+## 🎨 UI 변경사항
+
+### 관리자 회원 관리 페이지
+
+**새로 추가된 컬럼:**
+
+1. **디바이스 컬럼**
+   - 📱 모바일 (파란색 배지)
+   - 📱 태블릿 (보라색 배지)
+   - 🖥️ PC (회색 배지)
+   - "-" (정보 없음)
+
+2. **OS/브라우저 컬럼**
+   - 첫 번째 줄: OS (예: Windows 10, iOS 17)
+   - 두 번째 줄: 브라우저 (예: Chrome 120, Safari 17)
+   - "-" (정보 없음)
+
+**테이블 레이아웃:**
+```
+이메일 | 이름 | 유형 | 디바이스 | OS/브라우저 | 역할 | 등록일 | 마지막 로그인
+```
+
+---
+
+## 📈 데이터 수집 현황
+
+### 자동 수집 정보
+- 디바이스 타입 (mobile, tablet, desktop)
+- 운영체제 (iOS, Android, Windows, macOS, Linux 등)
+- 브라우저 및 버전 (Chrome, Safari, Firefox, Edge 등)
+- IP 주소
+- User Agent 전체 문자열
+- 로그인 시간 (자동 업데이트)
+
+### 수집 시점
+- ✅ 이메일/비밀번호 로그인
+- ✅ 네이버 OAuth 로그인
+- ✅ 카카오 OAuth 로그인
+- ✅ 구글 OAuth 로그인
+- ✅ 관리자 로그인
+
+---
+
+## 🔧 문제 해결
+
+### 디바이스 정보가 표시되지 않는 경우
+
+**증상**: 회원 관리 페이지에서 디바이스 컬럼이 모두 "-"로 표시
+
+**원인**: 해당 사용자가 v1.7.5 배포 이후 아직 로그인하지 않음
+
+**해결**: 
+1. 테스트 계정으로 로그인
+2. 관리자 페이지 새로고침
+3. 디바이스 정보 자동 표시 확인
+
+### 컬럼이 표시되지 않는 경우
+
+**증상**: "디바이스", "OS/브라우저" 컬럼 자체가 보이지 않음
+
+**원인**: 브라우저 캐시
+
+**해결**:
+1. Ctrl + Shift + R (강력 새로고침)
+2. 또는 브라우저 캐시 삭제
+3. 페이지 재접속
+
+---
+
+## 🎊 배포 완료 체크리스트
+
+- ✅ 코드 빌드 성공
+- ✅ Cloudflare Pages 배포 완료
+- ✅ 프로덕션 DB 마이그레이션 완료
+- ✅ UI 컬럼 추가 확인
+- ✅ 자동 데이터 수집 로직 활성화
+- ✅ Git 커밋 및 문서화 완료
+- ✅ README 업데이트 완료
+
+---
+
+## 🚀 다음 단계
+
+### 즉시 가능
+1. **프로덕션 사이트 접속하여 기능 확인**
+   - 관리자 페이지에서 새 컬럼 확인
+   - 테스트 로그인하여 데이터 수집 확인
+
+2. **실제 사용자 데이터 모니터링**
+   - 사용자 로그인 시 자동으로 데이터 수집 시작
+   - 관리자 대시보드에서 실시간 확인 가능
+
+### 향후 개선
+1. **통계 대시보드 추가**
+   - 디바이스별 사용자 분포 차트
+   - OS/브라우저별 통계
+   - 시간대별 접속 패턴
+
+2. **데이터 분석 활용**
+   - 모바일 최적화 우선순위
+   - 브라우저 호환성 개선
+   - 사용자 행동 패턴 분석
+
+---
+
+**배포 완료**: 2025-11-21  
+**배포 ID**: e7520537  
+**버전**: v1.7.5  
 **상태**: ✅ 성공
+
+**모든 기능이 프로덕션에 정상 반영되었습니다!** 🎉
