@@ -3,17 +3,19 @@
 ## ✅ 배포 완료 정보
 
 **배포 일시**: 2025-11-21  
-**버전**: v1.7.5 - Device Tracking in Admin Users Panel  
-**배포 ID**: e7520537  
+**버전**: v1.7.5 - Device Tracking in Admin Dashboard & Users Panel  
+**최초 배포 ID**: e7520537  
+**최신 배포 ID**: f68b02eb  
 **프로덕션 URL**: https://www.aromapulse.kr  
-**직접 접속 URL**: https://e7520537.aromapulse.pages.dev
+**직접 접속 URL**: https://f68b02eb.aromapulse.pages.dev
 
 ---
 
 ## 🚀 배포된 기능
 
 ### 디바이스 트래킹 기능
-- ✅ 회원 관리 페이지에 디바이스 정보 표시
+- ✅ **관리자 대시보드** 회원 관리 탭에 디바이스 정보 표시
+- ✅ **전용 회원 관리 페이지**에 디바이스 정보 표시
 - ✅ 디바이스 타입 배지 (모바일/태블릿/데스크톱)
 - ✅ OS 및 브라우저 정보 표시
 - ✅ 로그인 시 자동 데이터 수집
@@ -26,7 +28,7 @@
 
 ## 🔍 프로덕션 테스트 방법
 
-### 1. 관리자 대시보드 접속
+### 1. 관리자 대시보드 접속 (추천) ⭐
 
 **URL**: https://www.aromapulse.kr/static/admin-dashboard
 
@@ -34,7 +36,17 @@
 - 이메일: `admin@test.com`
 - 비밀번호: `test`
 
-### 2. 회원 관리 페이지 확인
+**확인 방법:**
+1. 대시보드 로그인
+2. 좌측 사이드바에서 "**회원 관리**" 탭 클릭
+3. 회원 목록 테이블 확인
+
+**테이블 구조:**
+```
+ID | 가입경로 | 이름 | 이메일 | 연락처 | 회원유형 | 디바이스 | OS/브라우저 | 역할 | 가입일 | 상태
+```
+
+### 2. 전용 회원 관리 페이지
 
 **URL**: https://www.aromapulse.kr/static/admin-users.html
 
@@ -113,13 +125,13 @@ LIMIT 10;
 
 ### 프로덕션 사이트
 - **메인**: https://www.aromapulse.kr
-- **관리자 대시보드**: https://www.aromapulse.kr/static/admin-dashboard
-- **회원 관리**: https://www.aromapulse.kr/static/admin-users.html
+- **관리자 대시보드** ⭐: https://www.aromapulse.kr/static/admin-dashboard
+- **회원 관리 (전용)**: https://www.aromapulse.kr/static/admin-users.html
 
-### Cloudflare Pages
-- **최신 배포**: https://e7520537.aromapulse.pages.dev
-- **대시보드**: https://e7520537.aromapulse.pages.dev/static/admin-dashboard
-- **회원 관리**: https://e7520537.aromapulse.pages.dev/static/admin-users.html
+### Cloudflare Pages 직접 URL
+- **최신 배포**: https://f68b02eb.aromapulse.pages.dev
+- **대시보드**: https://f68b02eb.aromapulse.pages.dev/static/admin-dashboard
+- **회원 관리**: https://f68b02eb.aromapulse.pages.dev/static/admin-users.html
 
 ### 개발 환경
 - **로컬 서버**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai
