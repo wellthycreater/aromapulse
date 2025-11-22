@@ -296,11 +296,6 @@ function filterByPriceRange(workshop, range) {
     }
 }
 
-// 워크샵 상세 보기
-function viewWorkshop(id) {
-    window.location.href = `/workshop/${id}`;
-}
-
 // 가격 포맷팅
 function formatPrice(price) {
     if (!price) return '가격 문의';
