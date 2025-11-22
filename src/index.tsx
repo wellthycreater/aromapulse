@@ -302,6 +302,9 @@ app.get('/', (c) => {
                         <a href="/" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-home mr-2"></i>홈
                         </a>
+                        <a href="/workshops" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                            <i class="fas fa-briefcase mr-2"></i>워크샵
+                        </a>
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
@@ -327,9 +330,14 @@ app.get('/', (c) => {
                             </div>
                         </div>
                         
-                        <!-- 통합 로그인 시스템 사용 -->
+                        <!-- 비로그인 상태 -->
                         <div id="auth-buttons" class="flex items-center space-x-2 sm:space-x-4">
-                            <!-- 로그인/회원가입 버튼 제거 (통합 로그인 시스템 사용) -->
+                            <button onclick="location.href='/login'" class="text-purple-600 hover:text-purple-800 font-semibold transition text-sm sm:text-base">
+                                로그인
+                            </button>
+                            <button onclick="location.href='/signup'" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-full hover:shadow-lg transition transform hover:scale-105 text-sm sm:text-base whitespace-nowrap">
+                                회원가입
+                            </button>
                         </div>
                         
                         <!-- 로그인 상태 (처음엔 숨김) -->
@@ -350,6 +358,9 @@ app.get('/', (c) => {
                                 
                                 <!-- 드롭다운 메뉴 -->
                                 <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
+                                    <a href="/mypage" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
+                                        <i class="fas fa-user mr-2"></i>마이페이지
+                                    </a>
                                     <a href="/shop" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
                                         <i class="fas fa-shopping-cart mr-2"></i>장바구니
                                     </a>
