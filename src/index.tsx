@@ -39,7 +39,8 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use('/api/*', cors());
 
 // Static files
-app.use('/static/*', serveStatic({ root: './public' }));
+// Serve static files from /static/* (Cloudflare Pages serves from dist root)
+app.use('/static/*', serveStatic({ root: './' }));
 
 // API Routes
 app.route('/api/auth', authRoutes);
