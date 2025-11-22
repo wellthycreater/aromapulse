@@ -1,0 +1,41 @@
+=== Cloudflare Console에서 실행: 프로덕션 DB 상태 확인 ===
+
+📌 Cloudflare Dashboard Console에서 하나씩 실행하세요
+
+--- 쿼리 1: 모든 테이블 목록 확인 ---
+SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
+
+--- 쿼리 2: workshop_quotes 테이블 존재 여부 확인 ---
+SELECT name FROM sqlite_master WHERE type='table' AND name='workshop_quotes';
+
+--- 쿼리 3: workshops 테이블 구조 확인 ---
+PRAGMA table_info(workshops);
+
+--- 쿼리 4: users 테이블 구조 확인 ---
+PRAGMA table_info(users);
+
+=== 결과 분석 ===
+
+📊 쿼리 1 결과에서 확인할 테이블:
+- users ✓
+- workshops ✓
+- workshop_quotes ← 이 테이블이 있어야 함!
+- instructors
+- workshop_bookings
+- workation_packages
+
+❌ workshop_quotes가 없다면:
+→ 마이그레이션 0003_instructors_and_quotes.sql이 적용되지 않음
+→ 이 마이그레이션을 먼저 적용해야 함
+
+✅ workshop_quotes가 있다면:
+→ 마이그레이션 0037 적용 가능
+→ ALTER TABLE 쿼리 실행
+
+=== 다음 단계 ===
+
+Case 1: workshop_quotes 테이블이 없는 경우
+→ MIGRATION_0003_CREATE_TABLES.txt 파일 참고
+
+Case 2: workshop_quotes 테이블이 있는 경우
+→ DB_MIGRATION_0037_STEP_BY_STEP.txt 파일 참고

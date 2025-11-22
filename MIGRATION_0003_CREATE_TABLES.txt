@@ -1,0 +1,49 @@
+=== Migration 0003: workshop_quotes 테이블 생성 ===
+
+📌 주의: 각 쿼리를 하나씩 실행하세요!
+
+--- 쿼리 1: instructors 테이블 생성 ---
+CREATE TABLE IF NOT EXISTS instructors (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, type TEXT NOT NULL CHECK(type IN ('perfumer', 'psychologist', 'mental_care', 'other')), title TEXT, specialization TEXT, bio TEXT, experience_years INTEGER, email TEXT, phone TEXT, hourly_rate INTEGER, daily_rate INTEGER, profile_image_url TEXT, certifications TEXT, is_available INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+
+--- 쿼리 2: workshop_quotes 테이블 생성 ---
+CREATE TABLE IF NOT EXISTS workshop_quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, workshop_id INTEGER NOT NULL, user_id INTEGER NOT NULL, company_name TEXT NOT NULL, company_contact_name TEXT NOT NULL, company_contact_phone TEXT NOT NULL, company_contact_email TEXT NOT NULL, company_department TEXT, participant_count INTEGER NOT NULL, preferred_date DATETIME, preferred_location TEXT, duration_hours INTEGER, requested_instructors TEXT, special_requests TEXT, budget_range TEXT, is_workation INTEGER DEFAULT 0, workation_destination TEXT, workation_duration_days INTEGER, status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'reviewed', 'quoted', 'accepted', 'rejected', 'completed')), quoted_price INTEGER, quote_details TEXT, admin_notes TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (workshop_id) REFERENCES workshops(id), FOREIGN KEY (user_id) REFERENCES users(id));
+
+--- 쿼리 3: workshop_instructors 테이블 생성 ---
+CREATE TABLE IF NOT EXISTS workshop_instructors (id INTEGER PRIMARY KEY AUTOINCREMENT, workshop_id INTEGER NOT NULL, instructor_id INTEGER NOT NULL, quote_id INTEGER, role TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (workshop_id) REFERENCES workshops(id), FOREIGN KEY (instructor_id) REFERENCES instructors(id), FOREIGN KEY (quote_id) REFERENCES workshop_quotes(id), UNIQUE(workshop_id, instructor_id));
+
+--- 쿼리 4: workation_packages 테이블 생성 ---
+CREATE TABLE IF NOT EXISTS workation_packages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT, destination TEXT NOT NULL, theme TEXT, duration_days INTEGER NOT NULL, min_participants INTEGER, max_participants INTEGER, price_per_person INTEGER, included_items TEXT, image_url TEXT, thumbnail_urls TEXT, is_active INTEGER DEFAULT 1, available_seasons TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+
+--- 쿼리 5: instructors 인덱스 ---
+CREATE INDEX IF NOT EXISTS idx_instructors_type ON instructors(type);
+
+--- 쿼리 6: instructors 인덱스 ---
+CREATE INDEX IF NOT EXISTS idx_instructors_available ON instructors(is_available);
+
+--- 쿼리 7: workshop_quotes 인덱스 ---
+CREATE INDEX IF NOT EXISTS idx_workshop_quotes_workshop ON workshop_quotes(workshop_id);
+
+--- 쿼리 8: workshop_quotes 인덱스 ---
+CREATE INDEX IF NOT EXISTS idx_workshop_quotes_user ON workshop_quotes(user_id);
+
+--- 쿼리 9: workshop_quotes 인덱스 ---
+CREATE INDEX IF NOT EXISTS idx_workshop_quotes_status ON workshop_quotes(status);
+
+--- 쿼리 10: workshop_instructors 인덱스 ---
+CREATE INDEX IF NOT EXISTS idx_workshop_instructors_workshop ON workshop_instructors(workshop_id);
+
+--- 쿼리 11: workshop_instructors 인덱스 ---
+CREATE INDEX IF NOT EXISTS idx_workshop_instructors_instructor ON workshop_instructors(instructor_id);
+
+--- 쿼리 12: workation_packages 인덱스 ---
+CREATE INDEX IF NOT EXISTS idx_workation_packages_active ON workation_packages(is_active);
+
+--- 검증: 테이블 생성 확인 ---
+SELECT name FROM sqlite_master WHERE type='table' AND name IN ('instructors', 'workshop_quotes', 'workshop_instructors', 'workation_packages') ORDER BY name;
+
+=== 실행 순서 ===
+1. 쿼리 1~4: 테이블 생성 (하나씩 실행)
+2. 쿼리 5~12: 인덱스 생성 (하나씩 실행)
+3. 검증 쿼리: 4개 테이블이 모두 나타나는지 확인
+
+✅ 성공하면 DB_MIGRATION_0037_STEP_BY_STEP.txt로 이동하세요!
