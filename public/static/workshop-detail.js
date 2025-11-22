@@ -1,17 +1,21 @@
-// Workshop Detail Page JavaScript
+// Workshop/Class Detail Page JavaScript (shared)
 
 let workshopId = null;
 let workshopData = null;
+let isClassPage = false; // Detect if this is a class detail page
 
 // Initialize page
 window.addEventListener('DOMContentLoaded', async () => {
-    // Get workshop ID from URL
+    // Detect page type from URL
+    isClassPage = window.location.pathname.includes('class-detail');
+    
+    // Get workshop/class ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     workshopId = urlParams.get('id');
     
     if (!workshopId) {
-        alert('워크샵 ID가 없습니다.');
-        window.location.href = '/workshops';
+        alert(isClassPage ? '클래스 ID가 없습니다.' : '워크샵 ID가 없습니다.');
+        window.location.href = isClassPage ? '/classes' : '/workshops';
         return;
     }
     
@@ -53,13 +57,15 @@ function handleAuth() {
     }
 }
 
-// Load workshop data
+// Load workshop or class data
 async function loadWorkshop() {
     try {
-        const response = await fetch(`/api/workshops/${workshopId}`);
+        // Call the appropriate API endpoint based on page type
+        const apiEndpoint = isClassPage ? `/api/classes/${workshopId}` : `/api/workshops/${workshopId}`;
+        const response = await fetch(apiEndpoint);
         
         if (!response.ok) {
-            throw new Error('워크샵을 찾을 수 없습니다');
+            throw new Error(isClassPage ? '클래스를 찾을 수 없습니다' : '워크샵을 찾을 수 없습니다');
         }
         
         workshopData = await response.json();
@@ -69,9 +75,9 @@ async function loadWorkshop() {
         document.getElementById('main-content').style.display = 'block';
         
     } catch (error) {
-        console.error('워크샵 로드 오류:', error);
-        alert('워크샵 정보를 불러오는데 실패했습니다.');
-        window.location.href = '/workshops';
+        console.error(isClassPage ? '클래스 로드 오류:' : '워크샵 로드 오류:', error);
+        alert(isClassPage ? '클래스 정보를 불러오는데 실패했습니다.' : '워크샵 정보를 불러오는데 실패했습니다.');
+        window.location.href = isClassPage ? '/classes' : '/workshops';
     }
 }
 
@@ -342,5 +348,6 @@ async function submitQuoteRequest() {
 // Close success modal
 function closeSuccessModal() {
     document.getElementById('success-modal').style.display = 'none';
-    window.location.href = '/workshops';
+    // Redirect to appropriate list page
+    window.location.href = isClassPage ? '/classes' : '/workshops';
 }
