@@ -262,7 +262,8 @@ async function submitQuoteRequest() {
         const specialRequests = document.getElementById('special-requests').value;
         
         // Get instructor requests
-        const instructorType = document.getElementById('instructor-type').value;
+        const instructorTypeEl = document.getElementById('instructor-type');
+        const instructorType = instructorTypeEl ? instructorTypeEl.value : 'perfumer';
         const requestedInstructors = [];
         
         // Perfumer is always included
@@ -273,8 +274,8 @@ async function submitQuoteRequest() {
             specialization: '조향사'
         });
         
-        // Add psychologist if selected
-        if (instructorType === 'both' || instructorType === 'perfumer_psychologist') {
+        // Add psychologist if selected (only for workshops)
+        if (instructorTypeEl && (instructorType === 'both' || instructorType === 'perfumer_psychologist')) {
             const psychologistCount = parseInt(document.getElementById('psychologist-count').value) || 0;
             if (psychologistCount > 0) {
                 const specializationType = instructorType === 'both' ? '심리상담사' : '멘탈케어 전문가';
@@ -286,8 +287,11 @@ async function submitQuoteRequest() {
             }
         }
         
-        // Get workation option
-        const isWorkation = document.getElementById('workation').checked;
+        // Get workation option (only for workshops) or gift wrapping (for classes)
+        const workationEl = document.getElementById('workation');
+        const giftWrappingEl = document.getElementById('gift-wrapping');
+        const isWorkation = workationEl ? workationEl.checked : false;
+        const isGiftWrapping = giftWrappingEl ? giftWrappingEl.checked : false;
         
         // Prepare quote data
         const quoteData = {
@@ -303,7 +307,8 @@ async function submitQuoteRequest() {
             preferred_date: preferredDate || null,
             requested_instructors: JSON.stringify(requestedInstructors),
             special_requests: specialRequests || null,
-            is_workation: isWorkation ? 1 : 0
+            is_workation: isWorkation ? 1 : 0,
+            is_gift_wrapping: isGiftWrapping ? 1 : 0
         };
         
         // Send request
