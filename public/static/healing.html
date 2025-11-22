@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>힐링 체험 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .tab-button.active {
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+        }
+        
+        .workshop-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .workshop-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center space-x-3">
+                    <img src="/static/logo-light.png" alt="아로마펄스" class="h-12 hover:scale-105 transition">
+                </a>
+                
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="text-gray-700 hover:text-purple-600 font-medium transition flex items-center">
+                        <i class="fas fa-home mr-2"></i>홈
+                    </a>
+                    <a href="/shop" class="text-gray-700 hover:text-purple-600 font-medium transition flex items-center">
+                        <i class="fas fa-shopping-bag mr-2"></i>쇼핑
+                    </a>
+                    <a href="/healing" class="text-purple-600 font-bold flex items-center">
+                        <i class="fas fa-star mr-2"></i>힐링 체험
+                    </a>
+                </div>
+                
+                <div class="w-4"></div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white py-16">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                <i class="fas fa-star mr-3"></i>힐링 체험
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100">
+                나만의 향기로 일상의 스트레스를 해소하세요
+            </p>
+        </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <div class="container mx-auto px-6 py-8">
+        <div class="flex justify-center gap-4 mb-8">
+            <button onclick="switchTab('workshops')" id="workshops-tab" class="tab-button px-8 py-4 rounded-full font-bold text-lg transition active">
+                <i class="fas fa-briefcase mr-2"></i>워크샵 (기업 전용)
+            </button>
+            <button onclick="switchTab('classes')" id="classes-tab" class="tab-button px-8 py-4 rounded-full font-bold text-lg transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+                <i class="fas fa-calendar-alt mr-2"></i>원데이 클래스
+            </button>
+        </div>
+
+        <!-- Workshops Content -->
+        <div id="workshops-content" class="content-section">
+            <div class="bg-purple-50 rounded-2xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-purple-900 mb-4">
+                    <i class="fas fa-building mr-2"></i>기업 워크샵
+                </h2>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-lg p-4">
+                        <i class="fas fa-check-circle text-purple-600 mr-2"></i>
+                        <span class="font-semibold">HR팀, 조직문화팀, 복리후생 담당자</span>
+                    </div>
+                    <div class="bg-white rounded-lg p-4">
+                        <i class="fas fa-check-circle text-purple-600 mr-2"></i>
+                        <span class="font-semibold">20인 이상 규모의 기업</span>
+                    </div>
+                    <div class="bg-white rounded-lg p-4">
+                        <i class="fas fa-check-circle text-purple-600 mr-2"></i>
+                        <span class="font-semibold">전문 강사 초빙 및 워케이션</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="workshops-loading" class="text-center py-12">
+                <i class="fas fa-spinner fa-spin text-5xl text-purple-600 mb-4"></i>
+                <p class="text-xl text-gray-600">워크샵 목록을 불러오는 중...</p>
+            </div>
+
+            <!-- Workshops Grid -->
+            <div id="workshops-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" style="display: none;"></div>
+
+            <!-- Empty State -->
+            <div id="workshops-empty" class="text-center py-12 bg-white rounded-2xl shadow-lg" style="display: none;">
+                <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                <p class="text-xl text-gray-600">등록된 워크샵이 없습니다.</p>
+            </div>
+        </div>
+
+        <!-- Classes Content -->
+        <div id="classes-content" class="content-section" style="display: none;">
+            <div class="bg-green-50 rounded-2xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-green-900 mb-4">
+                    <i class="fas fa-heart mr-2"></i>원데이 클래스
+                </h2>
+                <p class="text-green-800">
+                    누구나 참여 가능한 소규모 힐링 클래스입니다. 나만의 향을 만들며 특별한 시간을 보내세요.
+                </p>
+            </div>
+
+            <!-- Loading -->
+            <div id="classes-loading" class="text-center py-12">
+                <i class="fas fa-spinner fa-spin text-5xl text-green-600 mb-4"></i>
+                <p class="text-xl text-gray-600">클래스 목록을 불러오는 중...</p>
+            </div>
+
+            <!-- Classes Grid -->
+            <div id="classes-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" style="display: none;"></div>
+
+            <!-- Empty State -->
+            <div id="classes-empty" class="text-center py-12 bg-white rounded-2xl shadow-lg" style="display: none;">
+                <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                <p class="text-xl text-gray-600">등록된 클래스가 없습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'workshops';
+        let workshopsData = [];
+        let classesData = [];
+
+        // Tab switching
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.getElementById('workshops-tab').classList.remove('active', 'bg-gray-200', 'text-gray-700');
+            document.getElementById('classes-tab').classList.remove('active', 'bg-gray-200', 'text-gray-700');
+            
+            if (tab === 'workshops') {
+                document.getElementById('workshops-tab').classList.add('active');
+                document.getElementById('classes-tab').classList.add('bg-gray-200', 'text-gray-700');
+                document.getElementById('workshops-content').style.display = 'block';
+                document.getElementById('classes-content').style.display = 'none';
+            } else {
+                document.getElementById('classes-tab').classList.add('active');
+                document.getElementById('workshops-tab').classList.add('bg-gray-200', 'text-gray-700');
+                document.getElementById('workshops-content').style.display = 'none';
+                document.getElementById('classes-content').style.display = 'block';
+            }
+        }
+
+        // Load workshops
+        async function loadWorkshops() {
+            try {
+                const response = await fetch('/api/workshops?type=workshop&limit=50');
+                if (response.ok) {
+                    workshopsData = await response.json();
+                    renderWorkshops();
+                } else {
+                    showWorkshopsEmpty();
+                }
+            } catch (error) {
+                console.error('워크샵 로드 오류:', error);
+                showWorkshopsEmpty();
+            }
+        }
+
+        // Load classes
+        async function loadClasses() {
+            try {
+                const response = await fetch('/api/oneday-classes?limit=50');
+                if (response.ok) {
+                    classesData = await response.json();
+                    renderClasses();
+                } else {
+                    showClassesEmpty();
+                }
+            } catch (error) {
+                console.error('클래스 로드 오류:', error);
+                showClassesEmpty();
+            }
+        }
+
+        // Render workshops
+        function renderWorkshops() {
+            const grid = document.getElementById('workshops-grid');
+            const loading = document.getElementById('workshops-loading');
+            const empty = document.getElementById('workshops-empty');
+
+            loading.style.display = 'none';
+
+            if (workshopsData.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            grid.innerHTML = workshopsData.map(workshop => `
+                <div class="workshop-card bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer" onclick="location.href='/static/workshop-detail?id=${workshop.id}'">
+                    <div class="aspect-video bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 flex items-center justify-center">
+                        ${workshop.image_url ? `<img src="${workshop.image_url}" alt="${workshop.title}" class="w-full h-full object-cover">` : `<i class="fas fa-spa text-6xl text-white opacity-50"></i>`}
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                ${workshop.category || '워크샵'}
+                            </span>
+                            <span class="text-purple-600 font-bold">${workshop.price.toLocaleString()}원</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">${workshop.title}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">${workshop.description}</p>
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span><i class="fas fa-clock mr-1"></i>${workshop.duration}분</span>
+                            <span><i class="fas fa-users mr-1"></i>최대 ${workshop.max_participants}명</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render classes
+        function renderClasses() {
+            const grid = document.getElementById('classes-grid');
+            const loading = document.getElementById('classes-loading');
+            const empty = document.getElementById('classes-empty');
+
+            loading.style.display = 'none';
+
+            if (classesData.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            grid.innerHTML = classesData.map(classItem => `
+                <div class="workshop-card bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer" onclick="location.href='/static/class-detail?id=${classItem.id}'">
+                    <div class="aspect-video bg-gradient-to-br from-green-400 via-teal-400 to-blue-400 flex items-center justify-center">
+                        ${classItem.image_url ? `<img src="${classItem.image_url}" alt="${classItem.title}" class="w-full h-full object-cover">` : `<i class="fas fa-leaf text-6xl text-white opacity-50"></i>`}
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                ${classItem.category || '원데이 클래스'}
+                            </span>
+                            <span class="text-green-600 font-bold">${classItem.price.toLocaleString()}원</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">${classItem.title}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">${classItem.description}</p>
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span><i class="fas fa-clock mr-1"></i>${classItem.duration}분</span>
+                            <span><i class="fas fa-users mr-1"></i>최대 ${classItem.max_participants}명</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showWorkshopsEmpty() {
+            document.getElementById('workshops-loading').style.display = 'none';
+            document.getElementById('workshops-empty').style.display = 'block';
+        }
+
+        function showClassesEmpty() {
+            document.getElementById('classes-loading').style.display = 'none';
+            document.getElementById('classes-empty').style.display = 'block';
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadWorkshops();
+            loadClasses();
+        });
+    </script>
+</body>
+</html>

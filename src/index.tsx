@@ -150,6 +150,9 @@ app.get('/profile-edit', (c) => c.redirect('/static/mypage.html'));
 // MyPage - new user profile page
 app.get('/mypage', (c) => c.redirect('/static/mypage.html'));
 
+// Healing page - unified workshops and classes page
+app.get('/healing', (c) => c.redirect('/static/healing.html'));
+
 // Workshops page - redirect to static file (B2B 전용 - 기업 팀빌딩)
 app.get('/workshops', (c) => c.redirect('/static/workshops.html'));
 
@@ -305,21 +308,9 @@ app.get('/', (c) => {
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
-                        <div class="relative group">
-                            <button class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
-                                <i class="fas fa-star mr-2"></i>힐링 체험
-                                <i class="fas fa-chevron-down ml-2 text-xs"></i>
-                            </button>
-                            <!-- 드롭다운 메뉴 -->
-                            <div class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50 hidden group-hover:block">
-                                <a href="/workshops" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
-                                    <i class="fas fa-briefcase mr-2"></i>워크샵
-                                </a>
-                                <a href="/oneday-classes" class="block px-4 py-2 text-gray-800 hover:bg-purple-50 transition">
-                                    <i class="fas fa-calendar-alt mr-2"></i>원데이 클래스
-                                </a>
-                            </div>
-                        </div>
+                        <a href="/healing" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
+                            <i class="fas fa-star mr-2"></i>힐링 체험
+                        </a>
                     </div>
                     
                     <!-- Right: Visitor Stats & Auth -->
