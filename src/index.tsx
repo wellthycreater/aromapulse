@@ -68,6 +68,8 @@ app.route('/api/user', userRoutes);
 app.route('/api/users', usersRoutes);
 app.route('/api/visitors', visitorsRoutes);
 app.route('/api/oneday-classes', onedayClassesRoutes);
+// Alias for oneday classes (shorter URL)
+app.route('/api/classes', onedayClassesRoutes);
 app.route('/api/workshop-quotes', workshopQuotesRoutes);
 app.route('/api/login-logs', loginLogsRoutes);
 app.route('/api/user-analytics', userAnalyticsRoutes);
