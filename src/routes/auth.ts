@@ -64,10 +64,10 @@ auth.post('/signup', async (c) => {
     const deviceInfo = parseUserAgent(userAgent);
     
     // 부모 동의 정보 추출 (미성년자인 경우)
-    const parent_name = body.parent_name || null;
-    const parent_phone = body.parent_phone || null;
-    const parent_email = body.parent_email || null;
-    const is_minor = body.selectedUserType === 'B2C_student_middle_high' || false;
+    const parent_name = data.parent_name || null;
+    const parent_phone = data.parent_phone || null;
+    const parent_email = data.parent_email || null;
+    const is_minor = data.selectedUserType === 'B2C_student_middle_high' || false;
     
     // 사용자 생성 (디바이스 정보 및 부모 정보 포함)
     const result = await c.env.DB.prepare(
@@ -77,10 +77,10 @@ auth.post('/signup', async (c) => {
         b2b_category, b2b_business_name, b2b_business_number, b2b_address,
         company_role, company_size, department,
         oauth_provider,
-        device_type, device_os, device_browser,
+        last_device_type, last_os, last_browser, last_user_agent,
         parent_name, parent_phone, parent_email, parent_consent_date, is_minor
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       email,
       password_hash,
@@ -103,7 +103,8 @@ auth.post('/signup', async (c) => {
       // Device info (automatically detected from User-Agent)
       deviceInfo.device_type,
       deviceInfo.os,
-      deviceInfo.browser,
+      `${deviceInfo.browser} ${deviceInfo.browser_version}`,
+      userAgent,
       // Parent consent info (for minors)
       parent_name,
       parent_phone,
@@ -308,17 +309,26 @@ auth.get('/naver/callback', async (c) => {
         await logUserLogin(c.env.DB, userId, userInfo.email, 'naver', c.req.raw);
         
       } else {
-        // 신규 사용자 생성
+        // 디바이스 정보 추출
+        const userAgent = c.req.header('User-Agent') || '';
+        const deviceInfo = parseUserAgent(userAgent);
+        
+        // 신규 사용자 생성 (디바이스 정보 포함)
         const result = await c.env.DB.prepare(
-          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash)
-           VALUES (?, ?, ?, ?, ?, ?)`
+          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash, 
+           last_device_type, last_os, last_browser, last_user_agent)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           userInfo.email,
           userInfo.name,
           'naver',
           userInfo.id,
           'B2C', // 기본값, 추가 정보 입력 필요
-          null // OAuth 사용자는 비밀번호 없음
+          null, // OAuth 사용자는 비밀번호 없음
+          deviceInfo.device_type,
+          deviceInfo.os,
+          `${deviceInfo.browser} ${deviceInfo.browser_version}`,
+          userAgent
         ).run();
         
         userId = result.meta.last_row_id as number;
@@ -405,6 +415,9 @@ auth.get('/google/callback', async (c) => {
         'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
       ).bind(userId).run();
       
+      // 로그인 기록 저장
+      await logUserLogin(c.env.DB, userId, userInfo.email, 'google', c.req.raw);
+      
     } else {
       const emailUser = await c.env.DB.prepare(
         'SELECT id FROM users WHERE email = ?'
@@ -420,17 +433,29 @@ auth.get('/google/callback', async (c) => {
           'SELECT * FROM users WHERE id = ?'
         ).bind(userId).first();
         
+        // 로그인 기록 저장
+        await logUserLogin(c.env.DB, userId, userInfo.email, 'google', c.req.raw);
+        
       } else {
+        // 디바이스 정보 추출
+        const userAgent = c.req.header('User-Agent') || '';
+        const deviceInfo = parseUserAgent(userAgent);
+        
         const result = await c.env.DB.prepare(
-          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash)
-           VALUES (?, ?, ?, ?, ?, ?)`
+          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash,
+           last_device_type, last_os, last_browser, last_user_agent)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           userInfo.email,
           userInfo.name,
           'google',
           userInfo.id,
           'B2C',
-          null
+          null,
+          deviceInfo.device_type,
+          deviceInfo.os,
+          `${deviceInfo.browser} ${deviceInfo.browser_version}`,
+          userAgent
         ).run();
         
         userId = result.meta.last_row_id as number;
@@ -438,6 +463,9 @@ auth.get('/google/callback', async (c) => {
         user = await c.env.DB.prepare(
           'SELECT * FROM users WHERE id = ?'
         ).bind(userId).first();
+        
+        // 로그인 기록 저장 (신규 가입도 기록)
+        await logUserLogin(c.env.DB, userId, userInfo.email, 'google', c.req.raw);
       }
     }
     
@@ -501,6 +529,9 @@ auth.get('/kakao/callback', async (c) => {
         'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?'
       ).bind(userId).run();
       
+      // 로그인 기록 저장
+      await logUserLogin(c.env.DB, userId, userInfo.email, 'kakao', c.req.raw);
+      
     } else {
       const emailUser = await c.env.DB.prepare(
         'SELECT id FROM users WHERE email = ?'
@@ -516,17 +547,29 @@ auth.get('/kakao/callback', async (c) => {
           'SELECT * FROM users WHERE id = ?'
         ).bind(userId).first();
         
+        // 로그인 기록 저장
+        await logUserLogin(c.env.DB, userId, userInfo.email, 'kakao', c.req.raw);
+        
       } else {
+        // 디바이스 정보 추출
+        const userAgent = c.req.header('User-Agent') || '';
+        const deviceInfo = parseUserAgent(userAgent);
+        
         const result = await c.env.DB.prepare(
-          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash)
-           VALUES (?, ?, ?, ?, ?, ?)`
+          `INSERT INTO users (email, name, oauth_provider, oauth_id, user_type, password_hash,
+           last_device_type, last_os, last_browser, last_user_agent)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           userInfo.email,
           userInfo.name || '카카오 사용자',
           'kakao',
           userInfo.id,
           'B2C',
-          null
+          null,
+          deviceInfo.device_type,
+          deviceInfo.os,
+          `${deviceInfo.browser} ${deviceInfo.browser_version}`,
+          userAgent
         ).run();
         
         userId = result.meta.last_row_id as number;
@@ -534,6 +577,9 @@ auth.get('/kakao/callback', async (c) => {
         user = await c.env.DB.prepare(
           'SELECT * FROM users WHERE id = ?'
         ).bind(userId).first();
+        
+        // 로그인 기록 저장 (신규 가입도 기록)
+        await logUserLogin(c.env.DB, userId, userInfo.email, 'kakao', c.req.raw);
       }
     }
     
