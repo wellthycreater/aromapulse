@@ -281,7 +281,7 @@ app.get('/', (c) => {
     </head>
     <body class="bg-gray-50">
         <!-- Header -->
-        <header class="glass-effect shadow-lg sticky top-0 z-50">
+        <header class="bg-white shadow-lg sticky top-0 z-50">
             <nav class="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
                 <div class="flex md:grid md:grid-cols-3 items-center justify-between">
                     <!-- Left: Mobile Menu Button + Logo -->
