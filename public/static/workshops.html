@@ -336,7 +336,7 @@
                     return;
                 }
                 
-                // 🔑 관리자는 워크샵 접근 허용 (임시 접속 권한)
+                // 🔑 관리자는 워크샵 접근 허용 (임시 접속 권한) - v2
                 if (payload.role === 'admin' || payload.role === 'super_admin') {
                     console.log('[WORKSHOP] Admin access granted');
                     return; // 관리자는 권한 체크 우회
