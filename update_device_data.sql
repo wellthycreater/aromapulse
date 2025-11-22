@@ -1,66 +1,54 @@
--- Update existing users with diverse device information
--- This will create realistic device distribution for demo purposes
+-- Update existing users with sample device data
+-- 기존 사용자들에게 임시 디바이스 정보 할당
 
--- Update users with Android devices (30% of users)
+-- Desktop users (관리자 및 데스크톱 사용자)
 UPDATE users SET 
-    device_type = 'mobile',
-    device_os = 'Android',
-    device_browser = 'Chrome'
-WHERE id IN (
-    SELECT id FROM users 
-    ORDER BY RANDOM() 
-    LIMIT (SELECT CAST(COUNT(*) * 0.30 AS INTEGER) FROM users)
-);
+  last_device_type = 'Desktop',
+  last_os = 'Windows 10',
+  last_browser = 'Chrome 120',
+  last_ip = '127.0.0.1'
+WHERE id IN (1, 2, 13, 14, 15, 22, 23, 24, 25);
 
--- Update users with iOS devices (25% of remaining users)
+-- Android users (Android 스마트폰 사용자)
 UPDATE users SET 
-    device_type = 'mobile',
-    device_os = 'iOS',
-    device_browser = 'Safari'
-WHERE device_os IS NULL AND id IN (
-    SELECT id FROM users 
-    WHERE device_os IS NULL
-    ORDER BY RANDOM() 
-    LIMIT (SELECT CAST(COUNT(*) * 0.25 AS INTEGER) FROM users WHERE device_os IS NULL)
-);
+  last_device_type = 'Android',
+  last_os = 'Android 13',
+  last_browser = 'Chrome 120',
+  last_ip = '127.0.0.2'
+WHERE id IN (5, 8, 9, 17, 18);
 
--- Update users with iPad/Tablet (10% of remaining users)
+-- iOS users (iPhone 사용자)
 UPDATE users SET 
-    device_type = 'tablet',
-    device_os = 'iOS',
-    device_browser = 'Safari'
-WHERE device_os IS NULL AND id IN (
-    SELECT id FROM users 
-    WHERE device_os IS NULL
-    ORDER BY RANDOM() 
-    LIMIT (SELECT CAST(COUNT(*) * 0.10 AS INTEGER) FROM users WHERE device_os IS NULL)
-);
+  last_device_type = 'iOS',
+  last_os = 'iOS 17.2',
+  last_browser = 'Safari 17',
+  last_ip = '127.0.0.3'
+WHERE id IN (6, 7, 12, 16, 19, 39, 40);
 
--- Update users with Windows Desktop (20% of remaining users)
+-- iPad users (iPad 사용자)
 UPDATE users SET 
-    device_type = 'desktop',
-    device_os = 'Windows',
-    device_browser = 'Chrome'
-WHERE device_os IS NULL AND id IN (
-    SELECT id FROM users 
-    WHERE device_os IS NULL
-    ORDER BY RANDOM() 
-    LIMIT (SELECT CAST(COUNT(*) * 0.20 AS INTEGER) FROM users WHERE device_os IS NULL)
-);
+  last_device_type = 'iPad',
+  last_os = 'iPadOS 17.1',
+  last_browser = 'Safari 17',
+  last_ip = '127.0.0.4'
+WHERE id IN (10, 11, 20);
 
--- Update remaining users with macOS Desktop
+-- Android Tablet users (Android 태블릿 사용자)
 UPDATE users SET 
-    device_type = 'desktop',
-    device_os = 'macOS',
-    device_browser = 'Safari'
-WHERE device_os IS NULL;
+  last_device_type = 'Android Tablet',
+  last_os = 'Android 13',
+  last_browser = 'Chrome 120',
+  last_ip = '127.0.0.5'
+WHERE id IN (21);
 
--- Verify the distribution
+-- Verify the update
 SELECT 
-    device_os,
-    device_type,
-    COUNT(*) as count,
-    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM users), 1) as percentage
-FROM users
-GROUP BY device_os, device_type
-ORDER BY count DESC;
+  id, 
+  name, 
+  email, 
+  last_device_type, 
+  last_os, 
+  last_browser
+FROM users 
+WHERE last_device_type IS NOT NULL
+ORDER BY id;
