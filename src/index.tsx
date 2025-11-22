@@ -149,14 +149,12 @@ app.get('/profile-edit', (c) => c.redirect('/static/mypage.html'));
 // MyPage - new user profile page
 app.get('/mypage', (c) => c.redirect('/static/mypage.html'));
 
-// Workshops page - serve static HTML (B2B 전용 - 기업 팀빌딩)
-app.get('/workshops', serveStatic({ path: './static/workshops.html' }));
-app.get('/static/workshops', serveStatic({ path: './static/workshops.html' }));
+// Workshops page - redirect to static file (B2B 전용 - 기업 팀빌딩)
+app.get('/workshops', (c) => c.redirect('/static/workshops.html'));
 
-// One-day classes page - serve static HTML (B2C + B2B 개인 - 로컬 공방 클래스)
-app.get('/oneday-classes', serveStatic({ path: './static/classes.html' }));
-app.get('/classes', serveStatic({ path: './static/classes.html' }));
-app.get('/static/classes', serveStatic({ path: './static/classes.html' }));
+// One-day classes page - redirect to static file (B2C + B2B 개인 - 로컬 공방 클래스)
+app.get('/oneday-classes', (c) => c.redirect('/static/classes.html'));
+app.get('/classes', (c) => c.redirect('/static/classes.html'));
 
 // Local studios page - redirect to static file (로컬 공방 검색 및 예약)
 app.get('/local-studios', (c) => c.redirect('/static/local-studios.html'));
