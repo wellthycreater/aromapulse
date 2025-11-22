@@ -1,0 +1,44 @@
+=== ✅ 마이그레이션 성공 확인 ===
+
+오류 메시지: "duplicate column name: is_gift_wrapping"
+→ 이것은 좋은 신호입니다! 컬럼이 이미 존재합니다.
+
+=== 검증 쿼리 (Cloudflare Console에서 실행) ===
+
+--- 쿼리 1: 테이블 구조 확인 ---
+PRAGMA table_info(workshop_quotes);
+
+기대 결과:
+- is_workation 컬럼이 보여야 함 (type: INTEGER, dflt_value: 0)
+- is_gift_wrapping 컬럼이 보여야 함 (type: INTEGER, dflt_value: 0)
+
+--- 쿼리 2: 인덱스 확인 ---
+PRAGMA index_list(workshop_quotes);
+
+기대 결과:
+- idx_workshop_quotes_options 인덱스가 보여야 함
+
+--- 쿼리 3: 테스트 데이터 확인 ---
+SELECT COUNT(*) as total, 
+       SUM(CASE WHEN is_gift_wrapping = 1 THEN 1 ELSE 0 END) as with_gift_wrapping,
+       SUM(CASE WHEN is_workation = 1 THEN 1 ELSE 0 END) as with_workation
+FROM workshop_quotes;
+
+=== 다음 단계 ===
+
+✅ 검증이 성공하면:
+→ 프로덕션 배포 완료!
+→ 프론트엔드 테스트로 이동
+
+테스트 URL:
+1. 원데이 클래스: https://www.aromapulse.kr/static/class-detail.html?id=1
+2. 워크샵: https://www.aromapulse.kr/static/workshop-detail.html?id=1
+
+확인 사항:
+- 원데이 클래스: 조향사만 + 선물 포장 체크박스
+- 워크샵: 강사 선택 + 워케이션 체크박스
+- 견적 제출 테스트 → DB에서 is_gift_wrapping 값 확인
+
+=== 완료! ===
+마이그레이션이 이미 적용되어 있습니다.
+프론트엔드 테스트만 진행하면 됩니다! 🎉
