@@ -1,0 +1,38 @@
+=== Cloudflare Console에서 순서대로 실행하세요 ===
+
+📌 중요: 각 쿼리를 하나씩 복사 → Console에 붙여넣기 → Execute 클릭
+
+--- 쿼리 1: is_gift_wrapping 컬럼 추가 ---
+ALTER TABLE workshop_quotes ADD COLUMN is_gift_wrapping INTEGER DEFAULT 0;
+
+--- 쿼리 2: 인덱스 생성 ---
+CREATE INDEX IF NOT EXISTS idx_workshop_quotes_options ON workshop_quotes(is_workation, is_gift_wrapping);
+
+--- 검증 쿼리 1: 테이블 구조 확인 ---
+PRAGMA table_info(workshop_quotes);
+
+--- 검증 쿼리 2: 인덱스 확인 ---
+PRAGMA index_list(workshop_quotes);
+
+--- 검증 쿼리 3: 기존 데이터 확인 ---
+SELECT COUNT(*) as total_quotes, SUM(CASE WHEN is_gift_wrapping = 0 THEN 1 ELSE 0 END) as without_gift_wrapping, SUM(CASE WHEN is_gift_wrapping = 1 THEN 1 ELSE 0 END) as with_gift_wrapping FROM workshop_quotes;
+
+=== 실행 순서 ===
+1. 쿼리 1 복사 → 붙여넣기 → Execute → "Success" 확인
+2. 쿼리 2 복사 → 붙여넣기 → Execute → "Success" 확인
+3. 검증 쿼리 1 실행 → is_gift_wrapping 컬럼 확인
+4. 검증 쿼리 2 실행 → idx_workshop_quotes_options 인덱스 확인
+5. 검증 쿼리 3 실행 → 모든 기존 데이터가 is_gift_wrapping=0 확인
+
+=== 주의사항 ===
+- ❌ 여러 줄의 SQL을 동시에 실행하지 마세요
+- ❌ 세미콜론(;)을 여러 개 사용하지 마세요
+- ✅ 한 번에 하나의 쿼리만 실행하세요
+- ✅ 각 쿼리 실행 후 "Success" 메시지를 확인하세요
+
+=== 예상 결과 ===
+쿼리 1: Success (컬럼 추가 완료)
+쿼리 2: Success (인덱스 생성 완료)
+검증 쿼리 1: is_gift_wrapping 컬럼이 목록에 표시됨
+검증 쿼리 2: idx_workshop_quotes_options 인덱스가 목록에 표시됨
+검증 쿼리 3: total_quotes=기존수, without_gift_wrapping=기존수, with_gift_wrapping=0
