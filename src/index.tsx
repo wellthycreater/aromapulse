@@ -308,9 +308,30 @@ app.get('/', (c) => {
                         <a href="/shop" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
                             <i class="fas fa-shopping-bag mr-2"></i>쇼핑
                         </a>
-                        <a href="/healing" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center">
-                            <i class="fas fa-star mr-2"></i>힐링 체험
-                        </a>
+                        <div class="relative group">
+                            <a href="/healing" class="text-gray-700 hover:text-purple-600 font-semibold transition flex items-center cursor-pointer">
+                                <i class="fas fa-star mr-2"></i>힐링 체험
+                                <i class="fas fa-chevron-down ml-2 text-xs group-hover:rotate-180 transition-transform"></i>
+                            </a>
+                            <!-- 서브메뉴 드롭다운 -->
+                            <div class="absolute left-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <a href="/workshops" class="block px-4 py-3 text-gray-800 hover:bg-purple-50 transition flex items-center">
+                                    <i class="fas fa-briefcase mr-3 text-purple-600"></i>
+                                    <div>
+                                        <div class="font-semibold">워크샵</div>
+                                        <div class="text-xs text-gray-500">기업 전용 팀빌딩</div>
+                                    </div>
+                                </a>
+                                <hr class="my-1">
+                                <a href="/oneday-classes" class="block px-4 py-3 text-gray-800 hover:bg-purple-50 transition flex items-center">
+                                    <i class="fas fa-calendar-alt mr-3 text-green-600"></i>
+                                    <div>
+                                        <div class="font-semibold">원데이 클래스</div>
+                                        <div class="text-xs text-gray-500">누구나 참여 가능</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Right: Visitor Stats & Auth -->
