@@ -16,10 +16,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     trackPageView('workshops_list');
 });
 
-// UI 업데이트 (인증 링크)
+// UI 업데이트 (인증 링크) - 엘리먼트가 없으면 스킵
 function updateAuthUI() {
     const token = localStorage.getItem('token');
     const authLink = document.getElementById('auth-link');
+    
+    // auth-link 엘리먼트가 없으면 함수 종료 (unified login 사용 중)
+    if (!authLink) {
+        return;
+    }
     
     if (!token) {
         // 로그인하지 않은 경우
