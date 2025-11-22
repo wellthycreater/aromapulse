@@ -1575,14 +1575,18 @@ curl -X PUT https://your-domain/api/user/change-password \
 
 ### ✅ 완료된 작업
 
-**1. 관리자 대시보드 및 회원 관리 디바이스 추적** ✅
-- **기능**: 관리자 대시보드와 회원 관리 페이지에서 사용자별 접속 디바이스 정보 확인
+**1. 세분화된 디바이스 감지 시스템 (5종)** ✅
+- **기능**: 관리자 대시보드와 회원 관리 페이지에서 정확한 디바이스 정보 확인
 - **적용 페이지**:
   - `/static/admin-dashboard` - 관리자 메인 대시보드의 회원 관리 탭
   - `/static/admin-users.html` - 전용 회원 관리 페이지
-- **추가된 컬럼**:
-  - 디바이스 타입 배지: 모바일/태블릿/데스크톱 (아이콘 + 색상)
-  - OS/브라우저 정보: 운영체제 및 브라우저 표시
+- **5가지 디바이스 타입**:
+  - 🤖 **Android** (녹색 배지) - Android 스마트폰
+  - 🍎 **iOS** (파란색 배지) - iPhone/iPod
+  - 📱 **iPad** (보라색 배지) - iPad 태블릿
+  - 📱 **Android Tablet** (청록색 배지) - Android 태블릿
+  - 🖥️ **Desktop** (회색 배지) - Windows/macOS/Linux PC
+- **OS/브라우저 정보**: 운영체제 및 브라우저 버전 상세 표시
 - **데이터베이스 스키마**:
   - `last_device_type` - 최근 접속 디바이스 (mobile, tablet, desktop)
   - `last_os` - 최근 접속 운영체제 (iOS, Android, Windows, macOS 등)
