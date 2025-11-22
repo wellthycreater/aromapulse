@@ -15,6 +15,7 @@ export async function generateToken(user: Partial<User>, secret: string): Promis
     email: user.email,
     name: user.name,
     userType: user.user_type,
+    role: user.role || 'user', // 🔑 관리자 권한 정보 포함
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7일 유효
   };
