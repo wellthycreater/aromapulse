@@ -171,6 +171,11 @@ function checkQuotePermission() {
     
     const user = JSON.parse(userStr);
     
+    // 🔑 관리자는 모든 권한 우회 (임시 접속 허용)
+    if (user.is_admin === 1 || user.role === 'admin') {
+        return { hasPermission: true, isAdmin: true };
+    }
+    
     // B2B 사용자 체크
     if (user.user_type !== 'B2B') {
         return { hasPermission: false, reason: 'not_b2b' };
