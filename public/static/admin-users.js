@@ -211,14 +211,18 @@ function renderUsers() {
       oauthBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full"><i class="fas fa-envelope mr-1"></i>이메일</span>';
     }
     
-    // 디바이스 정보
+    // 디바이스 정보 (5 types: Android, iOS, iPad, Android Tablet, Desktop)
     let deviceBadge = '';
-    if (user.last_device_type === 'mobile') {
-      deviceBadge = '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"><i class="fas fa-mobile-alt mr-1"></i>모바일</span>';
-    } else if (user.last_device_type === 'tablet') {
-      deviceBadge = '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"><i class="fas fa-tablet-alt mr-1"></i>태블릿</span>';
-    } else if (user.last_device_type === 'desktop') {
-      deviceBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full"><i class="fas fa-desktop mr-1"></i>PC</span>';
+    if (user.last_device_type === 'Android') {
+      deviceBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"><i class="fab fa-android mr-1"></i>Android</span>';
+    } else if (user.last_device_type === 'iOS') {
+      deviceBadge = '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"><i class="fab fa-apple mr-1"></i>iOS</span>';
+    } else if (user.last_device_type === 'iPad') {
+      deviceBadge = '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"><i class="fas fa-tablet-alt mr-1"></i>iPad</span>';
+    } else if (user.last_device_type === 'Android Tablet') {
+      deviceBadge = '<span class="px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-full"><i class="fas fa-tablet-alt mr-1"></i>Android Tablet</span>';
+    } else if (user.last_device_type === 'Desktop') {
+      deviceBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full"><i class="fas fa-desktop mr-1"></i>Desktop</span>';
     } else {
       deviceBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">-</span>';
     }

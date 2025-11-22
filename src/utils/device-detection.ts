@@ -1,6 +1,6 @@
 // Device detection utilities
 export interface DeviceInfo {
-  device_type: 'mobile' | 'tablet' | 'desktop' | 'unknown';
+  device_type: 'Android' | 'iOS' | 'iPad' | 'Android Tablet' | 'Desktop' | 'unknown';
   os: string;
   browser: string;
   browser_version: string;
@@ -9,14 +9,32 @@ export interface DeviceInfo {
 export function parseUserAgent(userAgent: string): DeviceInfo {
   const ua = userAgent.toLowerCase();
   
-  // Detect device type
+  // Detect device type with detailed classification
   let device_type: DeviceInfo['device_type'] = 'unknown';
-  if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(userAgent)) {
-    device_type = 'tablet';
-  } else if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(userAgent)) {
-    device_type = 'mobile';
-  } else {
-    device_type = 'desktop';
+  
+  // iPad detection (before general tablet detection)
+  if (/ipad/i.test(userAgent)) {
+    device_type = 'iPad';
+  }
+  // Android Tablet detection
+  else if (/android/i.test(userAgent) && !/mobile/i.test(userAgent)) {
+    device_type = 'Android Tablet';
+  }
+  // iOS (iPhone/iPod) detection
+  else if (/iphone|ipod/i.test(userAgent)) {
+    device_type = 'iOS';
+  }
+  // Android Phone detection
+  else if (/android/i.test(userAgent) && /mobile/i.test(userAgent)) {
+    device_type = 'Android';
+  }
+  // Desktop detection
+  else if (/windows|macintosh|linux/i.test(userAgent) && !/mobile|tablet|ipad/i.test(userAgent)) {
+    device_type = 'Desktop';
+  }
+  // Fallback for other tablets
+  else if (/(tablet|playbook|silk)/i.test(userAgent)) {
+    device_type = 'Android Tablet';
   }
   
   // Detect OS
@@ -29,10 +47,13 @@ export function parseUserAgent(userAgent: string): DeviceInfo {
   else if (ua.includes('mac os x')) {
     const match = ua.match(/mac os x ([\d_]+)/);
     os = match ? `macOS ${match[1].replace(/_/g, '.')}` : 'macOS';
+  } else if (ua.includes('ipad')) {
+    const match = ua.match(/os ([\d_]+)/);
+    os = match ? `iPadOS ${match[1].replace(/_/g, '.')}` : 'iPadOS';
   } else if (ua.includes('android')) {
     const match = ua.match(/android ([\d.]+)/);
     os = match ? `Android ${match[1]}` : 'Android';
-  } else if (ua.includes('iphone') || ua.includes('ipad')) {
+  } else if (ua.includes('iphone') || ua.includes('ipod')) {
     const match = ua.match(/os ([\d_]+)/);
     os = match ? `iOS ${match[1].replace(/_/g, '.')}` : 'iOS';
   } else if (ua.includes('linux')) os = 'Linux';

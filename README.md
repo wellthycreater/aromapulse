@@ -1561,15 +1561,15 @@ curl -X PUT https://your-domain/api/user/change-password \
 ---
 
 **마지막 업데이트**: 2025-11-21  
-**버전**: 1.7.5 - Device Tracking in Admin Dashboard & Users Panel  
-**상태**: ✅ 관리자 대시보드 및 회원 관리 디바이스 추적 완료  
+**버전**: 1.7.6 - Enhanced 5-Type Device Detection  
+**상태**: ✅ 세분화된 디바이스 감지 (Android, iOS, iPad, Android Tablet, Desktop)  
 **회사명**: 웰씨코리아 (Wellthy Korea)  
 **결제 방식**: 토스페이먼츠 라이브 키 (실제 결제 가능)  
 **챗봇 서비스**: 사이드톡 AI (Sidetalk AI)  
-**배포 상태**: ✅ 프로덕션 배포 완료 (관리자 대시보드 포함)  
+**배포 상태**: ✅ 프로덕션 배포 완료 (5종 디바이스 감지)  
 **개발 환경 URL**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai  
 **프로덕션 URL**: https://www.aromapulse.kr  
-**최신 배포**: https://f68b02eb.aromapulse.pages.dev
+**최신 배포**: https://88d814e2.aromapulse.pages.dev
 
 ## 🆕 최신 업데이트 (v1.7.5) - 회원 관리 디바이스 추적 (2025-11-21)
 
