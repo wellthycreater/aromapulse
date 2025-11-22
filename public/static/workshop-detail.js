@@ -19,9 +19,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // Check authentication
-    checkAuth();
-    
     // Load workshop data
     await loadWorkshop();
     
@@ -29,33 +26,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     setupFormHandlers();
 });
 
-// Check authentication and update UI
-function checkAuth() {
-    const token = localStorage.getItem('token');
-    const authButton = document.getElementById('auth-button');
-    
-    if (token) {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            authButton.textContent = `${user.name}님`;
-            authButton.onclick = () => window.location.href = '/dashboard';
-        }
-    } else {
-        authButton.textContent = '로그인';
-        authButton.onclick = () => window.location.href = '/login';
-    }
-}
-
-// Handle auth button click
-function handleAuth() {
-    const token = localStorage.getItem('token');
-    if (token) {
-        window.location.href = '/dashboard';
-    } else {
-        window.location.href = '/login';
-    }
-}
+// Authentication check removed - using unified login system
 
 // Load workshop or class data
 async function loadWorkshop() {
