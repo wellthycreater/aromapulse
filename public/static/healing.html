@@ -201,155 +201,324 @@
 
     <!-- Business Partnership Section (예비 공방 대표를 위한 섹션) -->
     <section class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-20 relative overflow-hidden">
-        <!-- Decorative Elements -->
-        <div class="absolute top-0 left-0 w-full h-full">
-            <div class="absolute top-20 left-20 w-64 h-64 bg-purple-500 opacity-20 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-20 right-20 w-80 h-80 bg-pink-500 opacity-20 rounded-full blur-3xl"></div>
+        <!-- Animated Background Elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-purple-500 opacity-20 rounded-full blur-3xl float-animation"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-pink-500 opacity-20 rounded-full blur-3xl float-animation" style="animation-delay: 1.5s;"></div>
+            <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-yellow-400 opacity-10 rounded-full blur-3xl float-animation" style="animation-delay: 0.7s;"></div>
         </div>
         
         <div class="container mx-auto px-6 relative z-10">
             <!-- Section Header -->
             <div class="text-center mb-16">
                 <div class="inline-block mb-4">
-                    <div class="bg-gradient-to-r from-yellow-400 to-pink-400 text-slate-900 px-6 py-2 rounded-full font-bold text-sm">
-                        <i class="fas fa-rocket mr-2"></i>공방 창업 지원
+                    <div class="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 text-white px-8 py-3 rounded-full font-bold text-sm shadow-2xl">
+                        <i class="fas fa-store mr-2"></i>무인 향기 공방 창업 지원
                     </div>
                 </div>
-                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
-                    나만의 향기 공방을<br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400">시작하고 싶으신가요?</span>
+                <h2 class="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+                    24시간 자동 운영되는<br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400">스마트 향기 공방</span>
                 </h2>
-                <p class="text-xl text-purple-200 max-w-3xl mx-auto leading-relaxed">
-                    아로마펄스와 함께 당신의 공방 창업 꿈을 현실로 만들어보세요.<br>
-                    공간부터 교육, 마케팅까지 모든 것을 지원합니다.
+                <p class="text-xl md:text-2xl text-purple-200 max-w-4xl mx-auto leading-relaxed mb-4">
+                    이제는 무인 시스템으로 시작하세요! 🚀<br>
+                    예약부터 결제, 클래스 진행까지 자동화된 스마트 공방 솔루션
                 </p>
+                <div class="flex items-center justify-center gap-6 mt-6 flex-wrap">
+                    <div class="flex items-center bg-white bg-opacity-10 backdrop-blur-lg px-6 py-3 rounded-full">
+                        <i class="fas fa-clock text-yellow-400 mr-2 text-xl"></i>
+                        <span class="text-white font-semibold">24시간 무인 운영</span>
+                    </div>
+                    <div class="flex items-center bg-white bg-opacity-10 backdrop-blur-lg px-6 py-3 rounded-full">
+                        <i class="fas fa-mobile-alt text-pink-400 mr-2 text-xl"></i>
+                        <span class="text-white font-semibold">스마트 예약 시스템</span>
+                    </div>
+                    <div class="flex items-center bg-white bg-opacity-10 backdrop-blur-lg px-6 py-3 rounded-full">
+                        <i class="fas fa-chart-line text-green-400 mr-2 text-xl"></i>
+                        <span class="text-white font-semibold">자동 매출 관리</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Benefits Grid -->
             <div class="grid md:grid-cols-3 gap-8 mb-16">
-                <!-- Benefit 1 -->
-                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8 border border-white border-opacity-20 hover:bg-opacity-15 transition">
-                    <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mb-6">
-                        <i class="fas fa-store text-white text-3xl"></i>
+                <!-- Benefit 1: 스마트 공간 설계 -->
+                <div class="category-card bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/30 hover:border-yellow-400/50 shadow-2xl">
+                    <div class="relative mb-6">
+                        <div class="w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl">
+                            <i class="fas fa-paint-roller text-white text-4xl"></i>
+                        </div>
+                        <div class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                            신개념
+                        </div>
                     </div>
-                    <h3 class="text-2xl font-bold text-white mb-4">공간 연결</h3>
-                    <p class="text-purple-200 leading-relaxed">
-                        검증된 공방 공간을 소개하고 임대 계약부터 인테리어까지 A to Z 지원
+                    <h3 class="text-2xl font-bold text-white mb-4">🎨 스마트 공간 설계</h3>
+                    <p class="text-purple-200 leading-relaxed mb-4">
+                        원하는 컨셉에 맞춘 인테리어부터 무인 시스템 설치까지 원스톱 지원
                     </p>
-                    <ul class="mt-4 space-y-2 text-purple-100">
+                    <ul class="space-y-3 text-purple-100">
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-yellow-400 mr-2 mt-1"></i>
-                            <span>입지 분석 및 추천</span>
+                            <i class="fas fa-sparkles text-yellow-400 mr-3 mt-1"></i>
+                            <span><strong>컨셉별 맞춤 인테리어</strong><br><span class="text-sm text-purple-300">미니멀, 럭셔리, 내추럴 등</span></span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-yellow-400 mr-2 mt-1"></i>
-                            <span>인테리어 컨설팅</span>
+                            <i class="fas fa-sparkles text-yellow-400 mr-3 mt-1"></i>
+                            <span><strong>스마트 도어락 시스템</strong><br><span class="text-sm text-purple-300">예약별 자동 비밀번호 생성</span></span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-yellow-400 mr-2 mt-1"></i>
-                            <span>임대료 협상 지원</span>
+                            <i class="fas fa-sparkles text-yellow-400 mr-3 mt-1"></i>
+                            <span><strong>CCTV 원격 모니터링</strong><br><span class="text-sm text-purple-300">24시간 안전 관리</span></span>
                         </li>
                     </ul>
                 </div>
 
-                <!-- Benefit 2 -->
-                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8 border border-white border-opacity-20 hover:bg-opacity-15 transition">
-                    <div class="w-16 h-16 bg-gradient-to-r from-pink-400 to-purple-500 rounded-2xl flex items-center justify-center mb-6">
-                        <i class="fas fa-graduation-cap text-white text-3xl"></i>
+                <!-- Benefit 2: 자동화 운영 시스템 -->
+                <div class="category-card bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/30 hover:border-pink-400/50 shadow-2xl">
+                    <div class="relative mb-6">
+                        <div class="w-20 h-20 bg-gradient-to-r from-pink-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-xl">
+                            <i class="fas fa-robot text-white text-4xl"></i>
+                        </div>
+                        <div class="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                            HOT
+                        </div>
                     </div>
-                    <h3 class="text-2xl font-bold text-white mb-4">전문 교육</h3>
-                    <p class="text-purple-200 leading-relaxed">
-                        조향 기술부터 운영 노하우까지 체계적인 교육 프로그램 제공
+                    <h3 class="text-2xl font-bold text-white mb-4">🤖 자동화 운영 시스템</h3>
+                    <p class="text-purple-200 leading-relaxed mb-4">
+                        예약부터 결제, 출입까지 모든 것이 자동으로! 인건비 ZERO
                     </p>
-                    <ul class="mt-4 space-y-2 text-purple-100">
+                    <ul class="space-y-3 text-purple-100">
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-pink-400 mr-2 mt-1"></i>
-                            <span>조향사 자격증 과정</span>
+                            <i class="fas fa-sparkles text-pink-400 mr-3 mt-1"></i>
+                            <span><strong>온라인 예약 & 결제</strong><br><span class="text-sm text-purple-300">실시간 스케줄 관리</span></span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-pink-400 mr-2 mt-1"></i>
-                            <span>비즈니스 운영 교육</span>
+                            <i class="fas fa-sparkles text-pink-400 mr-3 mt-1"></i>
+                            <span><strong>자동 안내 메시지</strong><br><span class="text-sm text-purple-300">준비물, 위치, 출입방법 전송</span></span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-pink-400 mr-2 mt-1"></i>
-                            <span>클래스 커리큘럼 제공</span>
+                            <i class="fas fa-sparkles text-pink-400 mr-3 mt-1"></i>
+                            <span><strong>AI 챗봇 고객 응대</strong><br><span class="text-sm text-purple-300">24시간 자동 상담</span></span>
                         </li>
                     </ul>
                 </div>
 
-                <!-- Benefit 3 -->
-                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8 border border-white border-opacity-20 hover:bg-opacity-15 transition">
-                    <div class="w-16 h-16 bg-gradient-to-r from-blue-400 to-teal-500 rounded-2xl flex items-center justify-center mb-6">
-                        <i class="fas fa-bullhorn text-white text-3xl"></i>
+                <!-- Benefit 3: 통합 수익 관리 -->
+                <div class="category-card bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/30 hover:border-blue-400/50 shadow-2xl">
+                    <div class="relative mb-6">
+                        <div class="w-20 h-20 bg-gradient-to-r from-blue-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-xl">
+                            <i class="fas fa-chart-pie text-white text-4xl"></i>
+                        </div>
+                        <div class="absolute -top-2 -right-2 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                            추천
+                        </div>
                     </div>
-                    <h3 class="text-2xl font-bold text-white mb-4">마케팅 지원</h3>
-                    <p class="text-purple-200 leading-relaxed">
-                        아로마펄스 플랫폼을 통한 홍보 및 고객 유치 지원
+                    <h3 class="text-2xl font-bold text-white mb-4">📊 통합 수익 관리</h3>
+                    <p class="text-purple-200 leading-relaxed mb-4">
+                        플랫폼을 통한 홍보와 고객 유치, 수익 분석까지 한 번에
                     </p>
-                    <ul class="mt-4 space-y-2 text-purple-100">
+                    <ul class="space-y-3 text-purple-100">
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-blue-400 mr-2 mt-1"></i>
-                            <span>플랫폼 무료 입점</span>
+                            <i class="fas fa-sparkles text-blue-400 mr-3 mt-1"></i>
+                            <span><strong>아로마펄스 무료 입점</strong><br><span class="text-sm text-purple-300">수수료 업계 최저 5%</span></span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-blue-400 mr-2 mt-1"></i>
-                            <span>SNS 마케팅 지원</span>
+                            <i class="fas fa-sparkles text-blue-400 mr-3 mt-1"></i>
+                            <span><strong>실시간 매출 대시보드</strong><br><span class="text-sm text-purple-300">모바일 앱으로 언제 어디서나</span></span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-blue-400 mr-2 mt-1"></i>
-                            <span>예약 시스템 제공</span>
+                            <i class="fas fa-sparkles text-blue-400 mr-3 mt-1"></i>
+                            <span><strong>SNS 마케팅 패키지</strong><br><span class="text-sm text-purple-300">인스타 광고 무료 지원</span></span>
                         </li>
                     </ul>
                 </div>
             </div>
 
             <!-- Success Stats -->
-            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-12 border border-white border-opacity-20 mb-16">
-                <h3 class="text-3xl font-bold text-white text-center mb-10">
-                    <i class="fas fa-chart-line text-yellow-400 mr-3"></i>
-                    파트너 공방 성공 지표
-                </h3>
-                <div class="grid md:grid-cols-4 gap-8 text-center">
-                    <div>
-                        <div class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400 mb-2">12+</div>
-                        <div class="text-purple-200 font-semibold">협력 공방</div>
+            <div class="relative mb-16">
+                <div class="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/30 shadow-2xl">
+                    <div class="text-center mb-10">
+                        <div class="inline-block bg-gradient-to-r from-yellow-400 to-pink-500 text-white px-6 py-2 rounded-full font-bold text-sm mb-4">
+                            <i class="fas fa-fire mr-2"></i>실시간 데이터
+                        </div>
+                        <h3 class="text-3xl md:text-4xl font-bold text-white">
+                            무인 공방 파트너 성공 지표 📈
+                        </h3>
                     </div>
-                    <div>
-                        <div class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400 mb-2">85%</div>
-                        <div class="text-purple-200 font-semibold">첫 달 손익분기</div>
+                    <div class="grid md:grid-cols-4 gap-8 text-center">
+                        <div class="bg-white/5 rounded-2xl p-6 hover:bg-white/10 transition">
+                            <div class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400 mb-3">12+</div>
+                            <div class="text-purple-200 font-semibold text-lg">협력 무인 공방</div>
+                            <div class="text-purple-300 text-sm mt-2">전국 주요 지역</div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-6 hover:bg-white/10 transition">
+                            <div class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-400 mb-3">0명</div>
+                            <div class="text-purple-200 font-semibold text-lg">필요 직원 수</div>
+                            <div class="text-purple-300 text-sm mt-2">완전 무인 자동화</div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-6 hover:bg-white/10 transition">
+                            <div class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-teal-400 mb-3">24/7</div>
+                            <div class="text-purple-200 font-semibold text-lg">연중무휴 운영</div>
+                            <div class="text-purple-300 text-sm mt-2">시간 제약 없음</div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-6 hover:bg-white/10 transition">
+                            <div class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-400 mb-3">4.9★</div>
+                            <div class="text-purple-200 font-semibold text-lg">평균 만족도</div>
+                            <div class="text-purple-300 text-sm mt-2">2,500+ 리뷰 기준</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400 mb-2">200+</div>
-                        <div class="text-purple-200 font-semibold">월평균 수강생</div>
-                    </div>
-                    <div>
-                        <div class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400 mb-2">4.8★</div>
-                        <div class="text-purple-200 font-semibold">평균 만족도</div>
+                    
+                    <!-- Additional Stats Row -->
+                    <div class="grid md:grid-cols-3 gap-6 mt-8">
+                        <div class="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-6 border border-yellow-400/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-yellow-300 text-2xl font-bold">평균 3개월</div>
+                                    <div class="text-purple-200 text-sm">투자 회수 기간</div>
+                                </div>
+                                <i class="fas fa-piggy-bank text-yellow-400 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-2xl p-6 border border-pink-400/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-pink-300 text-2xl font-bold">월 400만원+</div>
+                                    <div class="text-purple-200 text-sm">평균 순수익</div>
+                                </div>
+                                <i class="fas fa-won-sign text-pink-400 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-2xl p-6 border border-green-400/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-green-300 text-2xl font-bold">92%</div>
+                                    <div class="text-purple-200 text-sm">재계약률</div>
+                                </div>
+                                <i class="fas fa-handshake text-green-400 text-3xl"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- CTA Box -->
-            <div class="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 rounded-3xl p-12 text-center">
-                <h3 class="text-3xl md:text-4xl font-bold text-white mb-6">
-                    지금 시작하세요! 🚀
-                </h3>
-                <p class="text-xl text-white mb-8 opacity-90">
-                    무료 상담으로 당신의 공방 창업 계획을 구체화해보세요
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <button onclick="location.href='mailto:support@wellthykorea.com?subject=공방 창업 상담 문의'" 
-                            class="bg-white text-purple-900 px-10 py-4 rounded-full text-lg font-bold hover:bg-gray-100 transition transform hover:scale-105 shadow-2xl">
-                        <i class="fas fa-envelope mr-2"></i>무료 상담 신청
-                    </button>
-                    <button onclick="openKakaoChannel()" 
-                            class="bg-yellow-400 text-gray-900 px-10 py-4 rounded-full text-lg font-bold hover:bg-yellow-300 transition transform hover:scale-105 shadow-2xl">
-                        <i class="fab fa-kickstarter mr-2"></i>카카오톡 문의
-                    </button>
+            <!-- Investment Info Box -->
+            <div class="bg-gradient-to-r from-slate-800 to-purple-900 rounded-3xl p-10 mb-16 border border-white/20">
+                <div class="text-center mb-8">
+                    <h3 class="text-3xl font-bold text-white mb-4">
+                        💰 초기 투자 비용 가이드
+                    </h3>
+                    <p class="text-purple-200">
+                        투명하고 합리적인 비용으로 시작하세요
+                    </p>
                 </div>
-                <p class="text-white text-sm mt-6 opacity-75">
-                    <i class="fas fa-phone-alt mr-2"></i>전화 상담: 070-4233-5183 (평일 10:00-18:00)
-                </p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+                        <h4 class="text-xl font-bold text-yellow-300 mb-4">
+                            <i class="fas fa-building mr-2"></i>공간 임대 (15~25평)
+                        </h4>
+                        <ul class="space-y-2 text-purple-100">
+                            <li class="flex justify-between">
+                                <span>보증금</span>
+                                <strong class="text-white">3,000만원~</strong>
+                            </li>
+                            <li class="flex justify-between">
+                                <span>월세</span>
+                                <strong class="text-white">100~200만원</strong>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+                        <h4 class="text-xl font-bold text-pink-300 mb-4">
+                            <i class="fas fa-cogs mr-2"></i>인테리어 + 시스템
+                        </h4>
+                        <ul class="space-y-2 text-purple-100">
+                            <li class="flex justify-between">
+                                <span>인테리어 공사</span>
+                                <strong class="text-white">1,500~2,500만원</strong>
+                            </li>
+                            <li class="flex justify-between">
+                                <span>스마트 시스템</span>
+                                <strong class="text-white">500~800만원</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-6 text-center bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-2xl p-6 border border-green-400/30">
+                    <div class="text-2xl font-bold text-green-300 mb-2">
+                        총 예상 초기 비용: 5,000만원 ~ 8,000만원
+                    </div>
+                    <p class="text-purple-200 text-sm">
+                        * 아로마펄스 파트너 혜택: 시스템 구축비 30% 할인 + 6개월 플랫폼 수수료 면제
+                    </p>
+                </div>
+            </div>
+
+            <!-- CTA Box -->
+            <div class="relative overflow-hidden rounded-3xl">
+                <div class="absolute inset-0 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500"></div>
+                <div class="absolute inset-0 opacity-30">
+                    <div class="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iMC4xIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')]"></div>
+                </div>
+                <div class="relative p-12 text-center">
+                    <div class="inline-block mb-6">
+                        <div class="bg-white text-purple-900 px-6 py-2 rounded-full font-bold text-sm shadow-lg">
+                            <i class="fas fa-gift mr-2"></i>신규 파트너 특별 혜택
+                        </div>
+                    </div>
+                    <h3 class="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                        지금 시작하면<br>
+                        <span class="text-yellow-300">최대 500만원 혜택!</span> 🎁
+                    </h3>
+                    <p class="text-xl text-white mb-8 opacity-90 max-w-2xl mx-auto">
+                        무료 상담으로 당신의 공방 창업 계획을 구체화하고<br>
+                        맞춤형 창업 패키지를 받아보세요
+                    </p>
+                    
+                    <!-- Benefits Pills -->
+                    <div class="flex flex-wrap justify-center gap-3 mb-8">
+                        <div class="bg-white/20 backdrop-blur-lg px-4 py-2 rounded-full text-white text-sm font-semibold">
+                            <i class="fas fa-check mr-1"></i>1:1 맞춤 컨설팅
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-lg px-4 py-2 rounded-full text-white text-sm font-semibold">
+                            <i class="fas fa-check mr-1"></i>사업 계획서 작성
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-lg px-4 py-2 rounded-full text-white text-sm font-semibold">
+                            <i class="fas fa-check mr-1"></i>입지 분석 리포트
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-lg px-4 py-2 rounded-full text-white text-sm font-semibold">
+                            <i class="fas fa-check mr-1"></i>수익성 시뮬레이션
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <button onclick="location.href='mailto:support@wellthykorea.com?subject=무인 공방 창업 상담 신청'" 
+                                class="bg-white text-purple-900 px-12 py-5 rounded-full text-lg font-bold hover:bg-gray-100 transition transform hover:scale-105 shadow-2xl flex items-center">
+                            <i class="fas fa-envelope mr-3 text-xl"></i>
+                            <div class="text-left">
+                                <div>무료 상담 신청</div>
+                                <div class="text-xs text-purple-600 font-normal">24시간 내 답변</div>
+                            </div>
+                        </button>
+                        <button onclick="openKakaoChannel()" 
+                                class="bg-yellow-400 text-gray-900 px-12 py-5 rounded-full text-lg font-bold hover:bg-yellow-300 transition transform hover:scale-105 shadow-2xl flex items-center">
+                            <i class="fab fa-kickstarter mr-3 text-xl"></i>
+                            <div class="text-left">
+                                <div>카카오톡 문의</div>
+                                <div class="text-xs text-gray-700 font-normal">실시간 상담</div>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6 text-white">
+                        <div class="flex items-center">
+                            <i class="fas fa-phone-alt mr-2"></i>
+                            <span class="font-semibold">070-4233-5183</span>
+                        </div>
+                        <div class="hidden sm:block w-px h-6 bg-white/30"></div>
+                        <div class="text-sm opacity-90">
+                            평일 10:00-18:00 (점심 12:00-13:00)
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Testimonials -->
