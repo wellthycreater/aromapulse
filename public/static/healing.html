@@ -489,33 +489,62 @@
                         </div>
                     </div>
                     
-                    <!-- Property Address Input -->
-                    <div class="max-w-2xl mx-auto mb-8">
-                        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/30">
-                            <h4 class="text-xl font-bold text-white mb-4 flex items-center justify-center">
-                                <i class="fas fa-map-marker-alt mr-2 text-yellow-300"></i>
-                                관심 있는 매물 주소가 있으신가요?
-                            </h4>
-                            <p class="text-purple-200 text-sm mb-4 text-center">
-                                매물 주소를 입력하시면 입지 분석 및 수익성 리포트를 무료로 제공해드립니다
+                    <!-- Available Properties Section -->
+                    <div class="mb-12">
+                        <div class="text-center mb-8">
+                            <h3 class="text-3xl md:text-4xl font-bold text-white mb-4">
+                                <i class="fas fa-building mr-3 text-yellow-300"></i>
+                                전국 공방 매물 보기
+                            </h3>
+                            <p class="text-xl text-purple-200">
+                                아로마펄스가 엄선한 최적의 공방 공간을 확인하세요
                             </p>
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                <input 
-                                    type="text" 
-                                    id="property-address"
-                                    placeholder="예: 서울특별시 강남구 테헤란로 123" 
-                                    class="flex-1 px-6 py-4 rounded-full bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-yellow-400/50 font-medium"
-                                />
-                                <button 
-                                    onclick="submitPropertyAddress()"
-                                    class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-full font-bold hover:shadow-2xl transition transform hover:scale-105 whitespace-nowrap">
-                                    <i class="fas fa-search mr-2"></i>매물 분석하기
-                                </button>
-                            </div>
-                            <div class="mt-3 flex items-center justify-center gap-2 text-purple-200 text-xs">
-                                <i class="fas fa-shield-alt text-green-400"></i>
-                                <span>입력하신 정보는 안전하게 보호됩니다</span>
-                            </div>
+                        </div>
+                        
+                        <!-- Region Filter -->
+                        <div class="flex flex-wrap justify-center gap-3 mb-8">
+                            <button onclick="filterProperties('all')" 
+                                    class="region-filter active bg-white/20 backdrop-blur-lg px-6 py-3 rounded-full font-bold text-white hover:bg-white/30 transition border border-white/30"
+                                    data-region="all">
+                                <i class="fas fa-globe mr-2"></i>전체
+                            </button>
+                            <button onclick="filterProperties('서울')" 
+                                    class="region-filter bg-white/10 backdrop-blur-lg px-6 py-3 rounded-full font-bold text-white hover:bg-white/20 transition border border-white/20"
+                                    data-region="서울">
+                                <i class="fas fa-building mr-2"></i>서울
+                            </button>
+                            <button onclick="filterProperties('경기')" 
+                                    class="region-filter bg-white/10 backdrop-blur-lg px-6 py-3 rounded-full font-bold text-white hover:bg-white/20 transition border border-white/20"
+                                    data-region="경기">
+                                <i class="fas fa-city mr-2"></i>경기
+                            </button>
+                            <button onclick="filterProperties('부산')" 
+                                    class="region-filter bg-white/10 backdrop-blur-lg px-6 py-3 rounded-full font-bold text-white hover:bg-white/20 transition border border-white/20"
+                                    data-region="부산">
+                                <i class="fas fa-water mr-2"></i>부산
+                            </button>
+                            <button onclick="filterProperties('대구')" 
+                                    class="region-filter bg-white/10 backdrop-blur-lg px-6 py-3 rounded-full font-bold text-white hover:bg-white/20 transition border border-white/20"
+                                    data-region="대구">
+                                <i class="fas fa-mountain mr-2"></i>대구
+                            </button>
+                            <button onclick="filterProperties('기타')" 
+                                    class="region-filter bg-white/10 backdrop-blur-lg px-6 py-3 rounded-full font-bold text-white hover:bg-white/20 transition border border-white/20"
+                                    data-region="기타">
+                                <i class="fas fa-map-marked-alt mr-2"></i>기타 지역
+                            </button>
+                        </div>
+                        
+                        <!-- Properties Grid -->
+                        <div id="properties-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Properties will be dynamically loaded here -->
+                        </div>
+                        
+                        <!-- No Results Message -->
+                        <div id="no-results" class="hidden text-center py-12">
+                            <i class="fas fa-search text-6xl text-purple-300 mb-4"></i>
+                            <p class="text-xl text-purple-200">해당 지역의 매물이 없습니다</p>
+                            <p class="text-purple-300 mt-2">다른 지역을 선택해보세요</p>
                         </div>
                     </div>
                     
@@ -609,6 +638,96 @@
     </section>
 
     <script>
+        // 매물 데이터 (실제로는 API에서 가져와야 함)
+        const properties = [
+            {
+                id: 1,
+                region: '서울',
+                district: '강남구',
+                address: '서울특별시 강남구 테헤란로 123',
+                size: '22평',
+                monthlyRent: 180,
+                deposit: 3000,
+                floor: '2층',
+                features: ['역세권', '주차가능', '신축건물'],
+                image: 'https://via.placeholder.com/400x300/667eea/ffffff?text=강남+공방',
+                status: 'available',
+                description: '강남역 3분 거리, 유동인구가 많은 최적의 입지'
+            },
+            {
+                id: 2,
+                region: '서울',
+                district: '홍대',
+                address: '서울특별시 마포구 와우산로 29길 45',
+                size: '18평',
+                monthlyRent: 150,
+                deposit: 2500,
+                floor: '1층',
+                features: ['홍대입구역', '1층 매장', '젊은층 밀집'],
+                image: 'https://via.placeholder.com/400x300/764ba2/ffffff?text=홍대+공방',
+                status: 'available',
+                description: '홍대 예술의 거리, 트렌디한 공간'
+            },
+            {
+                id: 3,
+                region: '경기',
+                district: '성남시',
+                address: '경기도 성남시 분당구 정자일로 95',
+                size: '25평',
+                monthlyRent: 120,
+                deposit: 2000,
+                floor: '지상 1층',
+                features: ['분당선 정자역', '주차 3대', '넓은 공간'],
+                image: 'https://via.placeholder.com/400x300/f093fb/ffffff?text=분당+공방',
+                status: 'available',
+                description: '여유로운 공간, 가족 단위 고객 유입 우수'
+            },
+            {
+                id: 4,
+                region: '부산',
+                district: '해운대구',
+                address: '부산광역시 해운대구 센텀중앙로 78',
+                size: '20평',
+                monthlyRent: 100,
+                deposit: 1500,
+                floor: '3층',
+                features: ['센텀시티', '오션뷰', '신축'],
+                image: 'https://via.placeholder.com/400x300/64b5f6/ffffff?text=해운대+공방',
+                status: 'reserved',
+                description: '바다가 보이는 힐링 공간, 관광객 유입 가능'
+            },
+            {
+                id: 5,
+                region: '대구',
+                district: '수성구',
+                address: '대구광역시 수성구 범어동 1234',
+                size: '19평',
+                monthlyRent: 90,
+                deposit: 1200,
+                floor: '2층',
+                features: ['범어역', '주차가능', '조용한 분위기'],
+                image: 'https://via.placeholder.com/400x300/81c784/ffffff?text=대구+공방',
+                status: 'available',
+                description: '고급 주거지역, 안정적인 고객층'
+            },
+            {
+                id: 6,
+                region: '경기',
+                district: '수원시',
+                address: '경기도 수원시 영통구 광교중앙로 170',
+                size: '23평',
+                monthlyRent: 110,
+                deposit: 1800,
+                floor: '1층',
+                features: ['광교신도시', '1층', '대로변'],
+                image: 'https://via.placeholder.com/400x300/ff8a65/ffffff?text=광교+공방',
+                status: 'available',
+                description: '신도시 중심가, 신규 거주민 밀집 지역'
+            }
+        ];
+        
+        let currentFilter = 'all';
+        
         function openKakaoChannel() {
             // 카카오톡 채널 연결 (실제 채널 URL로 교체 필요)
             window.open('https://pf.kakao.com/your-channel-id', '_blank');
@@ -616,119 +735,199 @@
             // window.open('http://qr.kakao.com/talk/your-code', '_blank');
         }
         
-        async function submitPropertyAddress() {
-            const addressInput = document.getElementById('property-address');
-            const address = addressInput.value.trim();
+        function loadProperties() {
+            const grid = document.getElementById('properties-grid');
+            const noResults = document.getElementById('no-results');
             
-            if (!address) {
-                alert('매물 주소를 입력해주세요.');
-                addressInput.focus();
+            const filteredProperties = currentFilter === 'all' 
+                ? properties 
+                : properties.filter(p => p.region === currentFilter);
+            
+            if (filteredProperties.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
                 return;
             }
             
-            // 주소 유효성 간단 체크
-            if (address.length < 10) {
-                alert('정확한 주소를 입력해주세요.\n예: 서울특별시 강남구 테헤란로 123');
-                addressInput.focus();
-                return;
-            }
+            noResults.classList.add('hidden');
             
-            // 로딩 표시
-            const originalText = event.target.innerHTML;
-            event.target.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>분석 중...';
-            event.target.disabled = true;
-            
-            try {
-                // 이메일로 매물 정보 전송
-                const subject = encodeURIComponent('매물 입지 분석 요청');
-                const body = encodeURIComponent(
-                    `매물 주소: ${address}\n\n` +
-                    `요청 시간: ${new Date().toLocaleString('ko-KR')}\n\n` +
-                    `분석 요청 사항:\n` +
-                    `- 입지 분석 리포트\n` +
-                    `- 예상 수익성 시뮬레이션\n` +
-                    `- 주변 경쟁 공방 분석\n` +
-                    `- 임대료 적정성 평가\n` +
-                    `- 상권 분석\n\n` +
-                    `※ 24시간 내 상세 리포트를 보내드립니다.`
-                );
-                
-                // 성공 메시지와 함께 이메일 클라이언트 열기
-                setTimeout(() => {
-                    event.target.innerHTML = originalText;
-                    event.target.disabled = false;
+            grid.innerHTML = filteredProperties.map(property => `
+                <div class="category-card bg-white rounded-2xl overflow-hidden shadow-xl">
+                    <!-- Property Image -->
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="${property.image}" alt="${property.district}" class="w-full h-full object-cover">
+                        <div class="absolute top-4 left-4">
+                            <span class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                                ${property.region} · ${property.district}
+                            </span>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            ${property.status === 'available' 
+                                ? '<span class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">입주 가능</span>'
+                                : '<span class="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold">예약 완료</span>'
+                            }
+                        </div>
+                    </div>
                     
-                    // 모달 또는 알림으로 성공 메시지 표시
-                    showSuccessModal(address);
-                    
-                    // 이메일 전송 (백그라운드)
-                    window.location.href = `mailto:support@wellthykorea.com?subject=${subject}&body=${body}`;
-                }, 1000);
-                
-            } catch (error) {
-                console.error('Error:', error);
-                event.target.innerHTML = originalText;
-                event.target.disabled = false;
-                alert('오류가 발생했습니다. 다시 시도해주세요.');
-            }
+                    <!-- Property Info -->
+                    <div class="p-6">
+                        <h4 class="text-xl font-bold text-gray-900 mb-2">${property.district} 무인 공방</h4>
+                        <p class="text-gray-600 text-sm mb-4 flex items-start">
+                            <i class="fas fa-map-marker-alt text-purple-600 mr-2 mt-1"></i>
+                            <span>${property.address}</span>
+                        </p>
+                        
+                        <!-- Features -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            ${property.features.map(feature => `
+                                <span class="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                    ${feature}
+                                </span>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Details Grid -->
+                        <div class="grid grid-cols-2 gap-3 mb-4 p-4 bg-gray-50 rounded-xl">
+                            <div>
+                                <div class="text-gray-500 text-xs mb-1">평수</div>
+                                <div class="font-bold text-gray-900">${property.size}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500 text-xs mb-1">층수</div>
+                                <div class="font-bold text-gray-900">${property.floor}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500 text-xs mb-1">보증금</div>
+                                <div class="font-bold text-purple-600">${property.deposit.toLocaleString()}만원</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500 text-xs mb-1">월세</div>
+                                <div class="font-bold text-pink-600">${property.monthlyRent.toLocaleString()}만원</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+                            ${property.description}
+                        </p>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex gap-2">
+                            <button onclick="showPropertyDetail(${property.id})" 
+                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-lg font-bold hover:shadow-lg transition">
+                                <i class="fas fa-info-circle mr-2"></i>상세보기
+                            </button>
+                            <button onclick="contactAboutProperty(${property.id})" 
+                                    class="flex-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-3 rounded-lg font-bold hover:shadow-lg transition">
+                                <i class="fas fa-phone mr-2"></i>문의하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
         
-        function showSuccessModal(address) {
-            // 성공 모달 표시
+        function filterProperties(region) {
+            currentFilter = region;
+            
+            // Update active button
+            document.querySelectorAll('.region-filter').forEach(btn => {
+                btn.classList.remove('active', 'bg-white/20', 'border-white/30');
+                btn.classList.add('bg-white/10', 'border-white/20');
+            });
+            
+            const activeBtn = document.querySelector(`[data-region="${region}"]`);
+            activeBtn.classList.add('active', 'bg-white/20', 'border-white/30');
+            activeBtn.classList.remove('bg-white/10', 'border-white/20');
+            
+            loadProperties();
+        }
+        
+        function showPropertyDetail(propertyId) {
+            const property = properties.find(p => p.id === propertyId);
+            if (!property) return;
+            
+            // 상세 정보 모달 표시
             const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+            modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto';
             modal.innerHTML = `
-                <div class="bg-white rounded-3xl p-8 max-w-md w-full animate-scale-in shadow-2xl">
-                    <div class="text-center">
-                        <div class="w-20 h-20 bg-gradient-to-r from-green-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-check text-white text-4xl"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-900 mb-4">
-                            분석 요청이 접수되었습니다! 🎉
-                        </h3>
-                        <div class="bg-purple-50 rounded-xl p-4 mb-6">
-                            <p class="text-sm text-gray-600 mb-2">
-                                <i class="fas fa-map-marker-alt text-purple-600 mr-2"></i>
-                                <strong>매물 주소:</strong>
-                            </p>
-                            <p class="text-purple-900 font-semibold">${address}</p>
-                        </div>
-                        <div class="space-y-3 text-left mb-6">
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
-                                <span class="text-gray-700">24시간 내 상세 입지 분석 리포트 발송</span>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
-                                <span class="text-gray-700">예상 수익성 시뮬레이션 제공</span>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
-                                <span class="text-gray-700">주변 상권 및 경쟁 분석</span>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
-                                <span class="text-gray-700">1:1 전문 컨설턴트 매칭</span>
-                            </div>
-                        </div>
+                <div class="bg-white rounded-3xl max-w-2xl w-full my-8 animate-scale-in shadow-2xl">
+                    <div class="relative">
+                        <img src="${property.image}" alt="${property.district}" class="w-full h-64 object-cover rounded-t-3xl">
                         <button onclick="this.closest('.fixed').remove()" 
-                                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-lg transition">
-                            확인
+                                class="absolute top-4 right-4 bg-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition">
+                            <i class="fas fa-times text-gray-700"></i>
                         </button>
-                        <p class="text-gray-500 text-sm mt-4">
-                            <i class="fas fa-envelope mr-2"></i>
-                            이메일로도 동일한 내용을 발송했습니다
-                        </p>
+                    </div>
+                    
+                    <div class="p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-3xl font-bold text-gray-900">${property.district} 무인 공방</h3>
+                            ${property.status === 'available' 
+                                ? '<span class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold">입주 가능</span>'
+                                : '<span class="bg-gray-500 text-white px-4 py-2 rounded-full text-sm font-bold">예약 완료</span>'
+                            }
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <!-- Address -->
+                            <div class="flex items-start">
+                                <i class="fas fa-map-marker-alt text-purple-600 text-xl mr-4 mt-1"></i>
+                                <div>
+                                    <div class="font-semibold text-gray-700 mb-1">주소</div>
+                                    <div class="text-gray-900">${property.address}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Details Grid -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-purple-50 p-4 rounded-xl">
+                                    <div class="text-purple-600 text-sm mb-1">평수</div>
+                                    <div class="text-2xl font-bold text-gray-900">${property.size}</div>
+                                </div>
+                                <div class="bg-pink-50 p-4 rounded-xl">
+                                    <div class="text-pink-600 text-sm mb-1">층수</div>
+                                    <div class="text-2xl font-bold text-gray-900">${property.floor}</div>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-xl">
+                                    <div class="text-green-600 text-sm mb-1">보증금</div>
+                                    <div class="text-2xl font-bold text-gray-900">${property.deposit.toLocaleString()}<span class="text-base">만원</span></div>
+                                </div>
+                                <div class="bg-orange-50 p-4 rounded-xl">
+                                    <div class="text-orange-600 text-sm mb-1">월세</div>
+                                    <div class="text-2xl font-bold text-gray-900">${property.monthlyRent.toLocaleString()}<span class="text-base">만원</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Features -->
+                            <div>
+                                <div class="font-semibold text-gray-700 mb-3">주요 특징</div>
+                                <div class="flex flex-wrap gap-2">
+                                    ${property.features.map(feature => `
+                                        <span class="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold">
+                                            <i class="fas fa-check mr-2"></i>${feature}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Description -->
+                            <div>
+                                <div class="font-semibold text-gray-700 mb-3">매물 설명</div>
+                                <p class="text-gray-600 leading-relaxed">${property.description}</p>
+                            </div>
+                            
+                            <!-- Contact Button -->
+                            <button onclick="contactAboutProperty(${property.id}); this.closest('.fixed').remove();" 
+                                    class="w-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 text-white px-8 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition transform hover:scale-105">
+                                <i class="fas fa-phone-alt mr-2"></i>이 매물 문의하기
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
             
             document.body.appendChild(modal);
-            
-            // 3초 후 입력 필드 초기화
-            setTimeout(() => {
-                document.getElementById('property-address').value = '';
-            }, 3000);
             
             // 모달 외부 클릭 시 닫기
             modal.addEventListener('click', (e) => {
@@ -737,6 +936,35 @@
                 }
             });
         }
+        
+        function contactAboutProperty(propertyId) {
+            const property = properties.find(p => p.id === propertyId);
+            if (!property) return;
+            
+            const subject = encodeURIComponent(`[매물 문의] ${property.district} 무인 공방`);
+            const body = encodeURIComponent(
+                `매물 정보:\n` +
+                `- 위치: ${property.address}\n` +
+                `- 평수: ${property.size}\n` +
+                `- 보증금: ${property.deposit.toLocaleString()}만원\n` +
+                `- 월세: ${property.monthlyRent.toLocaleString()}만원\n\n` +
+                `문의 내용:\n` +
+                `(여기에 문의 내용을 작성해주세요)\n\n` +
+                `연락처:\n` +
+                `이름: \n` +
+                `전화번호: \n` +
+                `이메일: \n`
+            );
+            
+            window.location.href = `mailto:support@wellthykorea.com?subject=${subject}&body=${body}`;
+        }
+        
+        // Page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProperties();
+        });
+        
+
     </script>
     
     <style>
