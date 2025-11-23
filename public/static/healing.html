@@ -748,7 +748,7 @@
     </section>
 
     <script>
-        // 매물 데이터 (실제로는 API에서 가져와야 함)
+        // 매물 데이터 (수익 공유 모델)
         const properties = [
             {
                 id: 1,
@@ -756,10 +756,9 @@
                 district: '강남구',
                 address: '서울특별시 강남구 테헤란로 123',
                 size: '22평',
-                monthlyRent: 180,
-                deposit: 3000,
+                revenueShare: '25%',
                 floor: '2층',
-                features: ['역세권', '주차가능', '신축건물'],
+                features: ['역세권', '주차가능', '신축건물', '보증금 ZERO', '월세 ZERO'],
                 image: 'https://via.placeholder.com/400x300/667eea/ffffff?text=강남+공방',
                 status: 'available',
                 description: '강남역 3분 거리, 유동인구가 많은 최적의 입지'
@@ -770,10 +769,9 @@
                 district: '홍대',
                 address: '서울특별시 마포구 와우산로 29길 45',
                 size: '18평',
-                monthlyRent: 150,
-                deposit: 2500,
+                revenueShare: '23%',
                 floor: '1층',
-                features: ['홍대입구역', '1층 매장', '젊은층 밀집'],
+                features: ['홍대입구역', '1층 매장', '젊은층 밀집', '보증금 ZERO', '월세 ZERO'],
                 image: 'https://via.placeholder.com/400x300/764ba2/ffffff?text=홍대+공방',
                 status: 'available',
                 description: '홍대 예술의 거리, 트렌디한 공간'
@@ -784,10 +782,9 @@
                 district: '성남시',
                 address: '경기도 성남시 분당구 정자일로 95',
                 size: '25평',
-                monthlyRent: 120,
-                deposit: 2000,
+                revenueShare: '20%',
                 floor: '지상 1층',
-                features: ['분당선 정자역', '주차 3대', '넓은 공간'],
+                features: ['분당선 정자역', '주차 3대', '넓은 공간', '보증금 ZERO', '월세 ZERO'],
                 image: 'https://via.placeholder.com/400x300/f093fb/ffffff?text=분당+공방',
                 status: 'available',
                 description: '여유로운 공간, 가족 단위 고객 유입 우수'
@@ -798,10 +795,9 @@
                 district: '해운대구',
                 address: '부산광역시 해운대구 센텀중앙로 78',
                 size: '20평',
-                monthlyRent: 100,
-                deposit: 1500,
+                revenueShare: '22%',
                 floor: '3층',
-                features: ['센텀시티', '오션뷰', '신축'],
+                features: ['센텀시티', '오션뷰', '신축', '보증금 ZERO', '월세 ZERO'],
                 image: 'https://via.placeholder.com/400x300/64b5f6/ffffff?text=해운대+공방',
                 status: 'reserved',
                 description: '바다가 보이는 힐링 공간, 관광객 유입 가능'
@@ -812,10 +808,9 @@
                 district: '수성구',
                 address: '대구광역시 수성구 범어동 1234',
                 size: '19평',
-                monthlyRent: 90,
-                deposit: 1200,
+                revenueShare: '20%',
                 floor: '2층',
-                features: ['범어역', '주차가능', '조용한 분위기'],
+                features: ['범어역', '주차가능', '조용한 분위기', '보증금 ZERO', '월세 ZERO'],
                 image: 'https://via.placeholder.com/400x300/81c784/ffffff?text=대구+공방',
                 status: 'available',
                 description: '고급 주거지역, 안정적인 고객층'
@@ -826,10 +821,9 @@
                 district: '수원시',
                 address: '경기도 수원시 영통구 광교중앙로 170',
                 size: '23평',
-                monthlyRent: 110,
-                deposit: 1800,
+                revenueShare: '22%',
                 floor: '1층',
-                features: ['광교신도시', '1층', '대로변'],
+                features: ['광교신도시', '1층', '대로변', '보증금 ZERO', '월세 ZERO'],
                 image: 'https://via.placeholder.com/400x300/ff8a65/ffffff?text=광교+공방',
                 status: 'available',
                 description: '신도시 중심가, 신규 거주민 밀집 지역'
@@ -897,7 +891,7 @@
                         </div>
                         
                         <!-- Details Grid -->
-                        <div class="grid grid-cols-2 gap-3 mb-4 p-4 bg-gray-50 rounded-xl">
+                        <div class="grid grid-cols-3 gap-3 mb-4 p-4 bg-gray-50 rounded-xl">
                             <div>
                                 <div class="text-gray-500 text-xs mb-1">평수</div>
                                 <div class="font-bold text-gray-900">${property.size}</div>
@@ -907,12 +901,20 @@
                                 <div class="font-bold text-gray-900">${property.floor}</div>
                             </div>
                             <div>
-                                <div class="text-gray-500 text-xs mb-1">보증금</div>
-                                <div class="font-bold text-purple-600">${property.deposit.toLocaleString()}만원</div>
+                                <div class="text-gray-500 text-xs mb-1">수익 공유</div>
+                                <div class="font-bold text-green-600">${property.revenueShare}</div>
                             </div>
-                            <div>
-                                <div class="text-gray-500 text-xs mb-1">월세</div>
-                                <div class="font-bold text-pink-600">${property.monthlyRent.toLocaleString()}만원</div>
+                        </div>
+                        
+                        <!-- Zero Cost Highlight -->
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-gradient-to-r from-green-50 to-teal-50 p-3 rounded-xl text-center border border-green-200">
+                                <div class="text-green-600 text-xs mb-1">보증금</div>
+                                <div class="font-bold text-green-700 text-lg">0원 ✨</div>
+                            </div>
+                            <div class="bg-gradient-to-r from-green-50 to-teal-50 p-3 rounded-xl text-center border border-green-200">
+                                <div class="text-green-600 text-xs mb-1">월세</div>
+                                <div class="font-bold text-green-700 text-lg">0원 ✨</div>
                             </div>
                         </div>
                         
@@ -990,7 +992,7 @@
                             </div>
                             
                             <!-- Details Grid -->
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-3 gap-4 mb-4">
                                 <div class="bg-purple-50 p-4 rounded-xl">
                                     <div class="text-purple-600 text-sm mb-1">평수</div>
                                     <div class="text-2xl font-bold text-gray-900">${property.size}</div>
@@ -999,13 +1001,29 @@
                                     <div class="text-pink-600 text-sm mb-1">층수</div>
                                     <div class="text-2xl font-bold text-gray-900">${property.floor}</div>
                                 </div>
-                                <div class="bg-green-50 p-4 rounded-xl">
-                                    <div class="text-green-600 text-sm mb-1">보증금</div>
-                                    <div class="text-2xl font-bold text-gray-900">${property.deposit.toLocaleString()}<span class="text-base">만원</span></div>
+                                <div class="bg-blue-50 p-4 rounded-xl">
+                                    <div class="text-blue-600 text-sm mb-1">수익 공유</div>
+                                    <div class="text-2xl font-bold text-gray-900">${property.revenueShare}</div>
                                 </div>
-                                <div class="bg-orange-50 p-4 rounded-xl">
-                                    <div class="text-orange-600 text-sm mb-1">월세</div>
-                                    <div class="text-2xl font-bold text-gray-900">${property.monthlyRent.toLocaleString()}<span class="text-base">만원</span></div>
+                            </div>
+                            
+                            <!-- Zero Cost Highlight -->
+                            <div class="bg-gradient-to-r from-green-500 to-teal-500 p-6 rounded-xl mb-4">
+                                <div class="text-center">
+                                    <div class="text-white text-lg font-bold mb-3">💰 수익 공유 모델</div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="bg-white/20 backdrop-blur-lg rounded-lg p-3">
+                                            <div class="text-white text-xs mb-1">보증금</div>
+                                            <div class="text-white text-2xl font-bold">0원</div>
+                                        </div>
+                                        <div class="bg-white/20 backdrop-blur-lg rounded-lg p-3">
+                                            <div class="text-white text-xs mb-1">월세</div>
+                                            <div class="text-white text-2xl font-bold">0원</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-white text-sm mt-3 opacity-90">
+                                        사장님 ${100 - parseInt(property.revenueShare)}% / 아로마펄스 ${property.revenueShare} 수익 배분
+                                    </div>
                                 </div>
                             </div>
                             
@@ -1051,19 +1069,23 @@
             const property = properties.find(p => p.id === propertyId);
             if (!property) return;
             
-            const subject = encodeURIComponent(`[매물 문의] ${property.district} 무인 공방`);
+            const subject = encodeURIComponent(`[매물 문의] ${property.district} 무인 공방 - 수익 공유 모델`);
             const body = encodeURIComponent(
                 `매물 정보:\n` +
                 `- 위치: ${property.address}\n` +
                 `- 평수: ${property.size}\n` +
-                `- 보증금: ${property.deposit.toLocaleString()}만원\n` +
-                `- 월세: ${property.monthlyRent.toLocaleString()}만원\n\n` +
+                `- 층수: ${property.floor}\n\n` +
+                `💰 수익 공유 모델:\n` +
+                `- 보증금: 0원 (ZERO)\n` +
+                `- 월세: 0원 (ZERO)\n` +
+                `- 수익 배분: 사장님 ${100 - parseInt(property.revenueShare)}% / 아로마펄스 ${property.revenueShare}\n\n` +
                 `문의 내용:\n` +
                 `(여기에 문의 내용을 작성해주세요)\n\n` +
                 `연락처:\n` +
                 `이름: \n` +
                 `전화번호: \n` +
-                `이메일: \n`
+                `이메일: \n` +
+                `현재 운영 중인 공방: \n`
             );
             
             window.location.href = `mailto:support@wellthykorea.com?subject=${subject}&body=${body}`;
