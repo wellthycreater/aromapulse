@@ -451,25 +451,37 @@
                         수익 공유 구조
                     </h4>
                     <div class="space-y-6">
-                        <!-- Revenue Share Breakdown -->
+                        <!-- Revenue Share Consultation Notice -->
+                        <div class="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-8 border border-purple-400/30 text-center mb-6">
+                            <div class="inline-block bg-white/10 backdrop-blur-lg px-6 py-3 rounded-full mb-4">
+                                <i class="fas fa-handshake text-yellow-400 text-2xl mr-3"></i>
+                                <span class="text-white font-bold text-xl">맞춤 수익 배분율 제안</span>
+                            </div>
+                            <p class="text-purple-100 text-lg leading-relaxed">
+                                각 매장의 입지, 규모, 운영 방식에 따라 <strong class="text-white">최적화된 수익 배분율</strong>을 제안해드립니다.<br>
+                                상담을 통해 <strong class="text-yellow-300">사장님께 가장 유리한 조건</strong>을 찾아드립니다.
+                            </p>
+                        </div>
+                        
+                        <!-- Revenue Share Benefits -->
                         <div class="grid md:grid-cols-2 gap-6">
                             <div class="bg-purple-500/10 rounded-xl p-6 border border-purple-400/20">
                                 <div class="flex items-center mb-4">
                                     <i class="fas fa-user-tie text-purple-400 text-2xl mr-3"></i>
-                                    <div class="text-purple-200 font-semibold">사장님 몫</div>
+                                    <div class="text-purple-200 font-semibold">사장님 수익</div>
                                 </div>
-                                <div class="text-4xl font-bold text-white mb-2">70~80%</div>
+                                <div class="text-3xl font-bold text-white mb-2">큰 비중 배분</div>
                                 <p class="text-purple-200 text-sm">
                                     운영, 마케팅, 콘텐츠 제작 등<br>
-                                    모든 매출의 대부분은 사장님께!
+                                    모든 노력에 대한 정당한 보상
                                 </p>
                             </div>
                             <div class="bg-pink-500/10 rounded-xl p-6 border border-pink-400/20">
                                 <div class="flex items-center mb-4">
                                     <i class="fas fa-building text-pink-400 text-2xl mr-3"></i>
-                                    <div class="text-pink-200 font-semibold">아로마펄스 몫</div>
+                                    <div class="text-pink-200 font-semibold">아로마펄스 지원</div>
                                 </div>
-                                <div class="text-4xl font-bold text-white mb-2">20~30%</div>
+                                <div class="text-3xl font-bold text-white mb-2">공간 + 시스템</div>
                                 <p class="text-pink-200 text-sm">
                                     공간 제공, 시설 유지보수,<br>
                                     플랫폼 마케팅 지원
@@ -756,9 +768,8 @@
                 district: '강남구',
                 address: '서울특별시 강남구 테헤란로 123',
                 size: '22평',
-                revenueShare: '25%',
                 floor: '2층',
-                features: ['역세권', '주차가능', '신축건물', '보증금 ZERO', '월세 ZERO'],
+                features: ['역세권', '주차가능', '신축건물'],
                 image: 'https://via.placeholder.com/400x300/667eea/ffffff?text=강남+공방',
                 status: 'available',
                 description: '강남역 3분 거리, 유동인구가 많은 최적의 입지'
@@ -769,9 +780,8 @@
                 district: '홍대',
                 address: '서울특별시 마포구 와우산로 29길 45',
                 size: '18평',
-                revenueShare: '23%',
                 floor: '1층',
-                features: ['홍대입구역', '1층 매장', '젊은층 밀집', '보증금 ZERO', '월세 ZERO'],
+                features: ['홍대입구역', '1층 매장', '젊은층 밀집'],
                 image: 'https://via.placeholder.com/400x300/764ba2/ffffff?text=홍대+공방',
                 status: 'available',
                 description: '홍대 예술의 거리, 트렌디한 공간'
@@ -782,9 +792,8 @@
                 district: '성남시',
                 address: '경기도 성남시 분당구 정자일로 95',
                 size: '25평',
-                revenueShare: '20%',
                 floor: '지상 1층',
-                features: ['분당선 정자역', '주차 3대', '넓은 공간', '보증금 ZERO', '월세 ZERO'],
+                features: ['분당선 정자역', '주차 3대', '넓은 공간'],
                 image: 'https://via.placeholder.com/400x300/f093fb/ffffff?text=분당+공방',
                 status: 'available',
                 description: '여유로운 공간, 가족 단위 고객 유입 우수'
@@ -795,9 +804,8 @@
                 district: '해운대구',
                 address: '부산광역시 해운대구 센텀중앙로 78',
                 size: '20평',
-                revenueShare: '22%',
                 floor: '3층',
-                features: ['센텀시티', '오션뷰', '신축', '보증금 ZERO', '월세 ZERO'],
+                features: ['센텀시티', '오션뷰', '신축'],
                 image: 'https://via.placeholder.com/400x300/64b5f6/ffffff?text=해운대+공방',
                 status: 'reserved',
                 description: '바다가 보이는 힐링 공간, 관광객 유입 가능'
@@ -808,9 +816,8 @@
                 district: '수성구',
                 address: '대구광역시 수성구 범어동 1234',
                 size: '19평',
-                revenueShare: '20%',
                 floor: '2층',
-                features: ['범어역', '주차가능', '조용한 분위기', '보증금 ZERO', '월세 ZERO'],
+                features: ['범어역', '주차가능', '조용한 분위기'],
                 image: 'https://via.placeholder.com/400x300/81c784/ffffff?text=대구+공방',
                 status: 'available',
                 description: '고급 주거지역, 안정적인 고객층'
@@ -821,9 +828,8 @@
                 district: '수원시',
                 address: '경기도 수원시 영통구 광교중앙로 170',
                 size: '23평',
-                revenueShare: '22%',
                 floor: '1층',
-                features: ['광교신도시', '1층', '대로변', '보증금 ZERO', '월세 ZERO'],
+                features: ['광교신도시', '1층', '대로변'],
                 image: 'https://via.placeholder.com/400x300/ff8a65/ffffff?text=광교+공방',
                 status: 'available',
                 description: '신도시 중심가, 신규 거주민 밀집 지역'
@@ -891,7 +897,7 @@
                         </div>
                         
                         <!-- Details Grid -->
-                        <div class="grid grid-cols-3 gap-3 mb-4 p-4 bg-gray-50 rounded-xl">
+                        <div class="grid grid-cols-2 gap-3 mb-4 p-4 bg-gray-50 rounded-xl">
                             <div>
                                 <div class="text-gray-500 text-xs mb-1">평수</div>
                                 <div class="font-bold text-gray-900">${property.size}</div>
@@ -900,10 +906,13 @@
                                 <div class="text-gray-500 text-xs mb-1">층수</div>
                                 <div class="font-bold text-gray-900">${property.floor}</div>
                             </div>
-                            <div>
-                                <div class="text-gray-500 text-xs mb-1">수익 공유</div>
-                                <div class="font-bold text-green-600">${property.revenueShare}</div>
-                            </div>
+                        </div>
+                        
+                        <!-- Revenue Share Consultation Notice -->
+                        <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl mb-4 border border-purple-200">
+                            <p class="text-purple-700 text-sm font-semibold text-center">
+                                <i class="fas fa-handshake mr-2"></i>수익 배분율은 상담 시 안내해드립니다
+                            </p>
                         </div>
                         
                         <!-- Zero Cost Highlight -->
@@ -992,7 +1001,7 @@
                             </div>
                             
                             <!-- Details Grid -->
-                            <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="grid grid-cols-2 gap-4 mb-4">
                                 <div class="bg-purple-50 p-4 rounded-xl">
                                     <div class="text-purple-600 text-sm mb-1">평수</div>
                                     <div class="text-2xl font-bold text-gray-900">${property.size}</div>
@@ -1000,10 +1009,6 @@
                                 <div class="bg-pink-50 p-4 rounded-xl">
                                     <div class="text-pink-600 text-sm mb-1">층수</div>
                                     <div class="text-2xl font-bold text-gray-900">${property.floor}</div>
-                                </div>
-                                <div class="bg-blue-50 p-4 rounded-xl">
-                                    <div class="text-blue-600 text-sm mb-1">수익 공유</div>
-                                    <div class="text-2xl font-bold text-gray-900">${property.revenueShare}</div>
                                 </div>
                             </div>
                             
@@ -1021,8 +1026,8 @@
                                             <div class="text-white text-2xl font-bold">0원</div>
                                         </div>
                                     </div>
-                                    <div class="text-white text-sm mt-3 opacity-90">
-                                        사장님 ${100 - parseInt(property.revenueShare)}% / 아로마펄스 ${property.revenueShare} 수익 배분
+                                    <div class="text-white text-sm mt-3 bg-white/10 backdrop-blur-lg rounded-lg p-3">
+                                        <i class="fas fa-handshake mr-2"></i>상담을 통해 맞춤 수익 배분율을 안내해드립니다
                                     </div>
                                 </div>
                             </div>
@@ -1078,7 +1083,7 @@
                 `💰 수익 공유 모델:\n` +
                 `- 보증금: 0원 (ZERO)\n` +
                 `- 월세: 0원 (ZERO)\n` +
-                `- 수익 배분: 사장님 ${100 - parseInt(property.revenueShare)}% / 아로마펄스 ${property.revenueShare}\n\n` +
+                `- 수익 배분: 상담 시 맞춤 안내\n\n` +
                 `문의 내용:\n` +
                 `(여기에 문의 내용을 작성해주세요)\n\n` +
                 `연락처:\n` +
