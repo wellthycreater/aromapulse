@@ -518,4 +518,3 @@ function addToGoogleCalendar() {
     // 새 창에서 구글 캘린더 열기
     window.open(googleCalendarUrl, '_blank', 'width=700,height=600');
 }
-}

@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { getCookie } from 'hono/cookie';
+import { JWTManager } from '../lib/auth/jwt';
 import type { Bindings } from '../types';
 
 const workshopQuotes = new Hono<{ Bindings: Bindings }>();
@@ -6,13 +8,18 @@ const workshopQuotes = new Hono<{ Bindings: Bindings }>();
 // Create workshop quote request
 workshopQuotes.post('/', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    if (!authHeader) {
-      return c.json({ error: '인증이 필요합니다' }, 401);
+    const token = getCookie(c, 'auth_token');
+    if (!token) {
+      return c.json({ error: '로그인이 필요합니다' }, 401);
     }
     
-    const token = authHeader.replace('Bearer ', '');
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const jwtManager = new JWTManager(c.env.JWT_SECRET);
+    const payload = await jwtManager.verify(token);
+    
+    if (!payload) {
+      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+    }
+    
     const userId = payload.userId;
     
     const data = await c.req.json();
@@ -75,13 +82,18 @@ workshopQuotes.post('/', async (c) => {
 // Get user's quote requests
 workshopQuotes.get('/my', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    if (!authHeader) {
-      return c.json({ error: '인증이 필요합니다' }, 401);
+    const token = getCookie(c, 'auth_token');
+    if (!token) {
+      return c.json({ error: '로그인이 필요합니다' }, 401);
     }
     
-    const token = authHeader.replace('Bearer ', '');
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const jwtManager = new JWTManager(c.env.JWT_SECRET);
+    const payload = await jwtManager.verify(token);
+    
+    if (!payload) {
+      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+    }
+    
     const userId = payload.userId;
     
     const result = await c.env.DB.prepare(

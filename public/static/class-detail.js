@@ -56,18 +56,25 @@ function toggleBookingType() {
 }
 
 // Check authentication and update UI
-function checkAuth() {
-    const token = localStorage.getItem('token');
-    const authButton = document.getElementById('auth-button');
-    
-    if (token) {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/auth/me', {
+            credentials: 'include'
+        });
+        
+        const authButton = document.getElementById('auth-button');
+        
+        if (response.ok) {
+            const user = await response.json();
             authButton.textContent = `${user.name}님`;
             authButton.onclick = () => window.location.href = '/dashboard';
+        } else {
+            authButton.textContent = '로그인';
+            authButton.onclick = () => window.location.href = '/login';
         }
-    } else {
+    } catch (error) {
+        console.error('Auth check error:', error);
+        const authButton = document.getElementById('auth-button');
         authButton.textContent = '로그인';
         authButton.onclick = () => window.location.href = '/login';
     }
@@ -209,13 +216,15 @@ function setupFormHandlers() {
     });
 }
 
-// Check quote permission (same as workshops.js)
 // Submit class booking request
 async function submitQuoteRequest() {
     try {
         // Check if user is logged in
-        const token = localStorage.getItem('token');
-        if (!token) {
+        const authCheck = await fetch('/api/auth/me', {
+            credentials: 'include'
+        });
+        
+        if (!authCheck.ok) {
             alert('로그인이 필요합니다.');
             window.location.href = '/login';
             return;
@@ -261,19 +270,19 @@ async function submitQuoteRequest() {
             is_workation: 0
         };
         
-        // Send request
+        // Send request with cookie-based authentication
         const response = await fetch('/api/workshop-quotes', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify(bookingData)
         });
         
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '클래스 신청 전송 실패');
+            throw new Error(error.error || '예약 처리 중 오류가 발생했습니다');
         }
         
         // Show success modal
@@ -286,7 +295,7 @@ async function submitQuoteRequest() {
         
     } catch (error) {
         console.error('클래스 신청 오류:', error);
-        alert(`클래스 신청에 실패했습니다:\n${error.message}`);
+        alert(`예약 실패: ${error.message}`);
     }
 }
 

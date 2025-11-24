@@ -14,17 +14,21 @@ const bookings = new Hono<{ Bindings: Bindings }>();
 // Create a new booking
 bookings.post('/oneday-classes/:classId', async (c: Context) => {
   try {
+    console.log('=== Booking Request Start ===');
     const { DB, JWT_SECRET } = c.env as Bindings;
     const classId = c.req.param('classId');
+    console.log('Class ID:', classId);
     
     // Get user from JWT token
     const token = getCookie(c, 'auth_token');
+    console.log('Token exists:', !!token);
     if (!token) {
       return c.json({ error: '로그인이 필요합니다' }, 401);
     }
     
     const jwtManager = new JWTManager(JWT_SECRET);
     const payload = await jwtManager.verify(token);
+    console.log('Payload:', payload);
     
     if (!payload) {
       return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
@@ -32,13 +36,13 @@ bookings.post('/oneday-classes/:classId', async (c: Context) => {
     
     // Get booking data from request
     const data = await c.req.json();
+    console.log('Booking data:', data);
     const {
       booking_date,  // ISO datetime string
       participants,
       booker_name,
       booker_phone,
-      booker_email,
-      special_requests
+      booker_email
     } = data;
     
     // Validate required fields
@@ -46,12 +50,14 @@ bookings.post('/oneday-classes/:classId', async (c: Context) => {
       return c.json({ error: '필수 정보를 모두 입력해주세요' }, 400);
     }
     
+    console.log('Querying class info...');
     // Get class info
     const classInfo = await DB.prepare(`
       SELECT id, title, price, provider_id FROM oneday_classes 
       WHERE id = ? AND is_active = 1
     `).bind(classId).first<{ id: number, title: string, price: number, provider_id: number }>();
     
+    console.log('Class info:', classInfo);
     if (!classInfo) {
       return c.json({ error: '클래스를 찾을 수 없습니다' }, 404);
     }
@@ -101,7 +107,14 @@ bookings.post('/oneday-classes/:classId', async (c: Context) => {
     
   } catch (error: any) {
     console.error('Booking creation error:', error);
-    return c.json({ error: '예약 처리 중 오류가 발생했습니다', details: error.message }, 500);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    return c.json({ 
+      error: '예약 처리 중 오류가 발생했습니다', 
+      details: error.message,
+      stack: error.stack,
+      type: error.constructor.name 
+    }, 500);
   }
 });
 
@@ -419,7 +432,7 @@ bookings.post('/products', async (c: Context) => {
         b.*,
         p.name as product_name,
         p.description as product_description,
-        p.image_url
+        p.thumbnail_image as image_url
       FROM product_bookings b
       JOIN products p ON b.product_id = p.id
       WHERE b.id = ?
@@ -459,7 +472,7 @@ bookings.get('/products/my', async (c: Context) => {
       SELECT 
         b.*,
         p.name as product_name,
-        p.image_url
+        p.thumbnail_image as image_url
       FROM product_bookings b
       JOIN products p ON b.product_id = p.id
       WHERE b.user_id = ?

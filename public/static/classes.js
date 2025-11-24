@@ -469,7 +469,7 @@ async function submitBooking(event) {
                 booker_name: bookerName,
                 booker_phone: bookerPhone,
                 booker_email: bookerEmail,
-                notes: notes || null
+                special_requests: notes || null
             })
         });
         
@@ -478,11 +478,26 @@ async function submitBooking(event) {
             showBookingSuccess(data.booking);
         } else {
             const error = await response.json();
-            alert(`예약 실패: ${error.error || '알 수 없는 오류'}`);
+            console.error('=== Server Error Response ===');
+            console.error('Status:', response.status);
+            console.error('Error object:', error);
+            console.error('Error JSON:', JSON.stringify(error, null, 2));
+            
+            // 에러 정보를 화면에 표시
+            const errorDetails = `
+에러: ${error.error || '알 수 없는 오류'}
+상세: ${error.details || 'N/A'}
+타입: ${error.type || 'N/A'}
+상태 코드: ${response.status}
+
+전체 응답:
+${JSON.stringify(error, null, 2)}
+            `;
+            alert(errorDetails);
         }
     } catch (error) {
         console.error('예약 오류:', error);
-        alert('예약 처리 중 오류가 발생했습니다.');
+        alert(`예약 처리 중 오류가 발생했습니다.\n\n에러: ${error.message}\n\n자세한 내용은 콘솔(F12)을 확인하세요.`);
     }
 }
 
@@ -506,13 +521,39 @@ function showBookingSuccess(booking) {
     document.getElementById('success-date').textContent = dateStr;
     document.getElementById('success-participants').textContent = `${booking.participants}명`;
     
-    // iCalendar 다운로드 링크 설정
-    const icalendarLink = document.getElementById('icalendar-link');
-    icalendarLink.href = `/api/bookings/${booking.id}/icalendar`;
-    icalendarLink.download = `aromapulse-booking-${booking.id}.ics`;
+    // 구글 캘린더 추가 링크 생성
+    const googleCalendarLink = createGoogleCalendarLink(booking);
+    const calendarButton = document.getElementById('google-calendar-link');
+    calendarButton.href = googleCalendarLink;
     
     // 성공 모달 표시
     document.getElementById('success-modal').classList.remove('hidden');
+}
+
+// 구글 캘린더 링크 생성
+function createGoogleCalendarLink(booking) {
+    const startDate = new Date(booking.booking_date);
+    const duration = booking.duration || 90; // 기본 90분
+    const endDate = new Date(startDate.getTime() + duration * 60000);
+    
+    // 구글 캘린더 URL 형식: YYYYMMDDTHHMMSSZ
+    const formatGoogleDate = (date) => {
+        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+    
+    const title = encodeURIComponent(booking.class_title || '아로마펄스 원데이 클래스');
+    const location = encodeURIComponent(booking.address || booking.location || '');
+    const description = encodeURIComponent(
+        `예약 번호: ${booking.id}\n` +
+        `참가 인원: ${booking.participants}명\n` +
+        `예약자: ${booking.booker_name}\n` +
+        `연락처: ${booking.booker_phone}\n\n` +
+        `${booking.class_description || ''}`
+    );
+    
+    const dates = `${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`;
+    
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${description}&location=${location}`;
 }
 
 // 성공 모달 닫기
