@@ -55,8 +55,8 @@ async function checkAuth() {
 
 // 사용자 정보 로드
 async function loadUserInfo() {
-    const user = await checkAuth();
-    if (!user) return;
+    const authUser = await checkAuth();
+    if (!authUser) return;
     
     try {
         const response = await fetch('/api/user/profile', {
@@ -75,11 +75,11 @@ async function loadUserInfo() {
         const user = data.user || data;
         
         // 사이드바 정보 업데이트
-        document.getElementById('sidebar-user-name').textContent = user.name || tokenUser.name || '사용자';
-        document.getElementById('sidebar-user-email').textContent = user.email || tokenUser.email || '';
+        document.getElementById('sidebar-user-name').textContent = user.name || authUser.name || '사용자';
+        document.getElementById('sidebar-user-email').textContent = user.email || authUser.email || '';
         
         // 프로필 이니셜 설정
-        const initial = (user.name || tokenUser.name || 'U').charAt(0).toUpperCase();
+        const initial = (user.name || authUser.name || 'U').charAt(0).toUpperCase();
         document.getElementById('profile-initial').textContent = initial;
         
         // 프로필 이미지가 있으면 표시
@@ -96,6 +96,7 @@ async function loadUserInfo() {
         }
         
         // 프로필 폼 채우기
+        console.log('프로필 폼 채우기 - name:', user.name, 'email:', user.email);
         document.getElementById('profile-name').value = user.name || '';
         document.getElementById('profile-email').value = user.email || '';
         document.getElementById('profile-phone').value = user.phone || '';
@@ -103,6 +104,7 @@ async function loadUserInfo() {
         
         // OAuth 사용자는 이메일 변경 불가
         const emailInput = document.getElementById('profile-email');
+        console.log('OAuth provider:', user.oauth_provider);
         if (user.oauth_provider && user.oauth_provider !== 'local') {
             emailInput.readOnly = true;
             emailInput.classList.add('bg-gray-50');
@@ -115,13 +117,13 @@ async function loadUserInfo() {
         
     } catch (error) {
         console.error('Failed to load user info:', error);
-        // 토큰에서 기본 정보 사용
-        document.getElementById('sidebar-user-name').textContent = tokenUser.name || '사용자';
-        document.getElementById('sidebar-user-email').textContent = tokenUser.email || '';
-        document.getElementById('profile-initial').textContent = (tokenUser.name || 'U').charAt(0).toUpperCase();
+        // checkAuth에서 받은 기본 정보 사용
+        document.getElementById('sidebar-user-name').textContent = authUser.name || '사용자';
+        document.getElementById('sidebar-user-email').textContent = authUser.email || '';
+        document.getElementById('profile-initial').textContent = (authUser.name || 'U').charAt(0).toUpperCase();
         
-        document.getElementById('profile-name').value = tokenUser.name || '';
-        document.getElementById('profile-email').value = tokenUser.email || '';
+        document.getElementById('profile-name').value = authUser.name || '';
+        document.getElementById('profile-email').value = authUser.email || '';
     }
 }
 
