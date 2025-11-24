@@ -4,6 +4,7 @@ let currentProduct = null;
 // URL에서 제품 ID 가져오기
 const urlParams = new URLSearchParams(window.location.search);
 const productId = urlParams.get('id');
+const autoBooking = urlParams.get('booking'); // 예약 모달 자동 열기 플래그
 
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', async () => {
@@ -16,6 +17,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadProductDetail();
     updateCartCount();
     initScrollHandler();
+    
+    // booking=true 파라미터가 있으면 예약 모달 자동 열기
+    if (autoBooking === 'true') {
+        setTimeout(() => {
+            openBookingModal();
+        }, 500); // 페이지 로드 후 0.5초 뒤에 모달 열기
+    }
 });
 
 // 제품 상세 정보 로드
