@@ -101,6 +101,18 @@ async function loadUserInfo() {
         document.getElementById('profile-phone').value = user.phone || '';
         document.getElementById('profile-address').value = user.address || user.b2b_address || '';
         
+        // OAuth 사용자는 이메일 변경 불가
+        const emailInput = document.getElementById('profile-email');
+        if (user.oauth_provider && user.oauth_provider !== 'local') {
+            emailInput.readOnly = true;
+            emailInput.classList.add('bg-gray-50');
+            emailInput.title = 'OAuth 로그인 사용자는 이메일을 변경할 수 없습니다';
+        } else {
+            emailInput.readOnly = false;
+            emailInput.classList.remove('bg-gray-50');
+            emailInput.title = '';
+        }
+        
     } catch (error) {
         console.error('Failed to load user info:', error);
         // 토큰에서 기본 정보 사용
@@ -305,8 +317,8 @@ function showTab(tabName) {
 async function updateProfile(event) {
     event.preventDefault();
     
-    const token = localStorage.getItem('token');
     const name = document.getElementById('profile-name').value;
+    const email = document.getElementById('profile-email').value;
     const phone = document.getElementById('profile-phone').value;
     const address = document.getElementById('profile-address').value;
     
@@ -316,30 +328,30 @@ async function updateProfile(event) {
         return;
     }
     
+    if (!email || email.trim() === '') {
+        alert('이메일을 입력해주세요');
+        return;
+    }
+    
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('올바른 이메일 형식을 입력해주세요');
+        return;
+    }
+    
     try {
-        console.log('프로필 업데이트 시작:', { name, phone, address });
+        console.log('프로필 업데이트 시작:', { name, email, phone, address });
         
-        // 현재 사용자 정보에서 profile_image 가져오기
-        const currentProfileResponse = await fetch('/api/user/profile', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        const currentProfile = await currentProfileResponse.json();
-        const currentProfileImage = currentProfile.user?.profile_image;
-        
-        // profile_image가 있으면 포함해서 전송 (유지)
-        const updateData = { name, phone, address };
-        if (currentProfileImage) {
-            updateData.profile_image = currentProfileImage;
-        }
+        // 업데이트 데이터 준비
+        const updateData = { name, email, phone, address };
         
         const response = await fetch('/api/user/profile', {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify(updateData)
         });
         
