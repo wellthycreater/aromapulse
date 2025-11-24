@@ -30,6 +30,20 @@
 
 ## 📋 현재 완료된 기능
 
+### ✅ 최신 업데이트 (2024-11-24)
+- **원데이 클래스 예약 시스템** ✅
+  - 클래스 목록에서 바로 예약 가능
+  - 예약 모달 통합 (날짜/시간/인원/예약자 정보)
+  - iCalendar (.ics) 파일 생성 → Google Calendar 연동
+  - 로그인 사용자만 예약 가능
+  - 14개 서울 지역 원데이 클래스 데이터 시드
+- **테스트 로그인 엔드포인트** ✅
+  - `/api/auth/test-google-login` - 개발/테스트용 자동 로그인
+- **Google Maps 통합** ✅
+  - Healing 페이지에 지도 표시
+  - 공방 위치 마커 및 InfoWindow
+  - 지도에서 바로 예약 가능
+
 ### ✅ 핵심 기능
 1. **회원 시스템 & OAuth 소셜 로그인**
    - B2C 사용자 (일반 스트레스형 / 직무 스트레스형)
@@ -2744,8 +2758,58 @@ echo "new_password_here" | npx wrangler pages secret put RESEARCH_LAB_PASSWORD -
 
 ---
 
-**마지막 업데이트**: 2025-11-20  
-**버전**: 1.7.5 - Research Lab Password Protection  
-**상태**: ✅ 개발 연구소 비밀번호 보호 기능 완료  
+## 🚀 프로덕션 배포 가이드
+
+### 준비 사항
+1. **GitHub 설정**
+   - GitHub 저장소 연결 완료
+   - 최신 코드 푸시 완료 (`git push origin main`)
+
+2. **Cloudflare 설정**
+   - Cloudflare API 키 설정 (Deploy 탭에서 설정)
+   - 프로젝트 이름 확인: `aromapulse` 또는 변경된 이름
+
+### 자동 배포 (권장)
+```bash
+# 1. 빌드
+npm run build
+
+# 2. Cloudflare Pages 배포
+npx wrangler pages deploy dist --project-name aromapulse
+```
+
+### 프로덕션 DB 마이그레이션
+```bash
+# 1. is_oauth 컬럼 추가 (프로덕션 DB에 아직 없다면)
+npx wrangler d1 execute aromapulse-production --command="ALTER TABLE users ADD COLUMN is_oauth INTEGER DEFAULT 0;"
+
+# 2. 모든 마이그레이션 적용
+npx wrangler d1 migrations apply aromapulse-production
+
+# 3. 원데이 클래스 시드 데이터 삽입
+npx wrangler d1 execute aromapulse-production --file=./seed_oneday_classes.sql
+```
+
+### 배포 후 확인 사항
+- [ ] 메인 페이지 로딩
+- [ ] 로그인/회원가입 작동
+- [ ] 원데이 클래스 페이지 표시 (`/classes`)
+- [ ] 예약 버튼 작동 (로그인 후)
+- [ ] API 엔드포인트 작동 (`/api/health`)
+
+### 환경 변수 (프로덕션)
+Cloudflare Pages 설정에서 다음 환경 변수 확인:
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI` (프로덕션 URL로 변경)
+- `JWT_SECRET`
+- `APP_URL` (프로덕션 URL)
+
+---
+
+**마지막 업데이트**: 2024-11-24  
+**버전**: 1.8.0 - Oneday Classes Booking System  
+**상태**: ✅ 원데이 클래스 예약 시스템 완료  
 **프로덕션 URL**: https://www.aromapulse.kr  
-**최신 배포**: https://ad4f2626.aromapulse.pages.dev
+**개발 환경**: Sandbox (테스트 완료)  
+**Git 커밋**: c3e68ac "Add booking functionality to classes page"
