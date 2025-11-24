@@ -304,7 +304,7 @@ auth.get('/google/callback', async (c: Context) => {
   }
 });
 
-// Logout
+// Logout (GET - for redirects)
 auth.get('/logout', async (c: Context) => {
   const { DB } = c.env as Bindings;
   
@@ -320,6 +320,24 @@ auth.get('/logout', async (c: Context) => {
   deleteCookie(c, 'auth_token', { path: '/' });
   
   return c.redirect('/');
+});
+
+// Logout (POST - for API calls)
+auth.post('/logout', async (c: Context) => {
+  const { DB } = c.env as Bindings;
+  
+  // Get token from cookie
+  const token = getCookie(c, 'auth_token');
+  
+  if (token) {
+    // Delete session from database
+    await DB.prepare(`DELETE FROM sessions WHERE session_token = ?`).bind(token).run();
+  }
+  
+  // Delete cookie
+  deleteCookie(c, 'auth_token', { path: '/' });
+  
+  return c.json({ message: 'Logged out successfully' });
 });
 
 // Get current user info

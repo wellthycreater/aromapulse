@@ -223,122 +223,7 @@ function compressImage(file, maxWidth = 400, quality = 0.8) {
     });
 }
 
-// 프로필 이미지 업로드
-async function handleProfileImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    // 파일 크기 체크 (10MB까지 허용 - 압축할 예정)
-    if (file.size > 10 * 1024 * 1024) {
-        alert('파일 크기는 10MB 이하여야 합니다');
-        return;
-    }
-    
-    // 이미지 파일 체크
-    if (!file.type.startsWith('image/')) {
-        alert('이미지 파일만 업로드 가능합니다');
-        return;
-    }
-    
-    try {
-        console.log('이미지 압축 중...');
-        
-        // 이미지 자동 압축 (400px, 품질 0.8)
-        const compressedBase64 = await compressImage(file, 400, 0.8);
-        
-        // 미리보기 표시
-        const preview = document.getElementById('profile-image-preview');
-        preview.src = compressedBase64;
-        preview.classList.remove('hidden');
-        document.getElementById('profile-initial').style.display = 'none';
-        
-        // 서버에 업로드
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/user/profile', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ 
-                profile_image: compressedBase64 
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('프로필 이미지 업로드 실패');
-        }
-        
-        const data = await response.json();
-        
-        // 새 토큰이 있으면 저장
-        if (data.token) {
-            localStorage.setItem('token', data.token);
-        }
-        
-        alert('✅ 프로필 사진이 성공적으로 업데이트되었습니다!');
-        
-        // 삭제 버튼 표시
-        document.getElementById('remove-image-btn').classList.remove('hidden');
-        
-        // 사용자 정보 다시 로드
-        await loadUserInfo();
-        
-    } catch (error) {
-        console.error('프로필 이미지 업로드 실패:', error);
-        alert('❌ 프로필 사진 업로드에 실패했습니다');
-    }
-}
-
-// 프로필 이미지 삭제
-async function removeProfileImage() {
-    if (!confirm('프로필 사진을 삭제하시겠습니까?')) {
-        return;
-    }
-    
-    try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/user/profile', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ 
-                profile_image: null  // null로 설정하여 삭제
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('프로필 이미지 삭제 실패');
-        }
-        
-        const data = await response.json();
-        
-        // 새 토큰이 있으면 저장
-        if (data.token) {
-            localStorage.setItem('token', data.token);
-        }
-        
-        // UI 업데이트
-        const preview = document.getElementById('profile-image-preview');
-        preview.src = '';
-        preview.classList.add('hidden');
-        document.getElementById('profile-initial').style.display = 'flex';
-        
-        // 삭제 버튼 숨김
-        document.getElementById('remove-image-btn').classList.add('hidden');
-        
-        alert('✅ 프로필 사진이 삭제되었습니다');
-        
-        // 사용자 정보 다시 로드
-        await loadUserInfo();
-        
-    } catch (error) {
-        console.error('프로필 이미지 삭제 실패:', error);
-        alert('❌ 프로필 사진 삭제에 실패했습니다');
-    }
-}
+// (중복 함수 제거됨 - 768-913줄에 쿠키 기반 버전 사용)
 
 // 탭 전환
 function showTab(tabName) {
@@ -441,11 +326,7 @@ async function updateProfile(event) {
             throw new Error(errorMsg + details + stack);
         }
         
-        // 새 토큰을 localStorage에 저장 (메인 페이지에서도 업데이트된 정보가 보이도록)
-        if (data.token) {
-            localStorage.setItem('token', data.token);
-            console.log('✅ 새 JWT 토큰 저장됨');
-        }
+        // 쿠키 기반 인증 사용 - 토큰은 서버에서 자동으로 쿠키에 설정됨
         
         alert('✅ 프로필이 성공적으로 업데이트되었습니다!');
         
@@ -475,15 +356,12 @@ async function updateProfile(event) {
 
 // 주문 내역 로드
 async function loadOrders() {
-    const token = localStorage.getItem('token');
     const ordersList = document.getElementById('orders-list');
     const ordersEmpty = document.getElementById('orders-empty');
     
     try {
         const response = await fetch('/api/orders/my-orders', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            credentials: 'include'  // 쿠키 포함
         });
         
         if (!response.ok) throw new Error('Failed to load orders');
@@ -530,15 +408,12 @@ async function loadOrders() {
 
 // 예약 내역 로드
 async function loadBookings(type = 'all') {
-    const token = localStorage.getItem('token');
     const bookingsList = document.getElementById('bookings-list');
     const bookingsEmpty = document.getElementById('bookings-empty');
     
     try {
         const response = await fetch('/api/bookings/my-bookings', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            credentials: 'include'  // 쿠키 포함
         });
         
         if (!response.ok) throw new Error('Failed to load bookings');
@@ -669,7 +544,6 @@ function filterBookings(type) {
 async function changePassword(event) {
     event.preventDefault();
     
-    const token = localStorage.getItem('token');
     const currentPassword = document.getElementById('current-password').value;
     const newPassword = document.getElementById('new-password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
@@ -691,9 +565,9 @@ async function changePassword(event) {
         const response = await fetch('/api/user/change-password', {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json'
             },
+            credentials: 'include',  // 쿠키 포함
             body: JSON.stringify({
                 current_password: currentPassword,
                 new_password: newPassword
@@ -725,7 +599,6 @@ async function withdrawAccount(event) {
         return;
     }
     
-    const token = localStorage.getItem('token');
     const password = document.getElementById('withdrawal-password').value;
     const reason = document.getElementById('withdrawal-reason').value;
     
@@ -733,9 +606,9 @@ async function withdrawAccount(event) {
         const response = await fetch('/api/user/withdraw', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json'
             },
+            credentials: 'include',  // 쿠키 포함
             body: JSON.stringify({ password, reason })
         });
         
@@ -745,8 +618,7 @@ async function withdrawAccount(event) {
         }
         
         alert('회원 탈퇴가 완료되었습니다');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        // 쿠키는 서버에서 자동으로 삭제됨
         location.href = '/';
         
     } catch (error) {
@@ -756,10 +628,18 @@ async function withdrawAccount(event) {
 }
 
 // 로그아웃
-function logout() {
+async function logout() {
     if (confirm('로그아웃 하시겠습니까?')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        try {
+            // 서버에 로그아웃 요청하여 쿠키 삭제
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (error) {
+            console.error('로그아웃 요청 실패:', error);
+        }
+        // 쿠키는 서버에서 삭제되었으므로 로그인 페이지로 이동
         location.href = '/';
     }
 }
