@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
+import { filterByOAuthProvider, type OAuthProvider } from '../utils/oauth-filter';
 
 const products = new Hono<{ Bindings: Bindings }>();
 
@@ -36,6 +37,7 @@ products.get('/', async (c) => {
     const region = c.req.query('region'); // 지역
     const symptom = c.req.query('symptom'); // 증상
     const isActive = c.req.query('is_active') !== '0'; // 활성 상태 (기본 true)
+    const provider = c.req.query('provider') as OAuthProvider | undefined; // OAuth 제공자
     
     let sql = 'SELECT * FROM products WHERE 1=1';
     const params: any[] = [];
@@ -71,12 +73,18 @@ products.get('/', async (c) => {
     const { results } = await stmt.bind(...params).all();
     
     // Parse JSON fields
-    const products = results.map((p: any) => ({
+    let productsList = results.map((p: any) => ({
       ...p,
       symptoms: p.symptoms ? JSON.parse(p.symptoms) : [],
     }));
     
-    return c.json({ products });
+    // OAuth 제공자별 필터링 적용 (해시 기반)
+    // 카카오/구글/네이버 로그인 사용자는 각각 다른 제품만 볼 수 있음
+    productsList = filterByOAuthProvider(productsList, provider);
+    
+    console.log(`[OAuth Filter - Products] Provider: ${provider || 'none'}, Total: ${results.length}, Filtered: ${productsList.length}`);
+    
+    return c.json({ products: productsList });
     
   } catch (error) {
     console.error('Get products error:', error);

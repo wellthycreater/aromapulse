@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
+import { filterByOAuthProvider, type OAuthProvider } from '../utils/oauth-filter';
 
 const onedayClasses = new Hono<{ Bindings: Bindings }>();
 
@@ -7,21 +8,27 @@ const onedayClasses = new Hono<{ Bindings: Bindings }>();
 onedayClasses.get('/', async (c) => {
   try {
     const limit = c.req.query('limit') || '50';
-    const provider = c.req.query('provider'); // 'google', 'naver', 'kakao'
+    const provider = c.req.query('provider') as OAuthProvider | undefined; // 'google', 'naver', 'kakao'
     
     let query = `SELECT oc.*, u.name as provider_name 
        FROM oneday_classes oc
        LEFT JOIN users u ON oc.provider_id = u.id
        WHERE oc.is_active = 1`;
     
-    // provider 파라미터는 필터링에 사용하지 않음 (모든 클래스 표시)
-    // 향후 필요시 google_place_id, naver_place_id, kakao_place_id로 필터링 가능
-    
     query += ` ORDER BY oc.created_at DESC LIMIT ?`;
     
     const result = await c.env.DB.prepare(query).bind(parseInt(limit)).all();
     
-    return c.json(result.results);
+    // OAuth 제공자별 필터링 적용 (해시 기반)
+    // 카카오/구글/네이버 로그인 사용자는 각각 다른 클래스만 볼 수 있음
+    const filteredResults = filterByOAuthProvider(
+      result.results as Array<{ id: number }>,
+      provider
+    );
+    
+    console.log(`[OAuth Filter] Provider: ${provider || 'none'}, Total: ${result.results.length}, Filtered: ${filteredResults.length}`);
+    
+    return c.json(filteredResults);
     
   } catch (error: any) {
     console.error('원데이 클래스 목록 조회 오류:', error);
