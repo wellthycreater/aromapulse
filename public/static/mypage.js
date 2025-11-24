@@ -55,21 +55,48 @@ async function checkAuth() {
 
 // 사용자 정보 로드
 async function loadUserInfo() {
+    console.log('[loadUserInfo] 시작...');
     const authUser = await checkAuth();
-    if (!authUser) return;
+    console.log('[loadUserInfo] checkAuth 결과:', authUser);
+    if (!authUser) {
+        console.error('[loadUserInfo] authUser가 없습니다');
+        return;
+    }
+    
+    // authUser 데이터로 먼저 기본 정보 표시
+    document.getElementById('sidebar-user-name').textContent = authUser.name || '사용자';
+    document.getElementById('sidebar-user-email').textContent = authUser.email || '';
+    document.getElementById('profile-initial').textContent = (authUser.name || 'U').charAt(0).toUpperCase();
+    document.getElementById('profile-name').value = authUser.name || '';
+    document.getElementById('profile-email').value = authUser.email || '';
     
     try {
+        console.log('[loadUserInfo] /api/user/profile 호출 중...');
         const response = await fetch('/api/user/profile', {
             credentials: 'include'  // 쿠키 포함
         });
         
+        console.log('[loadUserInfo] 응답 상태:', response.status);
+        
         if (!response.ok) {
-            console.error('Failed to load user info, status:', response.status);
-            throw new Error('Failed to load user info');
+            const errorText = await response.text();
+            console.error('[loadUserInfo] API 실패:', response.status, errorText);
+            console.warn('[loadUserInfo] authUser 데이터로 폴백합니다');
+            
+            // OAuth provider 설정 (authUser에서)
+            const emailInput = document.getElementById('profile-email');
+            const oauthProvider = authUser.provider;
+            console.log('[loadUserInfo] OAuth provider (from authUser):', oauthProvider);
+            if (oauthProvider && oauthProvider !== 'local') {
+                emailInput.readOnly = true;
+                emailInput.classList.add('bg-gray-50');
+                emailInput.title = 'OAuth 로그인 사용자는 이메일을 변경할 수 없습니다';
+            }
+            return;
         }
         
         const data = await response.json();
-        console.log('사용자 정보 로드 성공:', data);
+        console.log('[loadUserInfo] 사용자 정보 로드 성공:', data);
         
         // API 응답의 user 객체 사용
         const user = data.user || data;
@@ -96,7 +123,7 @@ async function loadUserInfo() {
         }
         
         // 프로필 폼 채우기
-        console.log('프로필 폼 채우기 - name:', user.name, 'email:', user.email);
+        console.log('[loadUserInfo] 프로필 폼 채우기 - name:', user.name, 'email:', user.email);
         document.getElementById('profile-name').value = user.name || '';
         document.getElementById('profile-email').value = user.email || '';
         document.getElementById('profile-phone').value = user.phone || '';
@@ -104,8 +131,8 @@ async function loadUserInfo() {
         
         // OAuth 사용자는 이메일 변경 불가
         const emailInput = document.getElementById('profile-email');
-        const oauthProvider = user.oauth_provider || user.provider;
-        console.log('OAuth provider:', oauthProvider);
+        const oauthProvider = user.oauth_provider || authUser.provider;
+        console.log('[loadUserInfo] OAuth provider:', oauthProvider);
         if (oauthProvider && oauthProvider !== 'local') {
             emailInput.readOnly = true;
             emailInput.classList.add('bg-gray-50');
@@ -117,14 +144,18 @@ async function loadUserInfo() {
         }
         
     } catch (error) {
-        console.error('Failed to load user info:', error);
-        // checkAuth에서 받은 기본 정보 사용
-        document.getElementById('sidebar-user-name').textContent = authUser.name || '사용자';
-        document.getElementById('sidebar-user-email').textContent = authUser.email || '';
-        document.getElementById('profile-initial').textContent = (authUser.name || 'U').charAt(0).toUpperCase();
+        console.error('[loadUserInfo] 예외 발생:', error);
+        console.warn('[loadUserInfo] authUser 데이터를 이미 표시했습니다');
         
-        document.getElementById('profile-name').value = authUser.name || '';
-        document.getElementById('profile-email').value = authUser.email || '';
+        // OAuth provider 설정 (authUser에서)
+        const emailInput = document.getElementById('profile-email');
+        const oauthProvider = authUser.provider;
+        console.log('[loadUserInfo] OAuth provider (from authUser, catch):', oauthProvider);
+        if (oauthProvider && oauthProvider !== 'local') {
+            emailInput.readOnly = true;
+            emailInput.classList.add('bg-gray-50');
+            emailInput.title = 'OAuth 로그인 사용자는 이메일을 변경할 수 없습니다';
+        }
     }
 }
 
