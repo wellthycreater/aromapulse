@@ -157,6 +157,77 @@ bookings.get('/my', async (c: Context) => {
   }
 });
 
+// Get user's bookings (마이페이지용 - 형식화된 응답)
+bookings.get('/my-bookings', async (c: Context) => {
+  try {
+    const { DB, JWT_SECRET } = c.env as Bindings;
+    
+    // Get user from JWT token
+    const token = getCookie(c, 'auth_token');
+    if (!token) {
+      return c.json({ error: '로그인이 필요합니다' }, 401);
+    }
+    
+    const jwtManager = new JWTManager(JWT_SECRET);
+    const payload = await jwtManager.verify(token);
+    
+    if (!payload) {
+      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+    }
+    
+    // Get oneday class bookings
+    const classBookings = await DB.prepare(`
+      SELECT 
+        b.id,
+        b.booking_date,
+        b.participants,
+        b.total_price,
+        b.status,
+        b.created_at,
+        c.title as class_title,
+        c.location,
+        c.address
+      FROM oneday_class_bookings b
+      JOIN oneday_classes c ON b.class_id = c.id
+      WHERE b.user_id = ?
+      ORDER BY b.booking_date DESC
+    `).bind(payload.userId).all();
+    
+    // Format bookings for frontend
+    const formattedBookings = classBookings.results.map((booking: any) => ({
+      booking_id: `CLASS-${booking.id}`,
+      type: 'class',
+      title: booking.class_title,
+      date: new Date(booking.booking_date).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      participants: booking.participants,
+      amount: booking.total_price,
+      status: booking.status,
+      location: booking.location || booking.address,
+      created_at: booking.created_at
+    }));
+    
+    return c.json({
+      success: true,
+      bookings: formattedBookings
+    });
+    
+  } catch (error: any) {
+    console.error('Get my-bookings error:', error);
+    return c.json({ 
+      success: false,
+      error: '예약 조회 중 오류가 발생했습니다', 
+      details: error.message,
+      bookings: []
+    }, 500);
+  }
+});
+
 // Get booking detail
 bookings.get('/:id', async (c: Context) => {
   try {
@@ -484,6 +555,59 @@ bookings.get('/products/my', async (c: Context) => {
   } catch (error: any) {
     console.error('Get product bookings error:', error);
     return c.json({ error: '예약 조회 중 오류가 발생했습니다', details: error.message }, 500);
+  }
+});
+
+// Get user statistics (마이페이지 통계용)
+bookings.get('/stats', async (c: Context) => {
+  try {
+    const { DB, JWT_SECRET } = c.env as Bindings;
+    
+    // Get user from JWT token
+    const token = getCookie(c, 'auth_token');
+    if (!token) {
+      return c.json({ error: '로그인이 필요합니다' }, 401);
+    }
+    
+    const jwtManager = new JWTManager(JWT_SECRET);
+    const payload = await jwtManager.verify(token);
+    
+    if (!payload) {
+      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+    }
+    
+    // Count total bookings
+    const bookingsCount = await DB.prepare(`
+      SELECT COUNT(*) as count FROM oneday_class_bookings
+      WHERE user_id = ?
+    `).bind(payload.userId).first<{ count: number }>();
+    
+    // Count total orders
+    const ordersCount = await DB.prepare(`
+      SELECT COUNT(*) as count FROM orders
+      WHERE user_id = ?
+    `).bind(payload.userId).first<{ count: number }>();
+    
+    return c.json({
+      success: true,
+      stats: {
+        total_orders: ordersCount?.count || 0,
+        total_bookings: bookingsCount?.count || 0,
+        total_consultations: 0  // TODO: 상담 시스템 구현 시 추가
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('Get stats error:', error);
+    return c.json({ 
+      success: false,
+      error: '통계 조회 중 오류가 발생했습니다', 
+      stats: {
+        total_orders: 0,
+        total_bookings: 0,
+        total_consultations: 0
+      }
+    }, 500);
   }
 });
 

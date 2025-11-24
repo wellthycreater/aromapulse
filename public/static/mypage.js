@@ -179,6 +179,36 @@ async function loadUserInfo() {
             emailInput.title = 'OAuth 로그인 사용자는 이메일을 변경할 수 없습니다';
         }
     }
+    
+    // 통계 로드
+    loadUserStats();
+}
+
+// 사용자 통계 로드
+async function loadUserStats() {
+    try {
+        const response = await fetch('/api/bookings/stats', {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            console.warn('통계 로드 실패:', response.status);
+            return;
+        }
+        
+        const data = await response.json();
+        const stats = data.stats || {};
+        
+        // 통계 카드 업데이트
+        const statCards = document.querySelectorAll('.stat-card .text-2xl');
+        if (statCards[0]) statCards[0].textContent = stats.total_orders || 0;
+        if (statCards[1]) statCards[1].textContent = stats.total_bookings || 0;
+        if (statCards[2]) statCards[2].textContent = stats.total_consultations || 0;
+        
+        console.log('통계 로드 성공:', stats);
+    } catch (error) {
+        console.error('통계 로드 오류:', error);
+    }
 }
 
 // 이미지 압축 함수
