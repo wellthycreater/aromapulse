@@ -376,16 +376,26 @@ document.addEventListener('DOMContentLoaded', () => {
 let currentBookingClass = null;
 
 // 예약 모달 열기
-function openBookingModal(classId, event) {
+async function openBookingModal(classId, event) {
     if (event) {
         event.stopPropagation();
     }
     
-    // 로그인 확인
-    const token = getCookie('auth_token');
-    if (!token) {
-        alert('로그인이 필요한 서비스입니다.\n\n메인 페이지에서 로그인 후 이용해주세요.');
-        window.location.href = '/';
+    // 로그인 확인 (서버 API 호출)
+    try {
+        const authResponse = await fetch('/api/auth/me', {
+            credentials: 'include'
+        });
+        const authData = await authResponse.json();
+        
+        if (!authData.authenticated) {
+            alert('로그인이 필요한 서비스입니다.\n\n테스트 로그인: https://www.aromapulse.kr/static/test-login.html');
+            window.location.href = '/static/test-login.html';
+            return;
+        }
+    } catch (error) {
+        console.error('인증 확인 오류:', error);
+        alert('로그인 상태를 확인할 수 없습니다.');
         return;
     }
     

@@ -14,10 +14,8 @@ onedayClasses.get('/', async (c) => {
        LEFT JOIN users u ON oc.provider_id = u.id
        WHERE oc.is_active = 1`;
     
-    // provider 파라미터가 있으면 map_providers 필터링
-    if (provider === 'google' || provider === 'naver' || provider === 'kakao') {
-      query += ` AND (oc.map_providers LIKE '%${provider}%' OR oc.map_providers IS NULL)`;
-    }
+    // provider 파라미터는 필터링에 사용하지 않음 (모든 클래스 표시)
+    // 향후 필요시 google_place_id, naver_place_id, kakao_place_id로 필터링 가능
     
     query += ` ORDER BY oc.created_at DESC LIMIT ?`;
     

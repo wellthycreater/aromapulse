@@ -362,3 +362,98 @@ function showToast(message, type = 'success') {
 function goBack() {
     window.history.back();
 }
+
+// ==================== 예약 관련 함수 ====================
+
+// 예약 모달 열기
+function openBookingModal() {
+    if (!currentProduct) {
+        alert('제품 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+    }
+
+    // 제품 정보 표시
+    document.getElementById('booking-product-title').textContent = currentProduct.name;
+    document.getElementById('booking-product-price').textContent = `${currentProduct.price.toLocaleString()}원`;
+    document.getElementById('booking-product-id').value = currentProduct.id;
+    
+    // 오늘 날짜 이후만 선택 가능하도록 설정
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('booking-date').min = today;
+    
+    // 모달 표시
+    document.getElementById('booking-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// 예약 모달 닫기
+function closeBookingModal() {
+    document.getElementById('booking-modal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('booking-form').reset();
+}
+
+// 예약 제출
+async function submitBooking(event) {
+    event.preventDefault();
+    
+    const productId = document.getElementById('booking-product-id').value;
+    const bookingDate = document.getElementById('booking-date').value;
+    const bookingTime = document.getElementById('booking-time').value;
+    const quantity = document.getElementById('booking-quantity').value;
+    const bookerName = document.getElementById('booker-name').value;
+    const bookerPhone = document.getElementById('booker-phone').value;
+    const bookerEmail = document.getElementById('booker-email').value;
+    
+    // 로딩 상태 표시
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>예약 중...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/bookings/products', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                booking_date: bookingDate,
+                booking_time: bookingTime,
+                quantity: parseInt(quantity),
+                booker_name: bookerName,
+                booker_phone: bookerPhone,
+                booker_email: bookerEmail
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // 예약 성공
+            closeBookingModal();
+            showSuccessModal();
+        } else {
+            throw new Error(data.error || '예약에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('Booking error:', error);
+        alert(`예약 실패: ${error.message}`);
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// 성공 모달 표시
+function showSuccessModal() {
+    document.getElementById('success-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// 성공 모달 닫기
+function closeSuccessModal() {
+    document.getElementById('success-modal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}

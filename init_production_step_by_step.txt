@@ -1,0 +1,43 @@
+Cloudflare D1 Console에서 아래 쿼리를 하나씩 복사해서 실행하세요.
+각 쿼리 실행 후 "Success" 확인하고 다음 쿼리로 진행하세요.
+
+=== 1단계: Users 테이블 ===
+CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE NOT NULL, name TEXT NOT NULL, profile_image TEXT, is_oauth INTEGER DEFAULT 0, user_type TEXT DEFAULT 'B2C', created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+
+=== 2단계: OAuth Accounts 테이블 ===
+CREATE TABLE IF NOT EXISTS oauth_accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, provider TEXT NOT NULL, provider_user_id TEXT NOT NULL, access_token TEXT, refresh_token TEXT, token_expires_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id), UNIQUE(provider, provider_user_id));
+
+=== 3단계: Sessions 테이블 ===
+CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, session_token TEXT UNIQUE NOT NULL, expires_at DATETIME NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id));
+
+=== 4단계: OAuth States 테이블 ===
+CREATE TABLE IF NOT EXISTS oauth_states (id INTEGER PRIMARY KEY AUTOINCREMENT, state TEXT UNIQUE NOT NULL, provider TEXT NOT NULL, redirect_uri TEXT NOT NULL, expires_at DATETIME NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+
+=== 5단계: Oneday Classes 테이블 ===
+CREATE TABLE IF NOT EXISTS oneday_classes (id INTEGER PRIMARY KEY AUTOINCREMENT, provider_id INTEGER NOT NULL, title TEXT NOT NULL, description TEXT, category TEXT, location TEXT NOT NULL, address TEXT, studio_name TEXT, instructor_name TEXT, price INTEGER, duration INTEGER, max_participants INTEGER, image_url TEXT, naver_place_id TEXT, kakao_place_id TEXT, google_place_id TEXT, map_providers TEXT DEFAULT 'google,naver,kakao', latitude REAL, longitude REAL, is_active INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (provider_id) REFERENCES users(id));
+
+=== 6단계: Bookings 테이블 ===
+CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, oneday_class_id INTEGER, workshop_id INTEGER, booking_date DATETIME NOT NULL, participants INTEGER NOT NULL, total_price INTEGER NOT NULL, booker_name TEXT NOT NULL, booker_phone TEXT NOT NULL, booker_email TEXT NOT NULL, status TEXT DEFAULT 'pending', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id));
+
+=== 7단계: 인덱스 생성 (선택사항, 나중에 실행 가능) ===
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_accounts_provider ON oauth_accounts(provider, provider_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(session_token);
+
+CREATE INDEX IF NOT EXISTS idx_oneday_classes_active ON oneday_classes(is_active);
+
+CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_bookings_class ON bookings(oneday_class_id);
+
+=== 8단계: 테스트 B2B 사용자 생성 ===
+INSERT INTO users (email, name, profile_image, is_oauth, user_type, created_at) VALUES ('production@aromapulse.kr', '프로덕션 테스트', NULL, 0, 'B2B', datetime('now'));
+
+=== 9단계: 테스트 원데이 클래스 생성 (provider_id는 위에서 생성된 사용자 ID 사용) ===
+INSERT INTO oneday_classes (provider_id, title, description, category, location, address, price, duration, max_participants, latitude, longitude, is_active, created_at, updated_at) VALUES (1, '힐링 아로마 원데이 클래스', '나만의 향기를 만드는 특별한 시간!', '아로마테라피', '서울 강남구', '서울시 강남구 테헤란로 123', 50000, 120, 10, 37.5665, 126.9780, 1, datetime('now'), datetime('now'));
+
+=== 완료! ===
+모든 테이블이 생성되었습니다. 
+이제 테스트 로그인을 시도할 수 있습니다: https://www.aromapulse.kr/api/auth/test-google-login

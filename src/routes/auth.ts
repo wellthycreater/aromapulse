@@ -69,6 +69,17 @@ async function findOrCreateUser(
   refreshToken: string | null,
   expiresIn: number
 ) {
+  // Admin email list - these users get automatic admin access
+  const ADMIN_EMAILS = [
+    'admin@aromapulse.kr',
+    'developer@aromapulse.kr',
+    'operator@aromapulse.kr',
+    'wellthykorea@gmail.com'
+  ];
+  
+  const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+  const userType = isAdmin ? 'B2B' : 'B2C';
+  
   // Check if oauth account exists
   const oauthAccount = await db.prepare(`
     SELECT user_id FROM oauth_accounts WHERE provider = ? AND provider_user_id = ?
@@ -83,30 +94,69 @@ async function findOrCreateUser(
       WHERE provider = ? AND provider_user_id = ?
     `).bind(accessToken, refreshToken, tokenExpiresAt, provider, providerId).run();
     
-    // Get user info
+    // Get user info with role
     const user = await db.prepare(`
-      SELECT id, email, name, profile_image FROM users WHERE id = ?
-    `).bind(oauthAccount.user_id).first<{ id: number, email: string, name: string, profile_image: string }>();
+      SELECT id, email, name, profile_image, user_type FROM users WHERE id = ?
+    `).bind(oauthAccount.user_id).first<{ id: number, email: string, name: string, profile_image: string, user_type: string }>();
+    
+    // Update user_type if admin email but not set as B2B
+    if (user && isAdmin && user.user_type !== 'B2B') {
+      await db.prepare(`
+        UPDATE users SET user_type = 'B2B', b2b_category = 'company' WHERE id = ?
+      `).bind(user.id).run();
+      user.user_type = 'B2B';
+    }
     
     return user;
   }
   
-  // Create new user
-  const userResult = await db.prepare(`
-    INSERT INTO users (email, name, profile_image, is_oauth, created_at)
-    VALUES (?, ?, ?, 1, datetime('now'))
-  `).bind(email, name, profileImage).run();
+  // Check if user exists by email (might have registered with different provider or email/password)
+  const existingUser = await db.prepare(`
+    SELECT id, email, name, profile_image, user_type FROM users WHERE email = ?
+  `).bind(email).first<{ id: number, email: string, name: string, profile_image: string, user_type: string }>();
   
-  const userId = Number(userResult.meta.last_row_id);
+  let userId: number;
   
-  // Create oauth account
+  if (existingUser) {
+    // User exists, link this OAuth account to existing user
+    userId = existingUser.id;
+    
+    // Update user_type if admin email but not set as B2B
+    if (isAdmin && existingUser.user_type !== 'B2B') {
+      await db.prepare(`
+        UPDATE users SET user_type = 'B2B', b2b_category = 'company', is_oauth = 1 WHERE id = ?
+      `).bind(userId).run();
+      existingUser.user_type = 'B2B';
+    }
+  } else {
+    // Create new user (Admin emails get B2B type, others get B2C)
+    const userResult = await db.prepare(`
+      INSERT INTO users (email, name, profile_image, is_oauth, user_type, b2b_category, created_at)
+      VALUES (?, ?, ?, 1, ?, ?, datetime('now'))
+    `).bind(email, name, profileImage, userType, isAdmin ? 'company' : null).run();
+    
+    userId = Number(userResult.meta.last_row_id);
+  }
+  
+  // Create oauth account (link to existing or new user)
   const tokenExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
   await db.prepare(`
-    INSERT INTO oauth_accounts (user_id, provider, provider_user_id, email, name, profile_image, access_token, refresh_token, token_expires_at, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(userId, provider, providerId, email, name, profileImage, accessToken, refreshToken, tokenExpiresAt).run();
+    INSERT INTO oauth_accounts (user_id, provider, provider_user_id, access_token, refresh_token, token_expires_at, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(userId, provider, providerId, accessToken, refreshToken, tokenExpiresAt).run();
   
-  return { id: userId, email, name, profile_image: profileImage };
+  // Return user info with updated type
+  if (existingUser) {
+    return { 
+      id: existingUser.id, 
+      email: existingUser.email, 
+      name: existingUser.name, 
+      profile_image: existingUser.profile_image, 
+      user_type: isAdmin ? 'B2B' : existingUser.user_type 
+    };
+  } else {
+    return { id: userId, email, name, profile_image: profileImage, user_type: userType };
+  }
 }
 
 // ======================
@@ -117,12 +167,12 @@ async function findOrCreateUser(
 auth.get('/google', async (c: Context) => {
   const { DB, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL } = c.env as Bindings;
   
-  const redirectUri = `${APP_URL}/auth/google/callback`;
+  const redirectUri = `${APP_URL}/api/auth/google/callback`;
   const googleOAuth = new GoogleOAuth(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, redirectUri);
   
   // Generate and store state
   const state = generateState();
-  const returnTo = c.req.query('returnTo') || '/healing';
+  const returnTo = c.req.query('returnTo') || '/';
   await storeOAuthState(DB, state, 'google', returnTo);
   
   // Redirect to Google
@@ -162,7 +212,7 @@ auth.get('/google/callback', async (c: Context) => {
   }
   
   try {
-    const redirectUri = `${APP_URL}/auth/google/callback`;
+    const redirectUri = `${APP_URL}/api/auth/google/callback`;
     const googleOAuth = new GoogleOAuth(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, redirectUri);
     
     // Exchange code for tokens
@@ -188,13 +238,18 @@ auth.get('/google/callback', async (c: Context) => {
       throw new Error('Failed to create or find user');
     }
     
-    // Generate JWT token
+    // Determine user role based on user_type and email
+    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com'];
+    const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
+    
+    // Generate JWT token with role
     const jwtManager = new JWTManager(JWT_SECRET);
     const jwtToken = await jwtManager.sign({
       userId: user.id,
       email: user.email,
       name: user.name,
       provider: 'google',
+      role: isAdmin ? 'admin' : 'user',
     });
     
     // Set cookie with JWT token
@@ -217,11 +272,31 @@ auth.get('/google/callback', async (c: Context) => {
     return c.redirect(returnTo);
   } catch (error) {
     console.error('Google OAuth callback error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : '';
+    
     return c.html(`
       <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+            .error-box { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
+            .error-details { background: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 10px; font-family: monospace; white-space: pre-wrap; }
+            a { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+          </style>
+        </head>
         <body>
-          <h1>로그인 실패</h1>
-          <p>로그인 처리 중 오류가 발생했습니다.</p>
+          <div class="error-box">
+            <h1>🔐 로그인 실패</h1>
+            <p>로그인 처리 중 오류가 발생했습니다.</p>
+            <div class="error-details">
+              <strong>오류 메시지:</strong>
+              ${errorMessage}
+              
+              ${errorStack ? `\n<strong>상세 정보:</strong>\n${errorStack}` : ''}
+            </div>
+          </div>
           <a href="/">홈으로 돌아가기</a>
         </body>
       </html>
@@ -293,12 +368,12 @@ auth.get('/me', async (c: Context) => {
 auth.get('/naver', async (c: Context) => {
   const { DB, NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, APP_URL } = c.env as Bindings;
   
-  const redirectUri = `${APP_URL}/auth/naver/callback`;
+  const redirectUri = `${APP_URL}/api/auth/naver/callback`;
   const naverOAuth = new NaverOAuth(NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, redirectUri);
   
   // Generate and store state
   const state = generateState();
-  const returnTo = c.req.query('returnTo') || '/healing';
+  const returnTo = c.req.query('returnTo') || '/';
   await storeOAuthState(DB, state, 'naver', returnTo);
   
   // Redirect to Naver
@@ -337,7 +412,7 @@ auth.get('/naver/callback', async (c: Context) => {
   }
   
   try {
-    const redirectUri = `${APP_URL}/auth/naver/callback`;
+    const redirectUri = `${APP_URL}/api/auth/naver/callback`;
     const naverOAuth = new NaverOAuth(NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, redirectUri);
     
     // Exchange code for tokens
@@ -363,13 +438,18 @@ auth.get('/naver/callback', async (c: Context) => {
       throw new Error('Failed to create or find user');
     }
     
-    // Generate JWT token
+    // Determine user role based on user_type and email
+    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com'];
+    const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
+    
+    // Generate JWT token with role
     const jwtManager = new JWTManager(JWT_SECRET);
     const jwtToken = await jwtManager.sign({
       userId: user.id,
       email: user.email,
       name: user.name,
       provider: 'naver',
+      role: isAdmin ? 'admin' : 'user',
     });
     
     // Set cookie
@@ -411,12 +491,12 @@ auth.get('/naver/callback', async (c: Context) => {
 auth.get('/kakao', async (c: Context) => {
   const { DB, KAKAO_REST_API_KEY, KAKAO_CLIENT_SECRET, APP_URL } = c.env as Bindings;
   
-  const redirectUri = `${APP_URL}/auth/kakao/callback`;
+  const redirectUri = `${APP_URL}/api/auth/kakao/callback`;
   const kakaoOAuth = new KakaoOAuth(KAKAO_REST_API_KEY, KAKAO_CLIENT_SECRET, redirectUri);
   
   // Generate and store state
   const state = generateState();
-  const returnTo = c.req.query('returnTo') || '/healing';
+  const returnTo = c.req.query('returnTo') || '/';
   await storeOAuthState(DB, state, 'kakao', returnTo);
   
   // Redirect to Kakao
@@ -455,7 +535,7 @@ auth.get('/kakao/callback', async (c: Context) => {
   }
   
   try {
-    const redirectUri = `${APP_URL}/auth/kakao/callback`;
+    const redirectUri = `${APP_URL}/api/auth/kakao/callback`;
     const kakaoOAuth = new KakaoOAuth(KAKAO_REST_API_KEY, KAKAO_CLIENT_SECRET, redirectUri);
     
     // Exchange code for tokens
@@ -484,13 +564,18 @@ auth.get('/kakao/callback', async (c: Context) => {
       throw new Error('Failed to create or find user');
     }
     
-    // Generate JWT token
+    // Determine user role based on user_type and email
+    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com'];
+    const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
+    
+    // Generate JWT token with role
     const jwtManager = new JWTManager(JWT_SECRET);
     const jwtToken = await jwtManager.sign({
       userId: user.id,
       email: user.email,
       name: user.name,
       provider: 'kakao',
+      role: isAdmin ? 'admin' : 'user',
     });
     
     // Set cookie
@@ -581,13 +666,18 @@ auth.get('/test-google-login', async (c: Context) => {
       throw new Error('Failed to get user');
     }
     
-    // Generate JWT token
+    // Determine user role based on user_type and email
+    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com'];
+    const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
+    
+    // Generate JWT token with role
     const jwtManager = new JWTManager(JWT_SECRET);
     const jwtToken = await jwtManager.sign({
       userId: user.id,
       email: user.email,
       name: user.name,
       provider: 'google',
+      role: isAdmin ? 'admin' : 'user',
     });
     
     // Set cookie with JWT token

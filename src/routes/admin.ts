@@ -1,7 +1,48 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
+import { sign } from 'hono/jwt';
 
 const admin = new Hono<{ Bindings: Bindings }>();
+
+// 관리자 로그인
+admin.post('/login', async (c) => {
+  try {
+    const { email, password } = await c.req.json();
+    
+    if (!email || !password) {
+      return c.json({ error: '이메일과 비밀번호를 입력해주세요' }, 400);
+    }
+    
+    // 하드코딩된 관리자 계정 (실제로는 DB에서 조회해야 함)
+    if (email === 'admin@aromapulse.kr' && password === 'admin123') {
+      // JWT 토큰 생성
+      const token = await sign(
+        {
+          email: email,
+          role: 'admin',
+          exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7일
+        },
+        c.env.JWT_SECRET || 'aromapulse-secret-key'
+      );
+      
+      return c.json({
+        success: true,
+        token: token,
+        user: {
+          email: email,
+          name: '관리자',
+          role: 'admin'
+        }
+      });
+    } else {
+      return c.json({ error: '이메일 또는 비밀번호가 올바르지 않습니다' }, 401);
+    }
+    
+  } catch (error) {
+    console.error('Admin login error:', error);
+    return c.json({ error: '로그인 실패' }, 500);
+  }
+});
 
 // 개발 연구소 비밀번호 검증
 admin.post('/verify-research-password', async (c) => {

@@ -31,6 +31,7 @@ import adminClassesRoutes from './routes/admin-classes';
 import loginLogsRoutes from './routes/login-logs';
 import userAnalyticsRoutes from './routes/user-analytics';
 import workshopBookingsRoutes from './routes/workshop-bookings';
+import placesSearchRoutes from './routes/places-search';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -74,6 +75,7 @@ app.route('/api/workshop-quotes', workshopQuotesRoutes);
 app.route('/api/login-logs', loginLogsRoutes);
 app.route('/api/user-analytics', userAnalyticsRoutes);
 app.route('/api/workshop-bookings', workshopBookingsRoutes);
+app.route('/api/places', placesSearchRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
@@ -318,17 +320,17 @@ app.get('/', (c) => {
                     <!-- Right: Visitor Stats & Auth -->
                     <div class="flex items-center justify-end space-x-4">
                         <!-- 방문자 통계 -->
-                        <div class="hidden md:flex items-center gap-3 bg-white bg-opacity-90 rounded-full px-4 py-2 shadow-sm">
-                            <div class="flex items-center gap-1 text-sm">
-                                <i class="fas fa-users text-purple-600"></i>
-                                <span class="font-semibold text-gray-700">오늘</span>
-                                <span class="font-bold text-purple-600" id="today-visitors">-</span>
+                        <div class="hidden md:flex items-center gap-2 bg-white bg-opacity-90 rounded-full px-3 py-1.5 shadow-sm">
+                            <div class="flex items-center gap-1 text-xs">
+                                <i class="fas fa-users text-purple-600 text-sm"></i>
+                                <span class="font-medium text-gray-700">오늘</span>
+                                <span class="font-semibold text-purple-600" id="today-visitors">-</span>
                             </div>
-                            <div class="w-px h-4 bg-gray-300"></div>
-                            <div class="flex items-center gap-1 text-sm">
-                                <i class="fas fa-chart-line text-pink-600"></i>
-                                <span class="font-semibold text-gray-700">전체</span>
-                                <span class="font-bold text-pink-600" id="total-visitors">-</span>
+                            <div class="w-px h-3 bg-gray-300"></div>
+                            <div class="flex items-center gap-1 text-xs">
+                                <i class="fas fa-chart-line text-pink-600 text-sm"></i>
+                                <span class="font-medium text-gray-700">전체</span>
+                                <span class="font-semibold text-pink-600" id="total-visitors">-</span>
                             </div>
                         </div>
                         
@@ -398,6 +400,16 @@ app.get('/', (c) => {
                     <a href="/healing" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
                         <i class="fas fa-star mr-3"></i>힐링 체험
                     </a>
+                    <div class="border-t border-gray-200 mt-4 pt-4">
+                        <div id="mobile-auth-buttons" class="space-y-2">
+                            <button onclick="location.href='/login'" class="w-full block py-3 px-4 text-purple-600 hover:bg-purple-50 rounded-lg transition font-semibold">
+                                <i class="fas fa-sign-in-alt mr-3"></i>로그인
+                            </button>
+                            <button onclick="location.href='/signup'" class="w-full block py-3 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
+                                <i class="fas fa-user-plus mr-3"></i>회원가입
+                            </button>
+                        </div>
+                    </div>
                 </nav>
             </div>
         </div>
@@ -1233,8 +1245,41 @@ app.get('/', (c) => {
             position: 'fixed' // 명시적으로 고정 위치 지정
         });
         
+        // Check login status and update UI
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/auth/me');
+                const data = await response.json();
+                
+                if (data.authenticated && data.user) {
+                    // 로그인 상태 - 버튼 변경
+                    const authButtons = document.getElementById('auth-buttons');
+                    const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
+                    
+                    // 이름의 첫 글자만 추출 (이니셜)
+                    const initial = data.user.name ? data.user.name.charAt(0) : '사';
+                    
+                    const loggedInHTML = '<div class="flex items-center gap-2">' +
+                        '<div class="w-7 h-7 bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm cursor-pointer" onclick="location.href=\\'/mypage\\'" title="' + data.user.name + '">' + 
+                        initial + '</div>' +
+                        '<button onclick="location.href=\\'/mypage\\'" class="text-purple-600 hover:text-purple-700 transition text-sm font-bold hidden sm:inline">' +
+                        '마이페이지</button>' +
+                        '<button onclick="location.href=\\'/api/auth/logout\\'" class="text-gray-700 hover:text-gray-900 transition text-sm font-bold">' +
+                        '로그아웃</button></div>';
+                    
+                    if (authButtons) authButtons.innerHTML = loggedInHTML;
+                    if (mobileAuthButtons) mobileAuthButtons.innerHTML = loggedInHTML;
+                }
+            } catch (error) {
+                console.error('Login status check failed:', error);
+            }
+        }
+        
         // 추가 보장: 챗봇 버튼이 로드된 후 스타일 강제 적용
         document.addEventListener('DOMContentLoaded', function() {
+            // 로그인 상태 체크
+            checkLoginStatus();
+            
             setTimeout(function() {
                 // 사이드톡 버튼 찾기 (여러 방법 시도)
                 const selectors = [

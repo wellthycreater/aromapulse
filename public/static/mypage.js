@@ -32,32 +32,22 @@ async function loadDynamicStyles() {
     }
 }
 
-// 로그인 체크
-function checkAuth() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        alert('로그인이 필요합니다');
-        location.href = '/login';
-        return null;
-    }
-    
+// 로그인 체크 (쿠키 기반 인증)
+async function checkAuth() {
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const response = await fetch('/api/auth/me');
+        const data = await response.json();
         
-        // 토큰 만료 체크
-        if (payload.exp && payload.exp * 1000 < Date.now()) {
-            alert('로그인이 만료되었습니다');
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+        if (data.authenticated && data.user) {
+            return data.user;
+        } else {
+            alert('로그인이 필요합니다');
             location.href = '/login';
             return null;
         }
-        
-        return payload;
     } catch (e) {
-        console.error('Token parse error:', e);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        console.error('Auth check error:', e);
+        alert('로그인 상태를 확인할 수 없습니다');
         location.href = '/login';
         return null;
     }
@@ -65,15 +55,12 @@ function checkAuth() {
 
 // 사용자 정보 로드
 async function loadUserInfo() {
-    const tokenUser = checkAuth();
-    if (!tokenUser) return;
+    const user = await checkAuth();
+    if (!user) return;
     
     try {
-        const token = localStorage.getItem('token');
         const response = await fetch('/api/user/profile', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            credentials: 'include'  // 쿠키 포함
         });
         
         if (!response.ok) {
@@ -691,6 +678,154 @@ function logout() {
     }
 }
 
+// 프로필 이미지 업로드 처리
+async function handleProfileImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드할 수 있습니다.');
+        return;
+    }
+    
+    // 파일 크기 검증 (1MB)
+    if (file.size > 1024 * 1024) {
+        alert('이미지 크기는 1MB 이하여야 합니다.');
+        return;
+    }
+    
+    try {
+        // 이미지를 캔버스에 그려서 리사이즈 및 압축
+        const img = new Image();
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            img.src = e.target.result;
+        };
+        
+        img.onload = async function() {
+            // 캔버스 생성 및 리사이즈 (최대 300x300)
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let width = img.width;
+            let height = img.height;
+            const maxSize = 300;
+            
+            if (width > height) {
+                if (width > maxSize) {
+                    height *= maxSize / width;
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width *= maxSize / height;
+                    height = maxSize;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Base64로 변환 (JPEG, 품질 0.8)
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // 업로드 중 표시
+            const uploadBtn = document.querySelector('[onclick*="profile-image-input"]');
+            const originalHTML = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i>';
+            uploadBtn.disabled = true;
+            
+            // API 호출
+            const response = await fetch('/api/user/profile-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ imageData })
+            });
+            
+            if (!response.ok) {
+                throw new Error('이미지 업로드 실패');
+            }
+            
+            const result = await response.json();
+            
+            // UI 업데이트
+            document.getElementById('profile-image-preview').src = imageData;
+            document.getElementById('profile-image-preview').classList.remove('hidden');
+            document.getElementById('profile-initial').style.display = 'none';
+            document.getElementById('remove-image-btn').classList.remove('hidden');
+            
+            // 버튼 복원
+            uploadBtn.innerHTML = originalHTML;
+            uploadBtn.disabled = false;
+            
+            alert('프로필 이미지가 업로드되었습니다.');
+        };
+        
+        reader.readAsDataURL(file);
+        
+    } catch (error) {
+        console.error('이미지 업로드 오류:', error);
+        alert('이미지 업로드에 실패했습니다.');
+        
+        // 버튼 복원
+        const uploadBtn = document.querySelector('[onclick*="profile-image-input"]');
+        uploadBtn.innerHTML = '<i class="fas fa-camera text-xs"></i>';
+        uploadBtn.disabled = false;
+    }
+}
+
+// 프로필 이미지 삭제
+async function removeProfileImage() {
+    if (!confirm('프로필 이미지를 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        // 삭제 중 표시
+        const removeBtn = document.getElementById('remove-image-btn');
+        const originalHTML = removeBtn.innerHTML;
+        removeBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i>';
+        removeBtn.disabled = true;
+        
+        // API 호출
+        const response = await fetch('/api/user/profile-image', {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('이미지 삭제 실패');
+        }
+        
+        // UI 업데이트
+        document.getElementById('profile-image-preview').src = '';
+        document.getElementById('profile-image-preview').classList.add('hidden');
+        document.getElementById('profile-initial').style.display = '';
+        removeBtn.classList.add('hidden');
+        
+        // 버튼 복원
+        removeBtn.innerHTML = originalHTML;
+        removeBtn.disabled = false;
+        
+        alert('프로필 이미지가 삭제되었습니다.');
+        
+    } catch (error) {
+        console.error('이미지 삭제 오류:', error);
+        alert('이미지 삭제에 실패했습니다.');
+        
+        // 버튼 복원
+        const removeBtn = document.getElementById('remove-image-btn');
+        removeBtn.innerHTML = '<i class="fas fa-times text-xs"></i>';
+        removeBtn.disabled = false;
+    }
+}
+
 // 새 상담 시작
 function startNewConsultation() {
     // 사이드톡 챗봇 열기
@@ -767,6 +902,10 @@ function getBookingStatusText(status) {
 document.addEventListener('DOMContentLoaded', async function() {
     // 동적 CSS 먼저 로드 (캐싱 우회)
     await loadDynamicStyles();
+    
+    // 인증 체크 먼저 수행
+    const user = await checkAuth();
+    if (!user) return;  // 로그인 안 되어 있으면 중단
     
     // 사용자 정보 및 데이터 로드
     loadUserInfo();

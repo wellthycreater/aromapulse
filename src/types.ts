@@ -232,7 +232,11 @@ export type Bindings = {
   KAKAO_CLIENT_SECRET: string;
   KAKAO_CALLBACK_URL: string;
   
+  // Google Maps API
+  GOOGLE_MAPS_API_KEY: string;
+  
   // Domain
   DOMAIN: string;
   BASE_URL: string;
+  APP_URL: string;
 };

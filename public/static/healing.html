@@ -1054,18 +1054,24 @@
         // Check Login Status on Page Load
         async function checkLoginStatus() {
             try {
+                console.log('[LOGIN] Checking login status...');
                 const response = await fetch('/api/auth/me');
+                console.log('[LOGIN] Response status:', response.status);
+                
                 const data = await response.json();
+                console.log('[LOGIN] Response data:', data);
 
                 if (data.authenticated) {
+                    console.log('[LOGIN] User is authenticated:', data.user);
                     currentUser = data.user;
                     showLoggedInState();
                     await loadClassesAndMap();
                 } else {
+                    console.log('[LOGIN] User is not authenticated');
                     showLoginRequiredState();
                 }
             } catch (error) {
-                console.error('Failed to check login status:', error);
+                console.error('[LOGIN] Failed to check login status:', error);
                 showLoginRequiredState();
             }
         }
@@ -1106,8 +1112,15 @@
         async function loadClassesAndMap() {
             try {
                 // Fetch oneday classes from API
+                console.log('Fetching classes from API...');
                 const response = await fetch(`/api/oneday-classes?provider=${currentUser.provider}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                }
+                
                 classes = await response.json();
+                console.log('Classes loaded:', classes.length, 'items');
 
                 // Show maps section
                 document.getElementById('maps-section').classList.remove('hidden');
@@ -1121,10 +1134,11 @@
                 document.getElementById('map-provider-name').textContent = providerNames[currentUser.provider] || 'Maps';
 
                 // Initialize map based on provider
+                console.log('Initializing map for provider:', currentUser.provider);
                 await initializeMapByProvider();
             } catch (error) {
                 console.error('Failed to load classes:', error);
-                alert('원데이 클래스 정보를 불러오는데 실패했습니다.');
+                alert(`원데이 클래스 정보를 불러오는데 실패했습니다.\n\n오류: ${error.message || error}\n\n브라우저 콘솔(F12)에서 자세한 정보를 확인하세요.`);
             }
         }
 
@@ -1141,6 +1155,25 @@
 
         // Initialize Google Maps
         async function initializeGoogleMap() {
+            // Wait for Google Maps API to load
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                console.log('Waiting for Google Maps API to load...');
+                await new Promise((resolve) => {
+                    const checkInterval = setInterval(() => {
+                        if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        throw new Error('Google Maps API failed to load within 10 seconds');
+                    }, 10000);
+                });
+            }
+            
             document.getElementById('map-loading').classList.add('hidden');
 
             const center = { lat: 37.5665, lng: 126.9780 };

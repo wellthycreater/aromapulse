@@ -1,0 +1,28 @@
+# Cloudflare D1 Console 명령어 (하나씩 복사해서 실행)
+
+# 1. Users 테이블
+CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE NOT NULL, name TEXT NOT NULL, profile_image TEXT, is_oauth INTEGER DEFAULT 0, user_type TEXT DEFAULT 'B2C', created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+
+# 2. OAuth Accounts 테이블
+CREATE TABLE oauth_accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, provider TEXT NOT NULL, provider_user_id TEXT NOT NULL, access_token TEXT, refresh_token TEXT, token_expires_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(provider, provider_user_id))
+
+# 3. Sessions 테이블
+CREATE TABLE sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, session_token TEXT UNIQUE NOT NULL, expires_at DATETIME NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+
+# 4. OAuth States 테이블
+CREATE TABLE oauth_states (id INTEGER PRIMARY KEY AUTOINCREMENT, state TEXT UNIQUE NOT NULL, provider TEXT NOT NULL, redirect_uri TEXT NOT NULL, expires_at DATETIME NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+
+# 5. Oneday Classes 테이블
+CREATE TABLE oneday_classes (id INTEGER PRIMARY KEY AUTOINCREMENT, provider_id INTEGER NOT NULL, title TEXT NOT NULL, description TEXT, category TEXT, location TEXT NOT NULL, address TEXT, studio_name TEXT, instructor_name TEXT, price INTEGER, duration INTEGER, max_participants INTEGER, image_url TEXT, map_providers TEXT DEFAULT 'google,naver,kakao', latitude REAL, longitude REAL, is_active INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+
+# 6. Bookings 테이블
+CREATE TABLE bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, oneday_class_id INTEGER, workshop_id INTEGER, booking_date DATETIME NOT NULL, participants INTEGER NOT NULL, total_price INTEGER NOT NULL, booker_name TEXT NOT NULL, booker_phone TEXT NOT NULL, booker_email TEXT NOT NULL, status TEXT DEFAULT 'pending', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+
+# 7. 테스트 사용자 생성
+INSERT INTO users (email, name, user_type) VALUES ('test@aromapulse.kr', '테스트 사용자', 'B2B')
+
+# 8. 테스트 클래스 생성
+INSERT INTO oneday_classes (provider_id, title, description, category, location, address, price, duration, max_participants, latitude, longitude) VALUES (1, '힐링 아로마 클래스', '나만의 향기 만들기', '아로마테라피', '서울 강남구', '서울시 강남구 테헤란로 123', 50000, 120, 10, 37.5665, 126.9780)
+
+# 완료! 이제 테스트하세요:
+# https://www.aromapulse.kr/api/auth/test-google-login

@@ -338,4 +338,140 @@ END:VEVENT
 END:VCALENDAR`;
 }
 
+// ==================== Product Bookings ====================
+
+// Create a new product booking
+bookings.post('/products', async (c: Context) => {
+  try {
+    const { DB, JWT_SECRET } = c.env as Bindings;
+    
+    // Get user from JWT token (optional for products)
+    const token = getCookie(c, 'auth_token');
+    let userId = null;
+    
+    if (token) {
+      const jwtManager = new JWTManager(JWT_SECRET);
+      const payload = await jwtManager.verify(token);
+      if (payload) {
+        userId = payload.userId;
+      }
+    }
+    
+    // Get booking data from request
+    const data = await c.req.json();
+    const {
+      product_id,
+      booking_date,
+      booking_time,
+      quantity,
+      booker_name,
+      booker_phone,
+      booker_email,
+      special_requests
+    } = data;
+    
+    // Validate required fields
+    if (!product_id || !booking_date || !booking_time || !booker_name || !booker_phone || !booker_email) {
+      return c.json({ error: '필수 정보를 모두 입력해주세요' }, 400);
+    }
+    
+    // Combine date and time
+    const bookingDateTime = `${booking_date}T${booking_time}:00`;
+    
+    // Get product info
+    const product = await DB.prepare(`
+      SELECT id, name, price FROM products 
+      WHERE id = ?
+    `).bind(product_id).first<{ id: number, name: string, price: number }>();
+    
+    if (!product) {
+      return c.json({ error: '제품을 찾을 수 없습니다' }, 404);
+    }
+    
+    // Calculate total price
+    const numQuantity = quantity || 1;
+    const totalPrice = product.price * numQuantity;
+    
+    // Create product booking
+    const result = await DB.prepare(`
+      INSERT INTO product_bookings (
+        product_id, user_id, booking_date, quantity, total_price,
+        booker_name, booker_phone, booker_email, special_requests, status,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))
+    `).bind(
+      product_id,
+      userId,
+      bookingDateTime,
+      numQuantity,
+      totalPrice,
+      booker_name,
+      booker_phone,
+      booker_email,
+      special_requests || null
+    ).run();
+    
+    const bookingId = Number(result.meta.last_row_id);
+    
+    // Get full booking details
+    const booking = await DB.prepare(`
+      SELECT 
+        b.*,
+        p.name as product_name,
+        p.description as product_description,
+        p.image_url
+      FROM product_bookings b
+      JOIN products p ON b.product_id = p.id
+      WHERE b.id = ?
+    `).bind(bookingId).first();
+    
+    return c.json({
+      message: '예약이 완료되었습니다',
+      booking: booking
+    }, 201);
+    
+  } catch (error: any) {
+    console.error('Product booking creation error:', error);
+    return c.json({ error: '예약 처리 중 오류가 발생했습니다', details: error.message }, 500);
+  }
+});
+
+// Get user's product bookings
+bookings.get('/products/my', async (c: Context) => {
+  try {
+    const { DB, JWT_SECRET } = c.env as Bindings;
+    
+    // Get user from JWT token
+    const token = getCookie(c, 'auth_token');
+    if (!token) {
+      return c.json({ error: '로그인이 필요합니다' }, 401);
+    }
+    
+    const jwtManager = new JWTManager(JWT_SECRET);
+    const payload = await jwtManager.verify(token);
+    
+    if (!payload) {
+      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+    }
+    
+    // Get bookings
+    const result = await DB.prepare(`
+      SELECT 
+        b.*,
+        p.name as product_name,
+        p.image_url
+      FROM product_bookings b
+      JOIN products p ON b.product_id = p.id
+      WHERE b.user_id = ?
+      ORDER BY b.booking_date DESC
+    `).bind(payload.userId).all();
+    
+    return c.json(result.results);
+    
+  } catch (error: any) {
+    console.error('Get product bookings error:', error);
+    return c.json({ error: '예약 조회 중 오류가 발생했습니다', details: error.message }, 500);
+  }
+});
+
 export default bookings;

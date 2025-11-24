@@ -304,4 +304,69 @@ user.put('/change-password', async (c) => {
   }
 });
 
+// 프로필 이미지 업로드
+user.post('/profile-image', async (c) => {
+  try {
+    const userId = c.get('userId');
+    const { imageData } = await c.req.json();
+    
+    if (!imageData) {
+      return c.json({ error: '이미지 데이터가 없습니다' }, 400);
+    }
+    
+    // Data URL 형식 검증 (data:image/jpeg;base64,... 또는 data:image/png;base64,...)
+    if (!imageData.startsWith('data:image/')) {
+      return c.json({ error: '유효하지 않은 이미지 형식입니다' }, 400);
+    }
+    
+    // 이미지 크기 검증 (Base64 문자열 길이로 대략적인 크기 계산)
+    // Base64는 원본의 약 133% 크기이므로, 1MB 제한 = 약 1.33MB Base64
+    const maxSize = 1.5 * 1024 * 1024; // 1.5MB Base64 문자열 (약 1MB 원본 이미지)
+    if (imageData.length > maxSize) {
+      return c.json({ error: '이미지 크기가 너무 큽니다 (최대 1MB)' }, 400);
+    }
+    
+    console.log('Uploading profile image for user:', userId);
+    console.log('Image data length:', imageData.length);
+    
+    // 데이터베이스에 이미지 저장
+    await c.env.DB.prepare(
+      'UPDATE users SET profile_image = ? WHERE id = ?'
+    ).bind(imageData, userId).run();
+    
+    console.log('Profile image uploaded successfully');
+    
+    return c.json({ 
+      message: '프로필 이미지가 성공적으로 업로드되었습니다',
+      imageUrl: imageData 
+    });
+    
+  } catch (error: any) {
+    console.error('프로필 이미지 업로드 실패:', error);
+    return c.json({ error: '프로필 이미지 업로드 실패' }, 500);
+  }
+});
+
+// 프로필 이미지 삭제
+user.delete('/profile-image', async (c) => {
+  try {
+    const userId = c.get('userId');
+    
+    console.log('Deleting profile image for user:', userId);
+    
+    // 데이터베이스에서 이미지 제거
+    await c.env.DB.prepare(
+      'UPDATE users SET profile_image = NULL WHERE id = ?'
+    ).bind(userId).run();
+    
+    console.log('Profile image deleted successfully');
+    
+    return c.json({ message: '프로필 이미지가 성공적으로 삭제되었습니다' });
+    
+  } catch (error: any) {
+    console.error('프로필 이미지 삭제 실패:', error);
+    return c.json({ error: '프로필 이미지 삭제 실패' }, 500);
+  }
+});
+
 export default user;

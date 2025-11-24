@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공방 검색 - 아로마펄스 관리자</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">
+            <i class="fas fa-search mr-2"></i>
+            Google Maps 공방 검색
+        </h1>
+
+        <!-- 검색 폼 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">검색 키워드</label>
+                <input type="text" id="searchQuery" 
+                    value="아로마 공방 향수 만들기 캔들 클래스"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600"
+                    placeholder="검색할 키워드를 입력하세요">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">중심 위치 (위도,경도)</label>
+                    <input type="text" id="searchLocation" 
+                        value="37.5665,126.9780"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600"
+                        placeholder="37.5665,126.9780 (서울 중심)">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">검색 반경 (미터)</label>
+                    <input type="number" id="searchRadius" 
+                        value="50000"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600"
+                        placeholder="50000 (50km)">
+                </div>
+            </div>
+
+            <button onclick="searchPlaces()" 
+                class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">
+                <i class="fas fa-search mr-2"></i>
+                검색하기
+            </button>
+        </div>
+
+        <!-- 검색 결과 -->
+        <div id="searchResults" class="hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                검색 결과 (<span id="resultCount">0</span>개)
+            </h2>
+            <div id="resultsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 결과가 여기에 표시됩니다 -->
+            </div>
+        </div>
+
+        <!-- 로딩 상태 -->
+        <div id="loading" class="hidden text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
+            <p class="mt-4 text-gray-600">검색 중...</p>
+        </div>
+    </div>
+
+    <script>
+        async function searchPlaces() {
+            const query = document.getElementById('searchQuery').value;
+            const location = document.getElementById('searchLocation').value;
+            const radius = document.getElementById('searchRadius').value;
+
+            const loading = document.getElementById('loading');
+            const resultsDiv = document.getElementById('searchResults');
+            
+            loading.classList.remove('hidden');
+            resultsDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/places/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, location, radius: parseInt(radius) })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.results);
+                    document.getElementById('resultCount').textContent = data.count;
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    alert('검색 실패: ' + (data.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('검색 오류:', error);
+                alert('검색 중 오류가 발생했습니다.');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function displayResults(results) {
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+
+            results.forEach(place => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition';
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${place.name}</h3>
+                    <p class="text-gray-600 mb-2">${place.address}</p>
+                    <p class="text-sm text-gray-500 mb-4">
+                        ⭐ ${place.rating || 'N/A'} (${place.userRatingsTotal || 0}개 리뷰)
+                    </p>
+                    <div class="flex gap-2">
+                        <button onclick="viewDetails('${place.placeId}')" 
+                            class="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                            상세보기
+                        </button>
+                        <button onclick="savePlace('${place.placeId}')" 
+                            class="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">
+                            저장
+                        </button>
+                    </div>
+                `;
+                resultsList.appendChild(card);
+            });
+        }
+
+        async function viewDetails(placeId) {
+            try {
+                const response = await fetch(`/api/places/details/${placeId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const place = data.place;
+                    alert(`
+공방명: ${place.name}
+주소: ${place.address}
+전화번호: ${place.phone || 'N/A'}
+웹사이트: ${place.website || 'N/A'}
+평점: ${place.rating || 'N/A'} (${place.userRatingsTotal || 0}개 리뷰)
+상태: ${place.businessStatus}
+                    `);
+                } else {
+                    alert('상세 정보 조회 실패');
+                }
+            } catch (error) {
+                console.error('상세 정보 조회 오류:', error);
+                alert('조회 중 오류가 발생했습니다.');
+            }
+        }
+
+        async function savePlace(placeId) {
+            if (!confirm('이 공방을 저장하시겠습니까? (관리자 승인 후 활성화됩니다)')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/places/details/${placeId}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('공방 정보를 가져올 수 없습니다.');
+                    return;
+                }
+
+                const place = data.place;
+                const photoRef = place.photos && place.photos[0] ? place.photos[0].reference : null;
+
+                const saveResponse = await fetch('/api/places/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        placeId: place.placeId,
+                        name: place.name,
+                        address: place.address,
+                        latitude: place.location.lat,
+                        longitude: place.location.lng,
+                        phone: place.phone,
+                        website: place.website,
+                        rating: place.rating,
+                        userRatingsTotal: place.userRatingsTotal,
+                        photoReference: photoRef
+                    })
+                });
+
+                const saveData = await saveResponse.json();
+
+                if (saveData.success) {
+                    alert('✓ 공방이 저장되었습니다!\n\n관리자 승인 후 클래스 목록에 표시됩니다.');
+                } else {
+                    alert('저장 실패: ' + saveData.message);
+                }
+            } catch (error) {
+                console.error('저장 오류:', error);
+                alert('저장 중 오류가 발생했습니다.');
+            }
+        }
+    </script>
+</body>
+</html>
