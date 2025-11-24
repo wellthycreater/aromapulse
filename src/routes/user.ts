@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { getCookie } from 'hono/cookie';
 import type { Bindings } from '../types';
 import { verifyToken } from '../utils/jwt';
 
@@ -62,7 +63,7 @@ async function hashPassword(password: string): Promise<string> {
 // 인증 미들웨어 (쿠키 기반)
 async function authMiddleware(c: any, next: any) {
   // 쿠키에서 토큰 가져오기
-  const token = c.req.cookie('auth_token');
+  const token = getCookie(c, 'auth_token');
   
   console.log('🔐 Auth middleware - Cookie token:', token ? 'Present' : 'Missing');
   
