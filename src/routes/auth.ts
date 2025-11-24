@@ -324,40 +324,48 @@ auth.get('/logout', async (c: Context) => {
 
 // Get current user info
 auth.get('/me', async (c: Context) => {
-  const { DB, JWT_SECRET } = c.env as Bindings;
-  
-  const token = getCookie(c, 'auth_token');
-  
-  if (!token) {
-    return c.json({ authenticated: false }, 200);
+  try {
+    const { DB, JWT_SECRET } = c.env as Bindings;
+    
+    const token = getCookie(c, 'auth_token');
+    
+    if (!token) {
+      return c.json({ authenticated: false }, 200);
+    }
+    
+    const jwtManager = new JWTManager(JWT_SECRET);
+    const payload = await jwtManager.verify(token);
+    
+    if (!payload) {
+      return c.json({ authenticated: false }, 200);
+    }
+    
+    // Get user from database
+    const user = await DB.prepare(`
+      SELECT id, email, name, profile_image FROM users WHERE id = ?
+    `).bind(payload.userId).first<{ id: number, email: string, name: string, profile_image: string }>();
+    
+    if (!user) {
+      return c.json({ authenticated: false }, 200);
+    }
+    
+    return c.json({
+      authenticated: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        profileImage: user.profile_image,
+        provider: payload.provider,
+      },
+    });
+  } catch (error: any) {
+    console.error('❌ /api/auth/me error:', error);
+    return c.json({ 
+      authenticated: false, 
+      error: error.message 
+    }, 200);
   }
-  
-  const jwtManager = new JWTManager(JWT_SECRET);
-  const payload = await jwtManager.verify(token);
-  
-  if (!payload) {
-    return c.json({ authenticated: false }, 200);
-  }
-  
-  // Get user from database
-  const user = await DB.prepare(`
-    SELECT id, email, name, profile_image FROM users WHERE id = ?
-  `).bind(payload.userId).first<{ id: number, email: string, name: string, profile_image: string }>();
-  
-  if (!user) {
-    return c.json({ authenticated: false }, 200);
-  }
-  
-  return c.json({
-    authenticated: true,
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      profileImage: user.profile_image,
-      provider: payload.provider,
-    },
-  });
 });
 
 // ======================
