@@ -521,3 +521,4 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(';').shift();
     return null;
 }
+// Version: 1.8.0 - Booking System - 1763974457

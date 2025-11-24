@@ -1,0 +1,8 @@
+name = "aromapulse"
+compatibility_date = "2025-11-19"
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aromapulse-production"
+database_id = "8ec629d0-47a9-46de-b2ab-5a197612230b"
