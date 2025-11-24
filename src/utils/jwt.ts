@@ -53,8 +53,9 @@ export async function verifyToken(token: string, secret: string): Promise<any> {
     }
 
     return payload;
-  } catch (error) {
-    throw new Error(`Token verification failed: ${error.message}`);
+  } catch (error: any) {
+    const errorMsg = error?.message || String(error);
+    throw new Error(`Token verification failed: ${errorMsg}`);
   }
 }
 
