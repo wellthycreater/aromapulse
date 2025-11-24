@@ -425,11 +425,20 @@ async function updateProfile(event) {
         
         const data = await response.json();
         console.log('[updateProfile] 프로필 업데이트 응답:', data);
+        console.log('[updateProfile] 응답 전체:', JSON.stringify(data, null, 2));
         
         if (!response.ok) {
-            const errorMsg = data.error || `서버 오류 (${response.status})`;
+            console.error('[updateProfile] 서버 에러 응답:', {
+                error: data.error,
+                message: data.message,
+                stack: data.stack,
+                details: data.details
+            });
+            
+            const errorMsg = data.error || data.message || `서버 오류 (${response.status})`;
             const details = data.details ? `\n상세: ${data.details}` : '';
-            throw new Error(errorMsg + details);
+            const stack = data.stack ? `\n스택: ${data.stack}` : '';
+            throw new Error(errorMsg + details + stack);
         }
         
         // 새 토큰을 localStorage에 저장 (메인 페이지에서도 업데이트된 정보가 보이도록)
