@@ -46,18 +46,18 @@ async function hashPassword(password: string): Promise<string> {
     .join('');
 }
 
-// 인증 미들웨어
+// 인증 미들웨어 (쿠키 기반)
 async function authMiddleware(c: any, next: any) {
-  const authHeader = c.req.header('Authorization');
+  // 쿠키에서 토큰 가져오기
+  const token = c.req.cookie('auth_token');
   
-  console.log('🔐 Auth middleware - Authorization header:', authHeader ? 'Present' : 'Missing');
+  console.log('🔐 Auth middleware - Cookie token:', token ? 'Present' : 'Missing');
   
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.error('❌ Auth failed: No Bearer token');
+  if (!token) {
+    console.error('❌ Auth failed: No auth_token cookie');
     return c.json({ error: '인증이 필요합니다' }, 401);
   }
   
-  const token = authHeader.substring(7);
   console.log('🎫 Token received (first 20 chars):', token.substring(0, 20) + '...');
   
   // JWT_SECRET 확인
