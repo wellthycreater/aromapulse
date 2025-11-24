@@ -193,8 +193,25 @@ bookings.get('/my-bookings', async (c: Context) => {
       ORDER BY b.booking_date DESC
     `).bind(payload.userId).all();
     
-    // Format bookings for frontend
-    const formattedBookings = classBookings.results.map((booking: any) => ({
+    // Get product bookings (쇼핑 예약)
+    const productBookings = await DB.prepare(`
+      SELECT 
+        b.id,
+        b.booking_date,
+        b.quantity as participants,
+        b.total_price,
+        b.status,
+        b.created_at,
+        b.booker_name,
+        p.name as product_name
+      FROM product_bookings b
+      JOIN products p ON b.product_id = p.id
+      WHERE b.user_id = ?
+      ORDER BY b.booking_date DESC
+    `).bind(payload.userId).all();
+    
+    // Format class bookings
+    const formattedClassBookings = classBookings.results.map((booking: any) => ({
       booking_id: `CLASS-${booking.id}`,
       type: 'class',
       title: booking.class_title,
@@ -212,9 +229,32 @@ bookings.get('/my-bookings', async (c: Context) => {
       created_at: booking.created_at
     }));
     
+    // Format product bookings
+    const formattedProductBookings = productBookings.results.map((booking: any) => ({
+      booking_id: `PRODUCT-${booking.id}`,
+      type: 'product',
+      title: booking.product_name,
+      date: new Date(booking.booking_date).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      participants: booking.participants,
+      amount: booking.total_price,
+      status: booking.status,
+      location: '',
+      created_at: booking.created_at
+    }));
+    
+    // Combine and sort by created_at
+    const allBookings = [...formattedClassBookings, ...formattedProductBookings]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
     return c.json({
       success: true,
-      bookings: formattedBookings
+      bookings: allBookings
     });
     
   } catch (error: any) {
@@ -576,9 +616,15 @@ bookings.get('/stats', async (c: Context) => {
       return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
     }
     
-    // Count total bookings
-    const bookingsCount = await DB.prepare(`
+    // Count total class bookings
+    const classBookingsCount = await DB.prepare(`
       SELECT COUNT(*) as count FROM oneday_class_bookings
+      WHERE user_id = ?
+    `).bind(payload.userId).first<{ count: number }>();
+    
+    // Count total product bookings
+    const productBookingsCount = await DB.prepare(`
+      SELECT COUNT(*) as count FROM product_bookings
       WHERE user_id = ?
     `).bind(payload.userId).first<{ count: number }>();
     
@@ -588,11 +634,14 @@ bookings.get('/stats', async (c: Context) => {
       WHERE user_id = ?
     `).bind(payload.userId).first<{ count: number }>();
     
+    // Total bookings = class bookings + product bookings
+    const totalBookings = (classBookingsCount?.count || 0) + (productBookingsCount?.count || 0);
+    
     return c.json({
       success: true,
       stats: {
         total_orders: ordersCount?.count || 0,
-        total_bookings: bookingsCount?.count || 0,
+        total_bookings: totalBookings,
         total_consultations: 0  // TODO: 상담 시스템 구현 시 추가
       }
     });

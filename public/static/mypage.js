@@ -467,8 +467,16 @@ async function loadBookings(type = 'all') {
             <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium mb-2 ${booking.type === 'workshop' ? 'bg-purple-50 text-purple-600' : 'bg-green-50 text-green-600'}">
-                            ${booking.type === 'workshop' ? '워크샵' : '원데이 클래스'}
+                        <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium mb-2 ${
+                            booking.type === 'workshop' ? 'bg-purple-50 text-purple-600' : 
+                            booking.type === 'product' ? 'bg-blue-50 text-blue-600' : 
+                            'bg-green-50 text-green-600'
+                        }">
+                            ${
+                                booking.type === 'workshop' ? '워크샵' : 
+                                booking.type === 'product' ? '쇼핑 예약' : 
+                                '원데이 클래스'
+                            }
                         </span>
                         <p class="text-xs text-gray-400">예약일: ${new Date(booking.created_at).toLocaleDateString('ko-KR')}</p>
                     </div>
