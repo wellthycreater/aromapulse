@@ -98,6 +98,12 @@ user.use('/*', authMiddleware);
 user.get('/profile', async (c) => {
   try {
     const userId = c.get('userId');
+    console.log('[GET /profile] userId:', userId);
+    
+    if (!userId) {
+      console.error('[GET /profile] No userId in context');
+      return c.json({ error: '인증 정보가 없습니다' }, 401);
+    }
     
     const user = await c.env.DB.prepare(`
       SELECT 
@@ -114,6 +120,8 @@ user.get('/profile', async (c) => {
       WHERE id = ?
     `).bind(userId).first();
     
+    console.log('[GET /profile] Query result:', user ? 'User found' : 'User not found');
+    
     if (!user) {
       return c.json({ error: '사용자를 찾을 수 없습니다' }, 404);
     }
@@ -121,8 +129,14 @@ user.get('/profile', async (c) => {
     return c.json({ user });
     
   } catch (error: any) {
-    console.error('프로필 조회 실패:', error);
-    return c.json({ error: '프로필 조회 실패' }, 500);
+    console.error('[GET /profile] Error:', error);
+    console.error('[GET /profile] Error message:', error.message);
+    console.error('[GET /profile] Error stack:', error.stack);
+    return c.json({ 
+      error: '프로필 조회 실패', 
+      details: error.message,
+      stack: error.stack 
+    }, 500);
   }
 });
 
@@ -130,7 +144,12 @@ user.get('/profile', async (c) => {
 user.put('/profile', async (c) => {
   try {
     const userId = c.get('userId');
-    console.log('📝 Profile update request for user:', userId);
+    console.log('[PUT /profile] userId:', userId);
+    
+    if (!userId) {
+      console.error('[PUT /profile] No userId in context');
+      return c.json({ error: '인증 정보가 없습니다' }, 401);
+    }
     
     const data = await c.req.json();
     console.log('📦 Update data received:', JSON.stringify(data));
