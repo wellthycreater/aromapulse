@@ -104,8 +104,9 @@ async function loadUserInfo() {
         
         // OAuth 사용자는 이메일 변경 불가
         const emailInput = document.getElementById('profile-email');
-        console.log('OAuth provider:', user.oauth_provider);
-        if (user.oauth_provider && user.oauth_provider !== 'local') {
+        const oauthProvider = user.oauth_provider || user.provider;
+        console.log('OAuth provider:', oauthProvider);
+        if (oauthProvider && oauthProvider !== 'local') {
             emailInput.readOnly = true;
             emailInput.classList.add('bg-gray-50');
             emailInput.title = 'OAuth 로그인 사용자는 이메일을 변경할 수 없습니다';
