@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { serveStatic } from 'hono/cloudflare-workers';
 import type { Bindings } from './types';
 
 // API Routes
@@ -38,9 +37,8 @@ const app = new Hono<{ Bindings: Bindings }>();
 // CORS 설정
 app.use('/api/*', cors());
 
-// Static files
-// Serve static files from /static/* (Cloudflare Pages serves from dist root)
-app.use('/static/*', serveStatic({ root: './' }));
+// Static files are automatically served by Cloudflare Pages from dist/
+// No need for serveStatic middleware
 
 // Auth Routes (both /auth and /api/auth for flexibility)
 app.route('/auth', authRoutes);

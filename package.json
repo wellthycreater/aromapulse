@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "vite",
     "dev:sandbox": "wrangler pages dev dist --d1=aromapulse-production --local --ip 0.0.0.0 --port 3000",
-    "build": "vite build && cp -r public/* dist/ && echo '{\"version\":1,\"include\":[\"/*\"],\"exclude\":[\"/_worker.js\",\"/_headers\"]}' > dist/_routes.json",
+    "build": "vite build && cp -r public/* dist/ && echo '{\"version\":1,\"include\":[\"/*\"],\"exclude\":[\"/_worker.js\",\"/_headers\",\"/static/*\"]}' > dist/_routes.json",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy dist",
     "deploy:prod": "npm run build && wrangler pages deploy dist --project-name aromapulse",
