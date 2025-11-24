@@ -101,7 +101,14 @@ async function authMiddleware(c: any, next: any) {
   } catch (error: any) {
     console.error('❌ Token verification failed:', error.message);
     console.error('Error stack:', error.stack);
-    return c.json({ error: '토큰 인증 실패: ' + error.message }, 401);
+    
+    // 토큰 검증 실패 시 쿠키 삭제 (자동 로그아웃)
+    c.header('Set-Cookie', 'auth_token=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
+    
+    return c.json({ 
+      error: '토큰 인증 실패: ' + error.message,
+      autoLogout: true  // 프론트엔드에서 로그아웃 처리하도록 플래그 추가
+    }, 401);
   }
 }
 

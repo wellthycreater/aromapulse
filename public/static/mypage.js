@@ -103,6 +103,16 @@ async function loadUserInfo() {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('[loadUserInfo] API 실패:', response.status, errorText);
+            
+            // 401 Unauthorized - 토큰 인증 실패 시 로그아웃
+            if (response.status === 401) {
+                console.warn('[loadUserInfo] 토큰 인증 실패 - 자동 로그아웃');
+                alert('⚠️ 로그인 세션이 만료되었습니다.\n다시 로그인해주세요.');
+                document.cookie = 'auth_token=; Path=/; Max-Age=0';
+                window.location.href = '/login';
+                return;
+            }
+            
             console.warn('[loadUserInfo] authUser 데이터로 폴백합니다');
             
             // OAuth provider 설정 (authUser에서)
@@ -377,6 +387,16 @@ async function updateProfile(event) {
             stack: error.stack,
             name: error.name
         });
+        
+        // 토큰 인증 실패 시 자동 로그아웃
+        if (error.message && error.message.includes('토큰 인증 실패')) {
+            alert('⚠️ 로그인 세션이 만료되었습니다.\n다시 로그인해주세요.');
+            // 쿠키 삭제
+            document.cookie = 'auth_token=; Path=/; Max-Age=0';
+            // 로그인 페이지로 리다이렉트
+            window.location.href = '/login';
+            return;
+        }
         
         // 사용자에게 명확한 에러 메시지 표시
         const errorMessage = error.message || '알 수 없는 오류가 발생했습니다';
