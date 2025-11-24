@@ -1310,15 +1310,82 @@
         }
 
         // Book Class
+        // Open booking modal
         function bookClass(classId, bookingUrl) {
             const cls = classes.find(c => c.id === classId);
             if (!cls) return;
             
-            if (bookingUrl && bookingUrl !== '#') {
-                window.open(bookingUrl, '_blank');
-            } else {
-                alert(`${cls.name || cls.title} 예약 페이지로 이동합니다.`);
+            // Show booking modal
+            document.getElementById('booking-modal').classList.remove('hidden');
+            document.getElementById('booking-class-title').textContent = cls.title || cls.name;
+            document.getElementById('booking-class-info').textContent = `${cls.location} · ${cls.price?.toLocaleString()}원`;
+            document.getElementById('booking-class-id').value = classId;
+            
+            // Prefill user info
+            document.getElementById('booker-name').value = currentUser.name;
+            document.getElementById('booker-email').value = currentUser.email;
+        }
+
+        // Close booking modal
+        function closeBookingModal() {
+            document.getElementById('booking-modal').classList.add('hidden');
+            document.getElementById('booking-form').reset();
+        }
+
+        // Submit booking
+        async function submitBooking(event) {
+            event.preventDefault();
+            
+            const classId = document.getElementById('booking-class-id').value;
+            const bookingDate = document.getElementById('booking-date').value;
+            const bookingTime = document.getElementById('booking-time').value;
+            const participants = document.getElementById('participants').value;
+            const bookerName = document.getElementById('booker-name').value;
+            const bookerPhone = document.getElementById('booker-phone').value;
+            const bookerEmail = document.getElementById('booker-email').value;
+            
+            // Combine date and time
+            const bookingDatetime = `${bookingDate}T${bookingTime}:00`;
+            
+            try {
+                const response = await fetch(`/api/bookings/oneday-classes/${classId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        booking_date: bookingDatetime,
+                        participants: parseInt(participants),
+                        booker_name: bookerName,
+                        booker_phone: bookerPhone,
+                        booker_email: bookerEmail
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    closeBookingModal();
+                    showBookingSuccess(data.booking);
+                } else {
+                    const error = await response.json();
+                    alert(error.error || '예약에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Booking error:', error);
+                alert('예약 처리 중 오류가 발생했습니다.');
             }
+        }
+
+        // Show booking success modal
+        function showBookingSuccess(booking) {
+            document.getElementById('success-modal').classList.remove('hidden');
+            document.getElementById('success-booking-id').textContent = booking.id;
+            document.getElementById('icalendar-link').href = `/api/bookings/${booking.id}/icalendar`;
+        }
+
+        // Close success modal
+        function closeSuccessModal() {
+            document.getElementById('success-modal').classList.add('hidden');
         }
 
         // Logout Function
@@ -1689,6 +1756,129 @@
             animation: scale-in 0.3s ease-out;
         }
     </style>
+
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-2xl w-full my-8 shadow-2xl">
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-t-3xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-2xl font-bold">
+                        <i class="fas fa-calendar-check mr-2"></i>
+                        클래스 예약
+                    </h3>
+                    <button onclick="closeBookingModal()" class="text-white hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <p class="text-purple-100 mt-2" id="booking-class-title">클래스명</p>
+                <p class="text-purple-200 text-sm" id="booking-class-info">위치 · 가격</p>
+            </div>
+            
+            <form id="booking-form" onsubmit="submitBooking(event)" class="p-8">
+                <input type="hidden" id="booking-class-id">
+                
+                <div class="space-y-6">
+                    <!-- Date & Time -->
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-calendar mr-2 text-purple-600"></i>예약 날짜
+                            </label>
+                            <input type="date" id="booking-date" required 
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-600 focus:outline-none"
+                                   min="<?php echo date('Y-m-d'); ?>">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-clock mr-2 text-purple-600"></i>예약 시간
+                            </label>
+                            <input type="time" id="booking-time" required 
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-600 focus:outline-none">
+                        </div>
+                    </div>
+                    
+                    <!-- Participants -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-users mr-2 text-purple-600"></i>참가 인원
+                        </label>
+                        <select id="participants" required 
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-600 focus:outline-none">
+                            <option value="1">1명</option>
+                            <option value="2">2명</option>
+                            <option value="3">3명</option>
+                            <option value="4">4명</option>
+                            <option value="5">5명 이상</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Booker Info -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-user mr-2 text-purple-600"></i>예약자 이름
+                        </label>
+                        <input type="text" id="booker-name" required 
+                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-600 focus:outline-none"
+                               placeholder="이름을 입력하세요">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-phone mr-2 text-purple-600"></i>연락처
+                        </label>
+                        <input type="tel" id="booker-phone" required 
+                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-600 focus:outline-none"
+                               placeholder="010-0000-0000">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-envelope mr-2 text-purple-600"></i>이메일
+                        </label>
+                        <input type="email" id="booker-email" required 
+                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-600 focus:outline-none"
+                               placeholder="email@example.com">
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg text-lg font-bold hover:shadow-xl transition transform hover:scale-105">
+                        <i class="fas fa-check-circle mr-2"></i>예약 완료
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Booking Success Modal -->
+    <div id="success-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl animate-scale-in">
+            <div class="bg-gradient-to-r from-green-500 to-teal-500 text-white p-8 rounded-t-3xl text-center">
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-green-500 text-4xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">예약이 완료되었습니다!</h3>
+                <p class="text-green-100">예약 번호: <span id="success-booking-id" class="font-bold"></span></p>
+            </div>
+            
+            <div class="p-8 space-y-4">
+                <p class="text-gray-600 text-center">
+                    예약 확인 메일이 발송되었습니다.<br>
+                    아래 버튼으로 캘린더에 일정을 추가하세요.
+                </p>
+                
+                <a id="icalendar-link" href="#" download
+                   class="block w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 rounded-lg text-center font-bold hover:shadow-xl transition transform hover:scale-105">
+                    <i class="fas fa-calendar-plus mr-2"></i>Google Calendar에 추가
+                </a>
+                
+                <button onclick="closeSuccessModal()" 
+                        class="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
