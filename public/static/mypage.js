@@ -411,11 +411,20 @@ async function updateProfile(event) {
             body: JSON.stringify(updateData)
         });
         
-        console.log('API 응답 상태:', response.status);
+        console.log('[updateProfile] API 응답 상태:', response.status);
+        
+        // Content-Type 확인
+        const contentType = response.headers.get('content-type');
+        console.log('[updateProfile] Content-Type:', contentType);
+        
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('[updateProfile] JSON이 아닌 응답:', text.substring(0, 500));
+            throw new Error('서버에서 올바른 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요.');
+        }
         
         const data = await response.json();
-        console.log('프로필 업데이트 응답:', data);
-        console.log('응답 상세 정보:', JSON.stringify(data, null, 2));
+        console.log('[updateProfile] 프로필 업데이트 응답:', data);
         
         if (!response.ok) {
             const errorMsg = data.error || `서버 오류 (${response.status})`;
