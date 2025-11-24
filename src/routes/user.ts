@@ -197,26 +197,30 @@ user.put('/profile', async (c) => {
       try {
         // 현재 사용자 정보 조회
         const currentUser = await c.env.DB.prepare(
-          'SELECT oauth_provider FROM users WHERE id = ?'
-        ).bind(userId).first<{ oauth_provider: string | null }>();
+          'SELECT oauth_provider, email FROM users WHERE id = ?'
+        ).bind(userId).first<{ oauth_provider: string | null; email: string }>();
         
         console.log('[Profile Update] Current user oauth_provider:', currentUser?.oauth_provider);
         
+        // OAuth 사용자인 경우, 이메일 변경 시도를 조용히 무시
         if (currentUser && currentUser.oauth_provider && currentUser.oauth_provider !== 'local' && currentUser.oauth_provider !== null) {
-          return c.json({ error: 'OAuth 로그인 사용자는 이메일을 변경할 수 없습니다' }, 400);
+          console.log('[Profile Update] OAuth user attempted email change - silently ignoring');
+          // 에러를 반환하지 않고 그냥 건너뜀 (프론트엔드에서 이미 readonly이므로)
+        } else {
+          // 로컬 계정 사용자만 이메일 변경 가능
+          
+          // 이메일 중복 체크
+          const existingUser = await c.env.DB.prepare(
+            'SELECT id FROM users WHERE email = ? AND id != ?'
+          ).bind(data.email, userId).first();
+          
+          if (existingUser) {
+            return c.json({ error: '이미 사용 중인 이메일입니다' }, 400);
+          }
+          
+          updateFields.push('email = ?');
+          updateValues.push(data.email);
         }
-        
-        // 이메일 중복 체크
-        const existingUser = await c.env.DB.prepare(
-          'SELECT id FROM users WHERE email = ? AND id != ?'
-        ).bind(data.email, userId).first();
-        
-        if (existingUser) {
-          return c.json({ error: '이미 사용 중인 이메일입니다' }, 400);
-        }
-        
-        updateFields.push('email = ?');
-        updateValues.push(data.email);
       } catch (emailCheckError: any) {
         console.error('[Profile Update] Email check error:', emailCheckError);
         // 에러가 발생해도 계속 진행 (이메일 업데이트 건너뛰기)
