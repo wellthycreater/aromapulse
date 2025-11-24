@@ -522,9 +522,11 @@ function showBookingSuccess(booking) {
     document.getElementById('success-participants').textContent = `${booking.participants}명`;
     
     // 구글 캘린더 추가 링크 생성
-    const googleCalendarLink = createGoogleCalendarLink(booking);
     const calendarButton = document.getElementById('google-calendar-link');
-    calendarButton.href = googleCalendarLink;
+    if (calendarButton) {
+        const googleCalendarLink = createGoogleCalendarLink(booking);
+        calendarButton.href = googleCalendarLink;
+    }
     
     // 성공 모달 표시
     document.getElementById('success-modal').classList.remove('hidden');
