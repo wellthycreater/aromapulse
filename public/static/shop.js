@@ -134,15 +134,17 @@ function createProductCard(product) {
         }
       </div>
       
-      <div class="grid grid-cols-2 gap-3">
-        <button onclick="viewProductDetail(${product.id})" class="bg-gray-100 text-gray-700 px-5 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
-          <i class="fas fa-search-plus"></i>
-          <span>상세</span>
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="viewProductDetail(${product.id})" class="bg-gray-100 text-gray-700 px-3 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+          <i class="fas fa-search-plus text-sm"></i>
+        </button>
+        <button onclick="quickBooking(${product.id})" ${product.stock <= 0 ? 'disabled' : ''} 
+          class="bg-pink-600 text-white px-3 py-3 rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
+          <i class="fas fa-calendar-check text-sm"></i>
         </button>
         <button onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''} 
-          class="btn-primary text-white px-5 py-4 rounded-2xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2">
-          <i class="fas fa-shopping-cart"></i>
-          <span>담기</span>
+          class="btn-primary text-white px-3 py-3 rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
+          <i class="fas fa-shopping-cart text-sm"></i>
         </button>
       </div>
     </div>
@@ -154,6 +156,12 @@ function createProductCard(product) {
 // 제품 상세보기
 function viewProductDetail(productId) {
   window.location.href = `/static/product-detail?id=${productId}`;
+}
+
+// 빠른 예약 (제품 상세 페이지의 예약 모달로 이동)
+function quickBooking(productId) {
+  // 제품 상세 페이지로 이동하고 예약 모달 자동 열기
+  window.location.href = `/static/product-detail?id=${productId}&booking=true`;
 }
 
 // 장바구니에 추가

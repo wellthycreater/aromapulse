@@ -1,4 +1,4 @@
-// Bookings API for Oneday Classes
+// Bookings API for Oneday Classes and Products
 import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { getCookie } from 'hono/cookie';

@@ -253,14 +253,18 @@
 
     <!-- 하단 고정 구매 바 (모바일) -->
     <div id="sticky-bar" class="lg:hidden fixed bottom-0 left-0 right-0 bg-white sticky-purchase-bar z-50 hidden">
-        <div class="grid grid-cols-2 gap-2 p-3">
+        <div class="grid grid-cols-3 gap-2 p-3">
             <button onclick="addToCart()" 
                 class="py-3 bg-white border-2 border-purple-600 text-purple-600 rounded-lg font-bold hover:bg-purple-50 transition">
-                <i class="fas fa-shopping-cart mr-1"></i>장바구니
+                <i class="fas fa-shopping-cart mr-1"></i>담기
+            </button>
+            <button onclick="openBookingModal()" 
+                class="py-3 bg-pink-600 text-white rounded-lg font-bold hover:bg-pink-700 transition">
+                <i class="fas fa-calendar-check mr-1"></i>예약
             </button>
             <button onclick="buyNow()" 
                 class="py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition">
-                <i class="fas fa-credit-card mr-1"></i>구매하기
+                <i class="fas fa-credit-card mr-1"></i>구매
             </button>
         </div>
     </div>
