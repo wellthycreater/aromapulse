@@ -1,6 +1,9 @@
 name = "aromapulse"
 compatibility_date = "2025-11-19"
-pages_build_output_dir = "./dist"
+pages_build_output_dir = "dist"
+
+[observability]
+enabled = true
 
 [[d1_databases]]
 binding = "DB"
