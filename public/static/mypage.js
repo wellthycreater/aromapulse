@@ -488,7 +488,7 @@ async function loadBookings(type = 'all') {
                     <h4 class="font-semibold text-gray-800 mb-3 text-sm">${booking.title || '프로그램명'}</h4>
                     <div class="flex gap-4 text-xs text-gray-600">
                         <span><i class="fas fa-calendar mr-1.5"></i>${booking.date || '날짜 미정'}</span>
-                        <span><i class="fas fa-users mr-1.5"></i>${booking.participants || 1}명</span>
+                        <span><i class="${booking.type === 'product' ? 'fas fa-box' : 'fas fa-users'} mr-1.5"></i>${booking.participants || 1}${booking.type === 'product' ? '개' : '명'}</span>
                     </div>
                 </div>
                 <div class="flex justify-between items-center pt-4 border-t border-gray-100">
