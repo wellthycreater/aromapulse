@@ -401,6 +401,9 @@ function closeBookingModal() {
     document.getElementById('booking-form').reset();
 }
 
+// 전역 변수로 예약 정보 저장
+let lastBookingInfo = null;
+
 // 예약 제출
 async function submitBooking(event) {
     event.preventDefault();
@@ -425,6 +428,7 @@ async function submitBooking(event) {
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({
                 product_id: productId,
                 booking_date: bookingDate,
@@ -439,6 +443,16 @@ async function submitBooking(event) {
         const data = await response.json();
         
         if (response.ok) {
+            // 예약 정보 저장 (구글 캘린더 추가용)
+            lastBookingInfo = {
+                productName: currentProduct.name,
+                bookingDate: bookingDate,
+                bookingTime: bookingTime,
+                quantity: quantity,
+                bookerName: bookerName,
+                description: currentProduct.description || '아로마펄스 제품 예약'
+            };
+            
             // 예약 성공
             closeBookingModal();
             showSuccessModal();
@@ -464,4 +478,44 @@ function showSuccessModal() {
 function closeSuccessModal() {
     document.getElementById('success-modal').classList.add('hidden');
     document.body.style.overflow = 'auto';
+}
+
+// 구글 캘린더에 추가
+function addToGoogleCalendar() {
+    if (!lastBookingInfo) {
+        alert('예약 정보를 찾을 수 없습니다.');
+        return;
+    }
+    
+    // 날짜/시간 포맷팅 (YYYYMMDDTHHMMSS)
+    const startDateTime = new Date(`${lastBookingInfo.bookingDate}T${lastBookingInfo.bookingTime}`);
+    const endDateTime = new Date(startDateTime.getTime() + 90 * 60000); // 90분 후
+    
+    const formatGoogleDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}${month}${day}T${hours}${minutes}00`;
+    };
+    
+    const startStr = formatGoogleDate(startDateTime);
+    const endStr = formatGoogleDate(endDateTime);
+    
+    // 구글 캘린더 URL 생성
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: `${lastBookingInfo.productName} 예약`,
+        dates: `${startStr}/${endStr}`,
+        details: `예약자: ${lastBookingInfo.bookerName}\n수량: ${lastBookingInfo.quantity}개\n\n${lastBookingInfo.description}`,
+        location: '아로마펄스',
+        ctz: 'Asia/Seoul'
+    });
+    
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?${params.toString()}`;
+    
+    // 새 창에서 구글 캘린더 열기
+    window.open(googleCalendarUrl, '_blank', 'width=700,height=600');
+}
 }
