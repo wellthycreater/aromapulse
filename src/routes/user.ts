@@ -4,6 +4,19 @@ import { verifyToken } from '../utils/jwt';
 
 const user = new Hono<{ Bindings: Bindings }>();
 
+// 전역 에러 핸들러
+user.onError((err, c) => {
+  console.error('[Global Error Handler]', err);
+  console.error('[Global Error Handler] Message:', err.message);
+  console.error('[Global Error Handler] Stack:', err.stack);
+  
+  return c.json({
+    error: '서버 오류가 발생했습니다',
+    message: err.message,
+    stack: err.stack
+  }, 500);
+});
+
 // 공개 API: CSS 스타일 반환 (인증 불필요)
 user.get('/mypage-styles', async (c) => {
   const css = `
