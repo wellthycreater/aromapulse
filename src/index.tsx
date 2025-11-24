@@ -196,6 +196,9 @@ app.get('/checkout', (c) => c.redirect('/static/checkout.html'));
 app.get('/checkout.html', (c) => c.redirect('/static/checkout.html'));
 app.get('/order-complete.html', (c) => c.redirect('/static/order-complete.html'));
 
+// Patch application page
+app.get('/patch-apply', (c) => c.redirect('/static/patch-apply.html'));
+
 // Admin login page
 app.get('/admin-login', (c) => c.redirect('/static/admin-login.html'));
 app.get('/admin/login', (c) => c.redirect('/static/admin-login.html'));
