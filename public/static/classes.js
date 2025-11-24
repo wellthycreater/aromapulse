@@ -16,63 +16,68 @@ window.addEventListener('DOMContentLoaded', async () => {
     trackPageView('classes_list');
 });
 
-// UI 업데이트 (인증 링크)
-function updateAuthUI() {
-    const token = localStorage.getItem('token');
+// UI 업데이트 (인증 링크) - 쿠키 기반
+async function updateAuthUI() {
     const authButtons = document.getElementById('auth-buttons');
     const userMenu = document.getElementById('user-menu');
     
-    if (!token) {
-        // 로그인하지 않은 경우
-        if (authButtons) authButtons.classList.remove('hidden');
-        if (userMenu) userMenu.classList.add('hidden');
-    } else {
-        // 로그인된 경우
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+    try {
+        // 서버에서 로그인 상태 확인
+        const response = await fetch('/api/auth/me', {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
             
-            // 토큰 만료 체크
-            if (payload.exp && payload.exp * 1000 < Date.now()) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+            if (data.authenticated) {
+                // 로그인된 경우
+                if (authButtons) authButtons.classList.add('hidden');
+                if (userMenu) {
+                    userMenu.classList.remove('hidden');
+                    userMenu.classList.add('flex');
+                }
+                
+                // 사용자 정보 표시
+                const userName = data.user.name || '사용자';
+                const userInitial = userName.charAt(0).toUpperCase();
+                
+                const userNameEl = document.getElementById('user-name');
+                const userInitialEl = document.getElementById('user-initial');
+                
+                if (userNameEl) userNameEl.textContent = userName;
+                if (userInitialEl) userInitialEl.textContent = userInitial;
+            } else {
+                // 로그인하지 않은 경우
                 if (authButtons) authButtons.classList.remove('hidden');
                 if (userMenu) userMenu.classList.add('hidden');
-                return;
             }
-            
-            // 로그인 상태 UI 표시
-            if (authButtons) authButtons.classList.add('hidden');
-            if (userMenu) {
-                userMenu.classList.remove('hidden');
-                userMenu.classList.add('flex');
-            }
-            
-            // 사용자 정보 표시
-            const userName = payload.name || '사용자';
-            const userInitial = userName.charAt(0).toUpperCase();
-            
-            const userNameEl = document.getElementById('user-name');
-            const userInitialEl = document.getElementById('user-initial');
-            
-            if (userNameEl) userNameEl.textContent = userName;
-            if (userInitialEl) userInitialEl.textContent = userInitial;
-            
-        } catch (e) {
-            console.error('Token parse error:', e);
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+        } else {
+            // API 오류 - 로그인 안 한 것으로 처리
             if (authButtons) authButtons.classList.remove('hidden');
             if (userMenu) userMenu.classList.add('hidden');
         }
+    } catch (error) {
+        console.error('Auth check error:', error);
+        // 오류 발생 - 로그인 안 한 것으로 처리
+        if (authButtons) authButtons.classList.remove('hidden');
+        if (userMenu) userMenu.classList.add('hidden');
     }
 }
 
 // 로그아웃 함수
-function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    alert('로그아웃되었습니다.');
-    location.reload();
+async function logout() {
+    try {
+        await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        alert('로그아웃되었습니다.');
+        location.href = '/';
+    } catch (error) {
+        console.error('Logout error:', error);
+        alert('로그아웃 중 오류가 발생했습니다.');
+    }
 }
 
 // 프로필 드롭다운 토글
