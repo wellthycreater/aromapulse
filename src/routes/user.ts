@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { Bindings } from '../types';
-import { verifyToken } from '../utils/jwt';
+import { JWTManager } from '../lib/auth/jwt';
 
 const user = new Hono<{ Bindings: Bindings }>();
 
@@ -83,15 +83,23 @@ async function authMiddleware(c: any, next: any) {
   console.log('🔑 JWT_SECRET present:', c.env.JWT_SECRET ? 'Yes' : 'No');
   
   try {
-    // JWT 토큰 검증
-    const tokenData = await verifyToken(token, c.env.JWT_SECRET);
-    
-    console.log('✅ Token verified successfully:', { userId: tokenData.userId, email: tokenData.email });
+    // JWT 토큰 검증 (JWTManager 사용)
+    const jwtManager = new JWTManager(c.env.JWT_SECRET);
+    const tokenData = await jwtManager.verify(token);
     
     if (!tokenData || !tokenData.userId) {
       console.error('❌ Invalid token data:', tokenData);
-      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+      
+      // 토큰 검증 실패 시 쿠키 삭제 (자동 로그아웃)
+      c.header('Set-Cookie', 'auth_token=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
+      
+      return c.json({ 
+        error: '유효하지 않은 토큰입니다',
+        autoLogout: true
+      }, 401);
     }
+    
+    console.log('✅ Token verified successfully:', { userId: tokenData.userId, email: tokenData.email });
     
     // 토큰에서 사용자 ID 추출하여 context에 저장
     c.set('userId', tokenData.userId);
@@ -311,9 +319,14 @@ user.put('/profile', async (c) => {
       WHERE id = ?
     `).bind(userId).first();
     
-    // 업데이트된 사용자 정보로 새 JWT 토큰 생성
-    const { generateToken } = await import('../utils/jwt');
-    const newToken = await generateToken(updatedUser as any, c.env.JWT_SECRET);
+    // 업데이트된 사용자 정보로 새 JWT 토큰 생성 (JWTManager 사용)
+    const jwtManager = new JWTManager(c.env.JWT_SECRET);
+    const newToken = await jwtManager.sign({
+      userId: updatedUser.id as number,
+      email: updatedUser.email as string,
+      name: updatedUser.name as string,
+      provider: (updatedUser.oauth_provider as 'google' | 'naver' | 'kakao') || 'kakao'
+    });
     
     return c.json({ 
       message: '프로필이 성공적으로 업데이트되었습니다',
