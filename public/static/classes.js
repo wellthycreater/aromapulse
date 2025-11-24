@@ -111,8 +111,8 @@ function viewClass(id) {
 // 클래스 목록 로드
 async function loadClasses() {
     try {
-        // type=class 파라미터로 원데이 클래스만 가져오기
-        const response = await fetch('/api/workshops?limit=100&type=class');
+        // 원데이 클래스 API 호출
+        const response = await fetch('/api/oneday-classes?limit=100');
         
         if (response.ok) {
             allClasses = await response.json();
@@ -238,15 +238,24 @@ function renderClasses() {
                             ${formatPrice(cls.price)}
                         </div>
                     </div>
-                    <button onclick="event.stopPropagation(); viewClass(${cls.id})" 
-                            class="group/btn relative px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-                        <span class="relative z-10 flex items-center">
-                            신청하기
-                            <i class="fas fa-arrow-right ml-2 group-hover/btn:translate-x-1 transition-transform"></i>
-                        </span>
-                        <!-- Shine Effect -->
-                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="event.stopPropagation(); viewClass(${cls.id})" 
+                                class="flex-1 px-4 py-3 border-2 border-green-600 text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-all duration-300">
+                            <span class="flex items-center justify-center">
+                                상세보기
+                                <i class="fas fa-info-circle ml-2"></i>
+                            </span>
+                        </button>
+                        <button onclick="event.stopPropagation(); openBookingModal(${cls.id}, event)" 
+                                class="group/btn relative flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+                            <span class="relative z-10 flex items-center justify-center">
+                                예약하기
+                                <i class="fas fa-calendar-check ml-2 group-hover/btn:scale-110 transition-transform"></i>
+                            </span>
+                            <!-- Shine Effect -->
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Features Tags -->
@@ -354,3 +363,156 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryFilter.addEventListener('change', searchClasses);
     }
 });
+
+// ============================================
+// 예약 기능
+// ============================================
+
+let currentBookingClass = null;
+
+// 예약 모달 열기
+function openBookingModal(classId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    // 로그인 확인
+    const token = getCookie('auth_token');
+    if (!token) {
+        alert('로그인이 필요한 서비스입니다.\n\n메인 페이지에서 로그인 후 이용해주세요.');
+        window.location.href = '/';
+        return;
+    }
+    
+    // 클래스 정보 찾기
+    const classInfo = allClasses.find(c => c.id === classId);
+    if (!classInfo) {
+        alert('클래스 정보를 찾을 수 없습니다.');
+        return;
+    }
+    
+    currentBookingClass = classInfo;
+    
+    // 모달 정보 설정
+    document.getElementById('booking-class-id').value = classId;
+    document.getElementById('booking-class-title').textContent = classInfo.title;
+    
+    // 날짜 기본값 설정 (내일)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateStr = tomorrow.toISOString().split('T')[0];
+    document.getElementById('booking-date').value = dateStr;
+    document.getElementById('booking-date').min = dateStr;
+    
+    // 시간 기본값 설정 (10:00)
+    document.getElementById('booking-time').value = '10:00';
+    
+    // 폼 초기화
+    document.getElementById('booking-form').reset();
+    document.getElementById('booking-class-id').value = classId;
+    document.getElementById('booking-date').value = dateStr;
+    document.getElementById('booking-time').value = '10:00';
+    
+    // 모달 표시
+    document.getElementById('booking-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// 예약 모달 닫기
+function closeBookingModal() {
+    document.getElementById('booking-modal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    currentBookingClass = null;
+}
+
+// 예약 제출
+async function submitBooking(event) {
+    event.preventDefault();
+    
+    const classId = document.getElementById('booking-class-id').value;
+    const bookingDate = document.getElementById('booking-date').value;
+    const bookingTime = document.getElementById('booking-time').value;
+    const participants = document.getElementById('participants').value;
+    const bookerName = document.getElementById('booker-name').value;
+    const bookerPhone = document.getElementById('booker-phone').value;
+    const bookerEmail = document.getElementById('booker-email').value;
+    const notes = document.getElementById('booking-notes').value;
+    
+    // 날짜/시간 결합
+    const bookingDatetime = `${bookingDate}T${bookingTime}:00`;
+    
+    try {
+        const response = await fetch(`/api/bookings/oneday-classes/${classId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                booking_date: bookingDatetime,
+                participants: parseInt(participants),
+                booker_name: bookerName,
+                booker_phone: bookerPhone,
+                booker_email: bookerEmail,
+                notes: notes || null
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showBookingSuccess(data.booking);
+        } else {
+            const error = await response.json();
+            alert(`예약 실패: ${error.error || '알 수 없는 오류'}`);
+        }
+    } catch (error) {
+        console.error('예약 오류:', error);
+        alert('예약 처리 중 오류가 발생했습니다.');
+    }
+}
+
+// 예약 성공 표시
+function showBookingSuccess(booking) {
+    closeBookingModal();
+    
+    // 성공 모달 정보 설정
+    document.getElementById('success-booking-id').textContent = `#${booking.id}`;
+    document.getElementById('success-class-title').textContent = booking.class_title;
+    
+    // 날짜 포맷팅
+    const bookingDate = new Date(booking.booking_date);
+    const dateStr = bookingDate.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    document.getElementById('success-date').textContent = dateStr;
+    document.getElementById('success-participants').textContent = `${booking.participants}명`;
+    
+    // iCalendar 다운로드 링크 설정
+    const icalendarLink = document.getElementById('icalendar-link');
+    icalendarLink.href = `/api/bookings/${booking.id}/icalendar`;
+    icalendarLink.download = `aromapulse-booking-${booking.id}.ics`;
+    
+    // 성공 모달 표시
+    document.getElementById('success-modal').classList.remove('hidden');
+}
+
+// 성공 모달 닫기
+function closeSuccessModal() {
+    document.getElementById('success-modal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    
+    // 페이지 새로고침 (선택사항)
+    // location.reload();
+}
+
+// 쿠키 가져오기 헬퍼 함수
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}

@@ -1,6 +1,6 @@
 // Authentication Routes
 import { Hono } from 'hono';
-import { setCookie, deleteCookie } from 'hono/cookie';
+import { setCookie, deleteCookie, getCookie } from 'hono/cookie';
 import type { Context } from 'hono';
 import { GoogleOAuth } from '../lib/oauth/google';
 import { NaverOAuth } from '../lib/oauth/naver';
@@ -234,7 +234,7 @@ auth.get('/logout', async (c: Context) => {
   const { DB } = c.env as Bindings;
   
   // Get token from cookie
-  const token = c.req.cookie('auth_token');
+  const token = getCookie(c, 'auth_token');
   
   if (token) {
     // Delete session from database
@@ -251,7 +251,7 @@ auth.get('/logout', async (c: Context) => {
 auth.get('/me', async (c: Context) => {
   const { DB, JWT_SECRET } = c.env as Bindings;
   
-  const token = c.req.cookie('auth_token');
+  const token = getCookie(c, 'auth_token');
   
   if (!token) {
     return c.json({ authenticated: false }, 200);
@@ -521,6 +521,105 @@ auth.get('/kakao/callback', async (c: Context) => {
         </body>
       </html>
     `);
+  }
+});
+
+// TEST ONLY: Quick login endpoint for development/testing
+// Creates a test Google user and sets auth cookie
+auth.get('/test-google-login', async (c: Context) => {
+  const { DB, JWT_SECRET, APP_URL } = c.env as Bindings;
+  
+  try {
+    // Create or find test user with Google provider
+    const testEmail = 'test.google@aromapulse.kr';
+    const testName = 'Google 테스트 사용자';
+    const testProviderId = 'test_google_123456';
+    
+    // Check if oauth account exists
+    let oauthAccount = await DB.prepare(`
+      SELECT user_id FROM oauth_accounts WHERE provider = 'google' AND provider_user_id = ?
+    `).bind(testProviderId).first<{ user_id: number }>();
+    
+    let userId: number;
+    
+    if (oauthAccount) {
+      userId = oauthAccount.user_id;
+    } else {
+      // Check if user exists
+      let user = await DB.prepare(`
+        SELECT id FROM users WHERE email = ?
+      `).bind(testEmail).first<{ id: number }>();
+      
+      if (!user) {
+        // Create new user
+        const userResult = await DB.prepare(`
+          INSERT INTO users (email, name, profile_image, is_oauth, user_type, created_at)
+          VALUES (?, ?, ?, 1, 'B2C', datetime('now'))
+        `).bind(testEmail, testName, 'https://via.placeholder.com/150').run();
+        
+        userId = Number(userResult.meta.last_row_id);
+      } else {
+        userId = user.id;
+      }
+      
+      // Create oauth account
+      await DB.prepare(`
+        INSERT INTO oauth_accounts (
+          user_id, provider, provider_user_id, access_token, 
+          refresh_token, token_expires_at, created_at
+        )
+        VALUES (?, 'google', ?, 'test_token', NULL, datetime('now', '+1 hour'), datetime('now'))
+      `).bind(userId, testProviderId).run();
+    }
+    
+    // Get user info
+    const user = await DB.prepare(`
+      SELECT id, email, name, profile_image FROM users WHERE id = ?
+    `).bind(userId).first<{ id: number, email: string, name: string, profile_image: string }>();
+    
+    if (!user) {
+      throw new Error('Failed to get user');
+    }
+    
+    // Generate JWT token
+    const jwtManager = new JWTManager(JWT_SECRET);
+    const jwtToken = await jwtManager.sign({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      provider: 'google',
+    });
+    
+    // Set cookie with JWT token
+    setCookie(c, 'auth_token', jwtToken, {
+      httpOnly: true,
+      secure: APP_URL.startsWith('https'),
+      sameSite: 'Lax',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: '/',
+    });
+    
+    // Create session in database
+    const sessionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    await DB.prepare(`
+      INSERT INTO sessions (user_id, session_token, expires_at, created_at)
+      VALUES (?, ?, ?, datetime('now'))
+    `).bind(user.id, jwtToken, sessionExpiresAt).run();
+    
+    // Log the login (commented out - table may not exist in all environments)
+    // await DB.prepare(`
+    //   INSERT INTO login_logs (user_id, provider, login_at)
+    //   VALUES (?, 'google', datetime('now'))
+    // `).bind(user.id).run();
+    
+    // Redirect to healing page
+    return c.redirect('/healing');
+  } catch (error) {
+    console.error('Test login error:', error);
+    return c.json({ 
+      error: 'Failed to create test login', 
+      details: error instanceof Error ? error.message : String(error) 
+    }, 500);
   }
 });
 
