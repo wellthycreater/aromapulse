@@ -42,7 +42,8 @@ app.use('/api/*', cors());
 // Serve static files from /static/* (Cloudflare Pages serves from dist root)
 app.use('/static/*', serveStatic({ root: './' }));
 
-// API Routes
+// Auth Routes (both /auth and /api/auth for flexibility)
+app.route('/auth', authRoutes);
 app.route('/api/auth', authRoutes);
 app.route('/api/products', productRoutes);
 app.route('/api/reviews', reviewRoutes);

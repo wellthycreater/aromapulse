@@ -7,6 +7,8 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBhWaWieHL0kdCrDRMn0QWYPW91-ZL_1Tc&libraries=places" async defer></script>
     <style>
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
@@ -78,6 +80,44 @@
             <p class="text-xl md:text-2xl mb-8 text-purple-100">
                 워크샵과 원데이 클래스로 일상의 스트레스를 해소하세요
             </p>
+            
+            <!-- Login Required Message (shown when not logged in) -->
+            <div id="login-required-section" class="hidden mt-12 max-w-3xl mx-auto">
+                <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/30">
+                    <p class="text-xl font-bold mb-4">
+                        <i class="fas fa-lock mr-2"></i>
+                        로그인이 필요한 서비스입니다
+                    </p>
+                    <p class="text-purple-200 text-sm mb-6">
+                        메인 페이지에서 로그인하신 후 공방을 지도에서 찾아보실 수 있습니다
+                    </p>
+                    <button onclick="location.href='/'" 
+                            class="bg-white text-purple-600 px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105">
+                        <i class="fas fa-home mr-2"></i>메인 페이지로 이동
+                    </button>
+                </div>
+            </div>
+            
+            <!-- User Info Section (shown when logged in) -->
+            <div id="user-info-section" class="hidden mt-12 max-w-3xl mx-auto">
+                <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/30">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div id="user-platform-icon" class="w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-white">
+                                <i class="fas fa-user text-purple-600 text-xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-bold text-lg" id="user-name">사용자님</p>
+                                <p class="text-purple-200 text-sm" id="user-platform">로그인 플랫폼</p>
+                            </div>
+                        </div>
+                        <button onclick="logout()" 
+                                class="bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-full font-semibold transition">
+                            로그아웃
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -157,6 +197,46 @@
                     </div>
                 </div>
             </a>
+        </div>
+    </section>
+
+    <!-- Google Maps Section (shown only when logged in with Google) -->
+    <section id="maps-section" class="hidden container mx-auto px-6 py-16">
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <!-- Section Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-8">
+                <h2 class="text-3xl font-bold mb-3">
+                    <i class="fas fa-map-marked-alt mr-3"></i>
+                    전국 아로마 공방 찾기
+                </h2>
+                <p class="text-purple-100">
+                    <span id="map-provider-name">Google Maps</span>로 가까운 공방을 찾아보세요
+                </p>
+            </div>
+
+            <!-- Map Container -->
+            <div class="relative">
+                <div id="map" class="w-full h-[600px] bg-gray-100"></div>
+                
+                <!-- Loading Overlay -->
+                <div id="map-loading" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90">
+                    <div class="text-center">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-purple-600 mb-4"></div>
+                        <p class="text-gray-600 font-semibold">지도를 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workshop List -->
+            <div class="p-8 bg-gray-50">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-list mr-3"></i>
+                    공방 목록
+                </h3>
+                <div id="workshops-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Workshops will be loaded here -->
+                </div>
+            </div>
         </div>
     </section>
 
@@ -965,6 +1045,290 @@
     </section>
 
     <script>
+        // Global Variables
+        let currentUser = null;
+        let map = null;
+        let markers = [];
+        let classes = []; // 원데이 클래스
+
+        // Check Login Status on Page Load
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/auth/me');
+                const data = await response.json();
+
+                if (data.authenticated) {
+                    currentUser = data.user;
+                    showLoggedInState();
+                    await loadClassesAndMap();
+                } else {
+                    showLoginRequiredState();
+                }
+            } catch (error) {
+                console.error('Failed to check login status:', error);
+                showLoginRequiredState();
+            }
+        }
+
+        // Show Login Required Message
+        function showLoginRequiredState() {
+            document.getElementById('login-required-section').classList.remove('hidden');
+            document.getElementById('user-info-section').classList.add('hidden');
+            document.getElementById('maps-section').classList.add('hidden');
+        }
+
+        // Show Logged In State
+        function showLoggedInState() {
+            document.getElementById('login-required-section').classList.add('hidden');
+            document.getElementById('user-info-section').classList.remove('hidden');
+            
+            // Update user info
+            document.getElementById('user-name').textContent = currentUser.name;
+            
+            const platformMap = {
+                'google': 'Google로 로그인',
+                'naver': 'Naver로 로그인',
+                'kakao': 'Kakao로 로그인'
+            };
+            document.getElementById('user-platform').textContent = platformMap[currentUser.provider] || currentUser.provider;
+            
+            // Update platform icon
+            const iconMap = {
+                'google': 'fa-google',
+                'naver': 'fa-n',
+                'kakao': 'fa-comment'
+            };
+            const icon = document.getElementById('user-platform-icon');
+            icon.innerHTML = `<i class="fab ${iconMap[currentUser.provider] || 'fa-user'} text-purple-600 text-xl"></i>`;
+        }
+
+        // Load Classes and Initialize Map
+        async function loadClassesAndMap() {
+            try {
+                // Fetch oneday classes from API
+                const response = await fetch(`/api/oneday-classes?provider=${currentUser.provider}`);
+                classes = await response.json();
+
+                // Show maps section
+                document.getElementById('maps-section').classList.remove('hidden');
+
+                // Update map provider name
+                const providerNames = {
+                    'google': 'Google Maps',
+                    'naver': 'Naver Map',
+                    'kakao': 'Kakao Map'
+                };
+                document.getElementById('map-provider-name').textContent = providerNames[currentUser.provider] || 'Maps';
+
+                // Initialize map based on provider
+                await initializeMapByProvider();
+            } catch (error) {
+                console.error('Failed to load classes:', error);
+                alert('원데이 클래스 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // Initialize Map by Provider
+        async function initializeMapByProvider() {
+            if (currentUser.provider === 'google') {
+                await initializeGoogleMap();
+            } else if (currentUser.provider === 'naver') {
+                await initializeNaverMap();
+            } else if (currentUser.provider === 'kakao') {
+                await initializeKakaoMap();
+            }
+        }
+
+        // Initialize Google Maps
+        async function initializeGoogleMap() {
+            document.getElementById('map-loading').classList.add('hidden');
+
+            const center = { lat: 37.5665, lng: 126.9780 };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: center,
+                zoom: 12,
+                styles: [
+                    {
+                        featureType: 'poi',
+                        elementType: 'labels',
+                        stylers: [{ visibility: 'off' }]
+                    }
+                ]
+            });
+
+            // Add markers
+            classes.forEach(cls => {
+                if (cls.latitude && cls.longitude) {
+                    const marker = new google.maps.Marker({
+                        position: { lat: cls.latitude, lng: cls.longitude },
+                        map: map,
+                        title: cls.name,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: '#9333EA',
+                            fillOpacity: 1,
+                            strokeColor: '#ffffff',
+                            strokeWeight: 2,
+                        }
+                    });
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: createInfoWindowContent(cls)
+                    });
+
+                    marker.addListener('click', () => {
+                        markers.forEach(m => m.infoWindow && m.infoWindow.close());
+                        infoWindow.open(map, marker);
+                    });
+
+                    marker.infoWindow = infoWindow;
+                    markers.push(marker);
+                }
+            });
+
+            loadClassesList();
+
+            if (classes.length > 0 && classes[0].latitude) {
+                map.setCenter({ lat: classes[0].latitude, lng: classes[0].longitude });
+            }
+        }
+
+        // Initialize Naver Map
+        async function initializeNaverMap() {
+            document.getElementById('map-loading').classList.remove('hidden');
+            document.getElementById('map-loading').innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
+                    <p class="text-gray-700 font-semibold mb-2">Naver Maps API 키가 필요합니다</p>
+                    <p class="text-gray-500 text-sm">Naver Cloud Platform에서 Maps API 키를 발급받아주세요</p>
+                </div>
+            `;
+            
+            // TODO: Implement Naver Maps when API keys are provided
+            loadClassesList();
+        }
+
+        // Initialize Kakao Map
+        async function initializeKakaoMap() {
+            document.getElementById('map-loading').classList.remove('hidden');
+            document.getElementById('map-loading').innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
+                    <p class="text-gray-700 font-semibold mb-2">Kakao Maps API 키가 필요합니다</p>
+                    <p class="text-gray-500 text-sm">Kakao Developers에서 Maps JavaScript 키를 발급받아주세요</p>
+                </div>
+            `;
+            
+            // TODO: Implement Kakao Maps when API keys are provided
+            loadClassesList();
+        }
+
+        // Create Info Window Content
+        function createInfoWindowContent(cls) {
+            const bookingUrl = getBookingUrl(cls);
+            return `
+                <div style="max-width: 300px; padding: 10px;">
+                    <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #1f2937;">
+                        ${cls.name || cls.title}
+                    </h3>
+                    <p style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
+                        <i class="fas fa-map-marker-alt"></i> ${cls.location || '주소 정보 없음'}
+                    </p>
+                    ${cls.description ? `<p style="font-size: 13px; color: #9ca3af; margin-bottom: 12px;">${cls.description}</p>` : ''}
+                    <button onclick="bookClass(${cls.id}, '${bookingUrl}')" style="background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; width: 100%; border: none; cursor: pointer;">
+                        <i class="fas fa-calendar-check"></i> 예약하기
+                    </button>
+                </div>
+            `;
+        }
+
+        // Get Booking URL based on provider
+        function getBookingUrl(cls) {
+            if (currentUser.provider === 'google') {
+                // Google Reserve link (if available)
+                return cls.google_place_id ? `https://www.google.com/maps/place/?q=place_id:${cls.google_place_id}` : '#';
+            } else if (currentUser.provider === 'naver') {
+                // Naver Smart Place link (if available)
+                return cls.naver_place_id ? `https://m.place.naver.com/place/${cls.naver_place_id}` : '#';
+            } else if (currentUser.provider === 'kakao') {
+                // Kakao Place link (if available)
+                return cls.kakao_place_id ? `https://place.map.kakao.com/${cls.kakao_place_id}` : '#';
+            }
+            return '#';
+        }
+
+        // Load Classes List
+        function loadClassesList() {
+            const listContainer = document.getElementById('workshops-list');
+            
+            if (classes.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-exclamation-circle text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">등록된 원데이 클래스가 없습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = classes.map(cls => {
+                const bookingUrl = getBookingUrl(cls);
+                return `
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer" 
+                         onclick="focusClass(${cls.id})">
+                        <div class="p-6">
+                            <h4 class="text-xl font-bold text-gray-900 mb-2">${cls.name || cls.title}</h4>
+                            <p class="text-sm text-gray-600 mb-3 flex items-start">
+                                <i class="fas fa-map-marker-alt text-purple-600 mr-2 mt-1"></i>
+                                <span>${cls.location || '주소 정보 없음'}</span>
+                            </p>
+                            ${cls.description ? `<p class="text-sm text-gray-500 mb-4">${cls.description}</p>` : ''}
+                            <button onclick="event.stopPropagation(); bookClass(${cls.id}, '${bookingUrl}')" 
+                                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-lg font-bold hover:shadow-lg transition">
+                                <i class="fas fa-calendar-check mr-2"></i>예약하기
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Focus on Class Marker
+        function focusClass(classId) {
+            const cls = classes.find(c => c.id === classId);
+            if (cls && cls.latitude && cls.longitude && map) {
+                map.setCenter({ lat: cls.latitude, lng: cls.longitude });
+                map.setZoom(15);
+                
+                const markerIndex = classes.findIndex(c => c.id === classId);
+                if (markerIndex >= 0 && markers[markerIndex]) {
+                    google.maps.event.trigger(markers[markerIndex], 'click');
+                }
+            }
+        }
+
+        // Book Class
+        function bookClass(classId, bookingUrl) {
+            const cls = classes.find(c => c.id === classId);
+            if (!cls) return;
+            
+            if (bookingUrl && bookingUrl !== '#') {
+                window.open(bookingUrl, '_blank');
+            } else {
+                alert(`${cls.name || cls.title} 예약 페이지로 이동합니다.`);
+            }
+        }
+
+        // Logout Function
+        function logout() {
+            window.location.href = '/auth/logout';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
+
         // 매물 데이터 (수익 공유 모델)
         const properties = [
             {

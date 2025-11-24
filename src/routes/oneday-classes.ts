@@ -6,16 +6,22 @@ const onedayClasses = new Hono<{ Bindings: Bindings }>();
 // 모든 원데이 클래스 목록 조회
 onedayClasses.get('/', async (c) => {
   try {
-    const limit = c.req.query('limit') || '10';
+    const limit = c.req.query('limit') || '50';
+    const provider = c.req.query('provider'); // 'google', 'naver', 'kakao'
     
-    const result = await c.env.DB.prepare(
-      `SELECT oc.*, u.name as provider_name 
+    let query = `SELECT oc.*, u.name as provider_name 
        FROM oneday_classes oc
-       JOIN users u ON oc.provider_id = u.id
-       WHERE oc.is_active = 1
-       ORDER BY oc.created_at DESC
-       LIMIT ?`
-    ).bind(parseInt(limit)).all();
+       LEFT JOIN users u ON oc.provider_id = u.id
+       WHERE oc.is_active = 1`;
+    
+    // provider 파라미터가 있으면 map_providers 필터링
+    if (provider === 'google' || provider === 'naver' || provider === 'kakao') {
+      query += ` AND (oc.map_providers LIKE '%${provider}%' OR oc.map_providers IS NULL)`;
+    }
+    
+    query += ` ORDER BY oc.created_at DESC LIMIT ?`;
+    
+    const result = await c.env.DB.prepare(query).bind(parseInt(limit)).all();
     
     return c.json(result.results);
     

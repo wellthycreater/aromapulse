@@ -6,12 +6,13 @@ const workshops = new Hono<{ Bindings: Bindings }>();
 // 모든 워크샵 목록 조회
 workshops.get('/', async (c) => {
   try {
-    const limit = c.req.query('limit') || '10';
+    const limit = c.req.query('limit') || '50';
     const type = c.req.query('type'); // 'workshop' or 'class'
+    const provider = c.req.query('provider'); // 'google', 'naver', 'kakao'
     
     let query = `SELECT w.*, u.name as provider_name 
        FROM workshops w
-       JOIN users u ON w.provider_id = u.id
+       LEFT JOIN users u ON w.provider_id = u.id
        WHERE w.is_active = 1`;
     
     // type 파라미터가 있으면 필터링
@@ -19,6 +20,11 @@ workshops.get('/', async (c) => {
       query += ` AND w.type = 'workshop'`;
     } else if (type === 'class') {
       query += ` AND w.type = 'class'`;
+    }
+    
+    // provider 파라미터가 있으면 map_providers 필터링
+    if (provider === 'google' || provider === 'naver' || provider === 'kakao') {
+      query += ` AND (w.map_providers LIKE '%${provider}%' OR w.map_providers IS NULL)`;
     }
     
     query += ` ORDER BY w.created_at DESC LIMIT ?`;
