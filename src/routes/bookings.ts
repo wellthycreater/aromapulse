@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { JWTManager } from '../lib/auth/jwt';
+import { generateCalendarUrl, formatClassBookingEvent } from '../utils/calendar';
 
 type Bindings = {
   DB: D1Database;
@@ -100,9 +101,35 @@ bookings.post('/oneday-classes/:classId', async (c: Context) => {
       WHERE b.id = ?
     `).bind(bookingId).first();
     
+    // Generate calendar URLs for all providers
+    let calendarUrls: any = {};
+    if (booking) {
+      const bookingDate = new Date(booking.booking_date as string);
+      const duration = (booking.duration as number) || 120; // default 2 hours
+      
+      const calendarEvent = formatClassBookingEvent(
+        booking.class_title as string,
+        booking.location as string,
+        bookingDate,
+        duration
+      );
+      
+      calendarUrls = {
+        google: generateCalendarUrl('google', calendarEvent),
+        naver: generateCalendarUrl('naver', calendarEvent),
+        kakao: generateCalendarUrl('kakao', calendarEvent)
+      };
+      
+      // Add provider-specific calendar URL to booking object
+      const userProvider = payload.provider || 'google';
+      (booking as any).calendar_url = calendarUrls[userProvider];
+      (booking as any).all_calendar_urls = calendarUrls;
+    }
+    
     return c.json({
       message: '예약이 완료되었습니다',
-      booking: booking
+      booking: booking,
+      calendar_urls: calendarUrls
     }, 201);
     
   } catch (error: any) {
