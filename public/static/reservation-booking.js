@@ -281,7 +281,10 @@ class ReservationBooking {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '예약 생성 실패');
+        console.error('❌ [Reservation] Server error:', result);
+        const errorMsg = result.error || '예약 생성 실패';
+        const errorDetails = result.details ? `\n\n상세: ${result.details}` : '';
+        throw new Error(errorMsg + errorDetails);
       }
 
       console.log('✅ [Reservation] Success:', result);

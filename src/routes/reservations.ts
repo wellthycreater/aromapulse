@@ -8,17 +8,25 @@ const reservations = new Hono<{ Bindings: Bindings }>();
 // 예약 생성 API
 reservations.post('/', async (c) => {
   try {
+    console.log('📝 [Reservation API] POST request received');
+    
     // JWT 토큰에서 사용자 정보 추출
     const token = getCookie(c, 'auth_token');
+    console.log('🔐 [Reservation API] Token present:', token ? 'Yes' : 'No');
+    
     if (!token) {
-      return c.json({ error: '로그인이 필요합니다' }, 401);
+      console.error('❌ [Reservation API] No auth token');
+      return c.json({ error: '로그인이 필요합니다. 다시 로그인해주세요.' }, 401);
     }
 
     const jwtManager = new JWTManager(c.env.JWT_SECRET);
     const payload = await jwtManager.verify(token);
     
+    console.log('👤 [Reservation API] JWT payload:', payload ? `userId: ${payload.userId}` : 'null');
+    
     if (!payload || !payload.userId) {
-      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+      console.error('❌ [Reservation API] Invalid token payload');
+      return c.json({ error: '유효하지 않은 토큰입니다. 다시 로그인해주세요.' }, 401);
     }
 
     const data = await c.req.json();
@@ -108,9 +116,13 @@ reservations.post('/', async (c) => {
 
   } catch (error: any) {
     console.error('❌ [Reservation] Error creating reservation:', error);
+    console.error('❌ [Reservation] Error message:', error.message);
+    console.error('❌ [Reservation] Error stack:', error.stack);
+    
     return c.json({ 
-      error: '예약 생성 실패', 
-      details: error.message 
+      error: '예약 생성 중 오류가 발생했습니다', 
+      details: error.message,
+      stack: error.stack 
     }, 500);
   }
 });
