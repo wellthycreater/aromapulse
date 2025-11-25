@@ -15,15 +15,28 @@ class ReservationBooking {
   async loadCurrentUser() {
     try {
       const response = await fetch('/api/user', {
-        credentials: 'include'
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
       });
+      
+      console.log('🔍 [Reservation] User check response:', response.status);
       
       if (response.ok) {
         this.currentUser = await response.json();
         console.log('✅ [Reservation] Current user loaded:', this.currentUser);
+      } else if (response.status === 401) {
+        console.warn('⚠️ [Reservation] User not logged in (401)');
+        this.currentUser = null;
+      } else {
+        console.error('❌ [Reservation] Failed to load user:', response.status);
+        this.currentUser = null;
       }
     } catch (error) {
       console.error('❌ [Reservation] Failed to load user:', error);
+      this.currentUser = null;
     }
   }
 
@@ -175,13 +188,26 @@ class ReservationBooking {
   }
 
   // 예약 모달 열기
-  openModal(type, itemId, itemTitle, itemPrice) {
+  async openModal(type, itemId, itemTitle, itemPrice) {
+    // 최신 로그인 상태 다시 확인
+    await this.loadCurrentUser();
+    
     // 로그인 체크
     if (!this.currentUser) {
-      alert('로그인이 필요한 서비스입니다');
-      window.location.href = '/login';
+      console.warn('⚠️ [Reservation] User not logged in, redirecting to login page');
+      
+      // 현재 페이지 URL을 returnTo로 저장
+      const currentUrl = window.location.pathname + window.location.search;
+      
+      if (confirm('로그인이 필요한 서비스입니다.\n로그인 페이지로 이동하시겠습니까?')) {
+        // 네이버 로그인 페이지로 직접 이동
+        window.location.href = `/auth/naver?returnTo=${encodeURIComponent(currentUrl)}`;
+      }
       return;
     }
+    
+    console.log('✅ [Reservation] User is logged in, opening modal');
+    
 
     this.reservationType = type; // 'class' or 'product'
     this.itemId = itemId;
