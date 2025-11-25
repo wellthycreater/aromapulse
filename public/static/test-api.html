@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 API 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold mb-4">🔍 예약 API 테스트</h1>
+            
+            <div class="space-y-4">
+                <button onclick="testReservationsAPI()" 
+                        class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                    예약 내역 API 호출
+                </button>
+                
+                <button onclick="testUserAPI()" 
+                        class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                    사용자 정보 API 호출
+                </button>
+                
+                <button onclick="clearResult()" 
+                        class="w-full px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium">
+                    결과 지우기
+                </button>
+            </div>
+            
+            <div id="result" class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <pre id="output" class="text-sm overflow-auto">여기에 결과가 표시됩니다...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.textContent += message + '\n';
+            console.log(message);
+        }
+
+        function clearResult() {
+            document.getElementById('output').textContent = '결과 지움\n\n';
+        }
+
+        async function testUserAPI() {
+            clearResult();
+            log('🔍 사용자 정보 API 테스트 시작...\n');
+            
+            try {
+                const response = await fetch('/api/user', {
+                    credentials: 'include'
+                });
+                
+                log(`✅ Response Status: ${response.status}`);
+                log(`✅ Response OK: ${response.ok}\n`);
+                
+                const data = await response.json();
+                log('📦 Response Data:');
+                log(JSON.stringify(data, null, 2));
+                
+                if (response.ok && data.id) {
+                    log(`\n✅ 로그인됨: ${data.name} (ID: ${data.id})`);
+                } else {
+                    log('\n❌ 로그인 안 됨');
+                }
+                
+            } catch (error) {
+                log(`\n❌ Error: ${error.message}`);
+                log(`❌ Stack: ${error.stack}`);
+            }
+        }
+
+        async function testReservationsAPI() {
+            clearResult();
+            log('🔍 예약 내역 API 테스트 시작...\n');
+            
+            try {
+                // 1. 사용자 인증 확인
+                log('1️⃣ 사용자 인증 확인...');
+                const userResponse = await fetch('/api/user', {
+                    credentials: 'include'
+                });
+                const userData = await userResponse.json();
+                
+                if (!userResponse.ok || !userData.id) {
+                    log('❌ 로그인이 필요합니다');
+                    log('👉 https://aromapulse.pages.dev/auth/naver 로 이동하세요\n');
+                    return;
+                }
+                
+                log(`✅ 로그인됨: ${userData.name} (ID: ${userData.id})\n`);
+                
+                // 2. 예약 내역 API 호출
+                log('2️⃣ 예약 내역 API 호출...');
+                const response = await fetch('/api/reservations/my', {
+                    credentials: 'include'
+                });
+                
+                log(`✅ Response Status: ${response.status}`);
+                log(`✅ Response OK: ${response.ok}\n`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    log('❌ API 오류:');
+                    log(JSON.stringify(errorData, null, 2));
+                    return;
+                }
+                
+                const reservations = await response.json();
+                
+                log('3️⃣ 예약 데이터:');
+                log(`📊 총 ${reservations.length}개의 예약\n`);
+                
+                if (reservations.length === 0) {
+                    log('⚠️ 예약 내역이 없습니다');
+                    log('👉 /shop 또는 /static/healing 에서 예약을 생성하세요\n');
+                } else {
+                    reservations.forEach((r, index) => {
+                        log(`\n📌 예약 #${index + 1}:`);
+                        log(`  - ID: ${r.id}`);
+                        log(`  - 타입: ${r.reservation_type}`);
+                        log(`  - 제목: ${r.class_title || r.product_name || '없음'}`);
+                        log(`  - 날짜: ${r.reservation_date} ${r.reservation_time || ''}`);
+                        log(`  - 인원: ${r.participants}명`);
+                        log(`  - 연락처: ${r.contact_phone}`);
+                        log(`  - 상태: ${r.status}`);
+                        log(`  - 생성일: ${r.created_at}`);
+                    });
+                }
+                
+                log('\n✅ 테스트 완료!');
+                
+            } catch (error) {
+                log(`\n❌ Error: ${error.message}`);
+                log(`❌ Stack: ${error.stack}`);
+            }
+        }
+        
+        // 페이지 로드 시 자동 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            log('🚀 테스트 페이지 로드 완료\n');
+            log('👆 위 버튼을 클릭하여 API를 테스트하세요\n');
+        });
+    </script>
+</body>
+</html>
