@@ -1547,26 +1547,136 @@
                 return;
             }
 
-            listContainer.innerHTML = classes.map(cls => {
-                const bookingUrl = getBookingUrl(cls);
-                return `
-                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer" 
-                         onclick="focusClass(${cls.id})">
-                        <div class="p-6">
-                            <h4 class="text-xl font-bold text-gray-900 mb-2">${cls.name || cls.title}</h4>
-                            <p class="text-sm text-gray-600 mb-3 flex items-start">
-                                <i class="fas fa-map-marker-alt text-purple-600 mr-2 mt-1"></i>
-                                <span>${cls.location || '주소 정보 없음'}</span>
-                            </p>
-                            ${cls.description ? `<p class="text-sm text-gray-500 mb-4">${cls.description}</p>` : ''}
-                            <button onclick="event.stopPropagation(); bookClass(${cls.id}, '${bookingUrl}')" 
-                                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-lg font-bold hover:shadow-lg transition">
-                                <i class="fas fa-calendar-check mr-2"></i>예약하기
-                            </button>
-                        </div>
+            // 거리별로 그룹화
+            const nearbyClasses = classes.filter(cls => cls.distance && cls.distance <= 20);
+            const mediumClasses = classes.filter(cls => cls.distance && cls.distance > 20 && cls.distance <= 50);
+            const sameRegionClasses = classes.filter(cls => cls.distance === 999); // 좌표 없지만 같은 지역
+            const farClasses = classes.filter(cls => (!cls.distance || cls.distance > 50) && cls.distance !== 999);
+            
+            let html = '';
+            
+            // 20km 이내 (가까운 지역)
+            if (nearbyClasses.length > 0) {
+                html += `
+                    <div class="col-span-full mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-location-arrow text-green-600 mr-2"></i>
+                            가까운 지역 (20km 이내) - ${nearbyClasses.length}개
+                        </h3>
                     </div>
                 `;
-            }).join('');
+                html += nearbyClasses.map(cls => renderClassCard(cls)).join('');
+            }
+            
+            // 20-50km (인근 지역)
+            if (mediumClasses.length > 0) {
+                html += `
+                    <div class="col-span-full mb-4 mt-8">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-map-marked-alt text-blue-600 mr-2"></i>
+                            인근 지역 (20-50km) - ${mediumClasses.length}개
+                        </h3>
+                    </div>
+                `;
+                html += mediumClasses.map(cls => renderClassCard(cls)).join('');
+            }
+            
+            // 같은 지역 (좌표 없지만 지역명 일치)
+            if (sameRegionClasses.length > 0) {
+                html += `
+                    <div class="col-span-full mb-4 mt-8">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-map-marker-alt text-purple-600 mr-2"></i>
+                            같은 지역 (수도권) - ${sameRegionClasses.length}개
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            정확한 거리 정보가 없지만, 같은 지역권에 위치한 공방입니다.
+                        </p>
+                    </div>
+                `;
+                html += sameRegionClasses.map(cls => renderClassCard(cls)).join('');
+            }
+            
+            // 거리 정보 없거나 50km 이상
+            if (farClasses.length > 0) {
+                html += `
+                    <div class="col-span-full mb-4 mt-8">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-globe text-gray-600 mr-2"></i>
+                            기타 지역 - ${farClasses.length}개
+                        </h3>
+                    </div>
+                `;
+                html += farClasses.map(cls => renderClassCard(cls)).join('');
+            }
+            
+            listContainer.innerHTML = html;
+        }
+        
+        // 클래스 카드 렌더링 함수
+        function renderClassCard(cls) {
+            const bookingUrl = getBookingUrl(cls);
+            
+            // 거리 배지 생성
+            let distanceBadge = '';
+            if (cls.distance) {
+                if (cls.distance === 999) {
+                    // 같은 지역 (좌표 없음)
+                    distanceBadge = `
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            같은 지역
+                        </span>
+                    `;
+                } else {
+                    let badgeColor = 'bg-green-100 text-green-800';
+                    let icon = 'fa-walking';
+                    
+                    if (cls.distance <= 5) {
+                        badgeColor = 'bg-green-100 text-green-800';
+                        icon = 'fa-walking';
+                    } else if (cls.distance <= 20) {
+                        badgeColor = 'bg-blue-100 text-blue-800';
+                        icon = 'fa-car';
+                    } else if (cls.distance <= 50) {
+                        badgeColor = 'bg-orange-100 text-orange-800';
+                        icon = 'fa-bus';
+                    } else {
+                        badgeColor = 'bg-gray-100 text-gray-800';
+                        icon = 'fa-train';
+                    }
+                    
+                    distanceBadge = `
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${badgeColor}">
+                            <i class="fas ${icon} mr-1"></i>
+                            ${cls.distance.toFixed(1)}km
+                        </span>
+                    `;
+                }
+            }
+            
+            return `
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer" 
+                     onclick="focusClass(${cls.id})">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-2">
+                            <h4 class="text-xl font-bold text-gray-900 flex-1">${cls.name || cls.title}</h4>
+                            ${distanceBadge}
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3 flex items-start">
+                            <i class="fas fa-map-marker-alt text-purple-600 mr-2 mt-1"></i>
+                            <span>${cls.location || '주소 정보 없음'}</span>
+                        </p>
+                        ${cls.description ? `<p class="text-sm text-gray-500 mb-4 line-clamp-2">${cls.description}</p>` : ''}
+                        ${cls.price ? `<p class="text-lg font-bold text-purple-600 mb-3">${cls.price.toLocaleString()}원</p>` : ''}
+                        <button onclick="event.stopPropagation(); bookClass(${cls.id}, '${bookingUrl}')" 
+                                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-lg font-bold hover:shadow-lg transition">
+                            <i class="fas fa-calendar-check mr-2"></i>예약하기
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
         // Focus on Class Marker
@@ -2120,7 +2230,16 @@
                 // 지도와 리스트 다시 렌더링
                 await initializeMapByProvider();
                 
-                alert(`✅ ${nearbyClasses.length}개의 인근 공방을 찾았습니다!\n\n지도에서 확인해보세요.`);
+                // 거리별 카운트
+                const nearby = nearbyClasses.filter(c => c.distance <= 20).length;
+                const medium = nearbyClasses.filter(c => c.distance > 20 && c.distance <= 50).length;
+                
+                let message = `✅ ${nearbyClasses.length}개의 인근 공방을 찾았습니다!\n\n`;
+                if (nearby > 0) message += `🚶 가까운 지역 (20km 이내): ${nearby}개\n`;
+                if (medium > 0) message += `🚗 인근 지역 (20-50km): ${medium}개\n`;
+                message += '\n지도에서 위치를 확인해보세요!';
+                
+                alert(message);
                 
             } catch (error) {
                 console.error('❌ [Nearby Classes] 인근 공방 로드 실패:', error);
@@ -2150,6 +2269,14 @@
         
         .animate-scale-in {
             animation: scale-in 0.3s ease-out;
+        }
+        
+        /* Line clamp utility for description text */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
     </style>
 
