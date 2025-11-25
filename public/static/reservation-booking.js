@@ -1,4 +1,4 @@
-// 예약 모달 및 네이버 캘린더 연동
+// 예약 모달 및 캘린더 파일 다운로드 (ICS)
 // 원데이 클래스 및 상품 예약 기능
 
 class ReservationBooking {
@@ -145,16 +145,16 @@ class ReservationBooking {
                 placeholder="추가로 전달하실 내용이 있으시면 작성해주세요"></textarea>
             </div>
 
-            <!-- 네이버 캘린더 연동 옵션 -->
+            <!-- 캘린더 파일 다운로드 옵션 -->
             <div class="bg-green-50 rounded-lg p-4 border border-green-200">
               <label class="flex items-center cursor-pointer">
                 <input type="checkbox" id="addToNaverCalendar" class="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500">
                 <span class="ml-3 text-sm font-medium text-gray-700">
                   <i class="fas fa-calendar-plus mr-2 text-green-600"></i>
-                  네이버 캘린더에 일정 추가하기
+                  캘린더 파일 다운로드 (.ics)
                 </span>
               </label>
-              <p class="text-xs text-gray-500 mt-2 ml-8">예약 완료 후 네이버 캘린더에 자동으로 일정이 등록됩니다</p>
+              <p class="text-xs text-gray-500 mt-2 ml-8">예약 완료 후 캘린더 파일을 다운로드합니다 (네이버/구글/아웃룩 캘린더에서 사용 가능)</p>
             </div>
 
             <!-- 제출 버튼 -->
@@ -289,7 +289,7 @@ class ReservationBooking {
 
       console.log('✅ [Reservation] Success:', result);
 
-      // 네이버 캘린더 연동 체크
+      // 캘린더 파일 다운로드 체크
       if (document.getElementById('addToNaverCalendar').checked) {
         this.addToNaverCalendar(result.calendar_data);
       }
@@ -315,25 +315,51 @@ class ReservationBooking {
     }
   }
 
-  // 네이버 캘린더에 일정 추가
+  // 캘린더 파일 다운로드 (ICS 형식)
   addToNaverCalendar(calendarData) {
     try {
-      // 네이버 캘린더 일정 추가 URL 생성
-      const title = encodeURIComponent(calendarData.title);
-      const date = calendarData.date.replace(/-/g, '');
-      const time = calendarData.time.replace(':', '');
+      // ICS 파일 생성 (표준 iCalendar 형식)
+      const startDate = calendarData.date.replace(/-/g, '');
+      const startTime = calendarData.time.replace(':', '') + '00';
       
-      // 네이버 캘린더 URL
-      const naverCalendarUrl = `https://calendar.naver.com/new#/schedule/new?title=${title}&startDate=${date}&startTime=${time}00`;
+      // 종료 시간 (시작 시간 + 2시간)
+      const startHour = parseInt(calendarData.time.split(':')[0]);
+      const endHour = (startHour + 2).toString().padStart(2, '0');
+      const endTime = endHour + calendarData.time.split(':')[1] + '00';
       
-      console.log('📅 [Naver Calendar] Opening:', naverCalendarUrl);
+      const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//AromaPulse//Reservation//KO',
+        'BEGIN:VEVENT',
+        `UID:${Date.now()}@aromapulse.kr`,
+        `DTSTAMP:${startDate}T${startTime}Z`,
+        `DTSTART:${startDate}T${startTime}Z`,
+        `DTEND:${startDate}T${endTime}Z`,
+        `SUMMARY:${calendarData.title}`,
+        `DESCRIPTION:아로마펄스 예약`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
       
-      // 새 창에서 네이버 캘린더 열기
-      window.open(naverCalendarUrl, '_blank', 'width=800,height=600');
+      // Blob 생성 및 다운로드
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `aromapulse-reservation-${startDate}.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('📅 [Calendar] ICS file downloaded');
+      alert('📅 캘린더 파일이 다운로드되었습니다.\n네이버 캘린더, 구글 캘린더, 아웃룩 등에서 열어보세요!');
       
     } catch (error) {
-      console.error('❌ [Naver Calendar] Error:', error);
-      alert('네이버 캘린더 연동 중 오류가 발생했습니다');
+      console.error('❌ [Calendar] Error:', error);
+      alert('캘린더 파일 생성 중 오류가 발생했습니다');
     }
   }
 }
