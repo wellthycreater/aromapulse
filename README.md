@@ -19,10 +19,17 @@
 ## 🌐 접속 URL
 
 ### 프로덕션 (Cloudflare Pages) ✅
-- **메인 URL**: https://aromapulse.pages.dev
+- **메인 URL**: https://aromapulse.pages.dev ⭐ **공식 접속 URL**
+- **최신 빌드**: https://34462036.aromapulse.pages.dev
 - **로그인**: https://aromapulse.pages.dev/login
 - **회원가입**: https://aromapulse.pages.dev/signup
-- **예정 도메인**: https://aromapulse.kr (연결 예정)
+- **힐링 체험 (Naver Maps)**: https://aromapulse.pages.dev/static/healing
+
+### 커스텀 도메인 (참고용)
+- **aromapulse.kr**: ⚠️ Naver Maps API 인증 제한으로 `.pages.dev` 사용 권장
+- **www.aromapulse.kr**: ⚠️ Naver Maps API 인증 제한으로 `.pages.dev` 사용 권장
+
+> **중요**: Naver Maps를 사용하려면 반드시 `aromapulse.pages.dev` 도메인으로 접속하세요.
 
 ### 개발 환경 (Sandbox)
 - **Frontend**: https://3000-ixw6l6ek5pa4nw2e7gi09-c07dda5e.sandbox.novita.ai
