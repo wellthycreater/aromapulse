@@ -479,6 +479,7 @@ async function loadBookings(type = 'all') {
         
         let reservations = await response.json();
         console.log('[MyPage] Loaded reservations:', reservations);
+        console.log('[MyPage] Total count:', reservations.length);
         
         // reservation_type 기반 타입 필터링
         if (type !== 'all') {
@@ -488,14 +489,17 @@ async function loadBookings(type = 'all') {
                 'class': 'class'
             };
             reservations = reservations.filter(r => r.reservation_type === typeMap[type]);
+            console.log(`[MyPage] After filter (${type}):`, reservations.length);
         }
         
         if (reservations.length === 0) {
             bookingsList.innerHTML = '';
             bookingsEmpty.style.display = 'block';
-            console.log('[MyPage] No reservations found');
+            console.log('[MyPage] No reservations to display');
             return;
         }
+        
+        console.log('[MyPage] Displaying', reservations.length, 'reservations');
         
         bookingsEmpty.style.display = 'none';
         bookingsList.innerHTML = reservations.map(reservation => {
@@ -545,8 +549,18 @@ async function loadBookings(type = 'all') {
         `).join('');
         
     } catch (error) {
-        console.error('Failed to load bookings:', error);
-        bookingsList.innerHTML = '<p class="text-center text-gray-500 py-8">예약 내역을 불러오는데 실패했습니다</p>';
+        console.error('[MyPage] Failed to load bookings:', error);
+        console.error('[MyPage] Error details:', error.message);
+        bookingsEmpty.style.display = 'none';
+        bookingsList.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <p class="mb-2">예약 내역을 불러오는데 실패했습니다</p>
+                <p class="text-sm text-gray-400">${error.message}</p>
+                <button onclick="loadBookings()" class="mt-4 px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
+                    다시 시도
+                </button>
+            </div>
+        `;
     }
 }
 
@@ -1052,4 +1066,5 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 사용자 정보 및 데이터 로드
     loadUserInfo();
     loadOrders();
+    loadBookings();  // 예약 내역도 자동 로드
 });
