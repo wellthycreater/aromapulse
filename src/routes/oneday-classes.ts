@@ -20,6 +20,11 @@ onedayClasses.get('/', async (c) => {
        LEFT JOIN users u ON oc.provider_id = u.id
        WHERE oc.is_active = 1`;
     
+    // 위치 기반 필터링이 활성화된 경우, 좌표가 있는 클래스만 조회
+    if (nearby) {
+      query += ` AND oc.latitude IS NOT NULL AND oc.longitude IS NOT NULL`;
+    }
+    
     query += ` ORDER BY oc.created_at DESC LIMIT ?`;
     
     const result = await c.env.DB.prepare(query).bind(parseInt(limit)).all();
