@@ -35,42 +35,40 @@ async function loadDynamicStyles() {
 // 로그인 체크 (쿠키 기반 인증)
 async function checkAuth() {
     try {
-        console.log('[checkAuth] /api/auth/me 호출...');
-        const response = await fetch('/api/auth/me');
+        console.log('[checkAuth] /api/user 호출...');
+        const response = await fetch('/api/user', {
+            credentials: 'include'
+        });
         console.log('[checkAuth] 응답 상태:', response.status);
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('[checkAuth] API 실패:', response.status, errorText);
+            console.error('[checkAuth] API 실패:', response.status);
+            if (response.status === 401) {
+                console.log('[checkAuth] 로그인 필요 - /auth/naver로 리다이렉트');
+                alert('⚠️ 로그인이 필요합니다.\n네이버 로그인 페이지로 이동합니다.');
+                location.href = '/auth/naver?returnTo=' + encodeURIComponent(window.location.pathname);
+                return null;
+            }
             alert('로그인 상태를 확인할 수 없습니다');
-            location.href = '/login';
-            return null;
-        }
-        
-        const contentType = response.headers.get('content-type');
-        console.log('[checkAuth] Content-Type:', contentType);
-        
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            console.error('[checkAuth] JSON이 아닌 응답:', text.substring(0, 200));
-            alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            location.href = '/';
             return null;
         }
         
         const data = await response.json();
-        console.log('[checkAuth] 응답 데이터:', data);
+        console.log('[checkAuth] 사용자 정보:', data);
         
-        if (data.authenticated && data.user) {
-            return data.user;
+        if (data.id && data.email) {
+            return data;
         } else {
+            console.error('[checkAuth] 잘못된 응답 형식:', data);
             alert('로그인이 필요합니다');
-            location.href = '/login';
+            location.href = '/auth/naver?returnTo=' + encodeURIComponent(window.location.pathname);
             return null;
         }
     } catch (e) {
         console.error('[checkAuth] 예외 발생:', e);
         alert('로그인 상태를 확인할 수 없습니다');
-        location.href = '/login';
+        location.href = '/';
         return null;
     }
 }

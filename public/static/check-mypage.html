@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 진단</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold mb-4">🔧 마이페이지 진단 도구</h1>
+            
+            <div class="space-y-4 mb-6">
+                <button onclick="checkAuth()" 
+                        class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                    1️⃣ 로그인 상태 확인
+                </button>
+                
+                <button onclick="checkMypageAccess()" 
+                        class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                    2️⃣ 마이페이지 접근 확인
+                </button>
+                
+                <button onclick="checkAPIs()" 
+                        class="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">
+                    3️⃣ 모든 API 확인
+                </button>
+                
+                <button onclick="goToMypage()" 
+                        class="w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium">
+                    ➡️ 마이페이지로 이동
+                </button>
+            </div>
+            
+            <div id="result" class="p-4 bg-gray-50 rounded-lg">
+                <pre id="output" class="text-sm overflow-auto whitespace-pre-wrap">여기에 진단 결과가 표시됩니다...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const colors = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            output.textContent += `${colors[type]} ${message}\n`;
+            console.log(message);
+        }
+
+        function clear() {
+            document.getElementById('output').textContent = '';
+        }
+
+        async function checkAuth() {
+            clear();
+            log('=== 로그인 상태 확인 ===\n', 'info');
+            
+            try {
+                const response = await fetch('/api/user', {
+                    credentials: 'include'
+                });
+                
+                log(`Response Status: ${response.status}`, 'info');
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user && user.id) {
+                        log(`로그인됨`, 'success');
+                        log(`사용자: ${user.name} (${user.email})`, 'info');
+                        log(`User ID: ${user.id}`, 'info');
+                        log(`OAuth Provider: ${user.oauth_provider || 'unknown'}`, 'info');
+                        log(`\n✅ 마이페이지 접근 가능 상태입니다!`, 'success');
+                        return true;
+                    }
+                }
+                
+                log('로그인 안 됨', 'error');
+                log('해결: https://aromapulse.pages.dev/auth/naver 로 로그인하세요', 'warning');
+                return false;
+                
+            } catch (error) {
+                log(`오류: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function checkMypageAccess() {
+            clear();
+            log('=== 마이페이지 접근 확인 ===\n', 'info');
+            
+            try {
+                // 1. 로그인 확인
+                const isLoggedIn = await checkAuth();
+                if (!isLoggedIn) {
+                    log('\n❌ 로그인이 필요합니다', 'error');
+                    return;
+                }
+                
+                log('\n--- 마이페이지 파일 확인 ---', 'info');
+                
+                // 2. mypage.html 접근 확인
+                const response = await fetch('/static/mypage.html', {
+                    credentials: 'include'
+                });
+                
+                log(`Status: ${response.status}`, 'info');
+                
+                if (response.ok) {
+                    log('마이페이지 파일 로드 성공', 'success');
+                    const html = await response.text();
+                    log(`HTML 크기: ${Math.round(html.length / 1024)}KB`, 'info');
+                    
+                    // 3. 필수 요소 확인
+                    if (html.includes('tab-bookings')) {
+                        log('예약 내역 탭 존재', 'success');
+                    }
+                    if (html.includes('mypage.js')) {
+                        log('JavaScript 파일 포함됨', 'success');
+                    }
+                    
+                    log('\n✅ 마이페이지 접근 가능!', 'success');
+                    log('👉 "마이페이지로 이동" 버튼을 클릭하세요', 'info');
+                } else {
+                    log(`마이페이지 로드 실패: ${response.status}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`오류: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkAPIs() {
+            clear();
+            log('=== 모든 API 확인 ===\n', 'info');
+            
+            const apis = [
+                { name: '사용자 정보', url: '/api/user' },
+                { name: '예약 내역', url: '/api/reservations/my' },
+                { name: '주문 내역', url: '/api/orders/my' }
+            ];
+            
+            for (const api of apis) {
+                try {
+                    log(`\n--- ${api.name} API ---`, 'info');
+                    const response = await fetch(api.url, {
+                        credentials: 'include'
+                    });
+                    
+                    log(`URL: ${api.url}`, 'info');
+                    log(`Status: ${response.status}`, response.ok ? 'success' : 'error');
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (Array.isArray(data)) {
+                            log(`데이터 개수: ${data.length}개`, 'info');
+                        } else if (data.id) {
+                            log(`데이터: ${JSON.stringify(data).substring(0, 100)}...`, 'info');
+                        }
+                    } else {
+                        const error = await response.json().catch(() => ({}));
+                        log(`오류: ${error.error || response.statusText}`, 'error');
+                    }
+                    
+                } catch (error) {
+                    log(`${api.name} 오류: ${error.message}`, 'error');
+                }
+            }
+            
+            log('\n✅ API 확인 완료', 'success');
+        }
+
+        function goToMypage() {
+            window.location.href = '/static/mypage.html';
+        }
+
+        // 페이지 로드 시 자동 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            log('🚀 마이페이지 진단 도구 준비 완료\n');
+            log('위 버튼을 순서대로 클릭하여 진단하세요:\n');
+            log('1. 로그인 상태 확인');
+            log('2. 마이페이지 접근 확인');
+            log('3. 모든 API 확인');
+            log('4. 마이페이지로 이동\n');
+        });
+    </script>
+</body>
+</html>
