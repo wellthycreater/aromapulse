@@ -2337,16 +2337,59 @@
                     throw new Error(`API 요청 실패: ${response.status}`);
                 }
                 
-                const nearbyClasses = await response.json();
-                console.log(`✅ [Nearby Classes] ${nearbyClasses.length}개 인근 공방 발견`);
+                let nearbyClasses = await response.json();
+                console.log(`📦 [Nearby Classes] 서버에서 ${nearbyClasses.length}개 공방 받음`);
                 
-                if (nearbyClasses.length === 0) {
+                // 프론트엔드에서 거리 재계산 (서버에서 계산 못 한 경우 대비)
+                nearbyClasses = nearbyClasses.map(cls => {
+                    // 거리가 이미 계산되어 있으면 그대로 사용
+                    if (cls.distance !== undefined && cls.distance !== null && cls.distance !== 999) {
+                        return cls;
+                    }
+                    
+                    // 좌표가 있으면 프론트엔드에서 거리 계산
+                    if (cls.latitude && cls.longitude) {
+                        const dist = calculateDistance(latitude, longitude, cls.latitude, cls.longitude);
+                        return {
+                            ...cls,
+                            distance: parseFloat(dist.toFixed(2)),
+                            hasLocation: true
+                        };
+                    }
+                    
+                    // 좌표가 없으면 그대로 반환
+                    return cls;
+                });
+                
+                // 50km 이내만 필터링 (좌표 있는 것만)
+                const filtered = nearbyClasses.filter(cls => {
+                    // 좌표가 있고 50km 이내
+                    if (cls.latitude && cls.longitude && cls.distance <= 50) {
+                        return true;
+                    }
+                    // 좌표가 없지만 같은 지역 (distance=999)
+                    if (!cls.latitude || !cls.longitude) {
+                        return true;
+                    }
+                    return false;
+                });
+                
+                // 거리순 정렬
+                filtered.sort((a, b) => {
+                    if (a.distance === 999) return 1; // 좌표 없는 것은 뒤로
+                    if (b.distance === 999) return -1;
+                    return a.distance - b.distance;
+                });
+                
+                console.log(`✅ [Nearby Classes] ${filtered.length}개 인근 공방 발견 (50km 이내)`);
+                
+                if (filtered.length === 0) {
                     alert('😢 50km 이내에 공방이 없습니다.\n\n검색 반경을 늘리거나 다른 지역을 검색해보세요.');
                     return;
                 }
                 
                 // 전역 classes 변수 업데이트
-                classes = nearbyClasses;
+                classes = filtered;
                 
                 // 지도와 리스트 다시 렌더링
                 await initializeMapByProvider();
