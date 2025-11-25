@@ -2345,6 +2345,24 @@
                 const classesWithDistance = [];
                 const classesWithoutLocation = [];
                 
+                // 사용자 지역 판별
+                let userRegion = '기타';
+                if (latitude >= 37.3 && latitude <= 37.6 && longitude >= 126.4 && longitude <= 126.9) {
+                    userRegion = '인천';
+                } else if (latitude >= 37.4 && latitude <= 37.7 && longitude >= 126.8 && longitude <= 127.2) {
+                    userRegion = '서울';
+                } else if (latitude >= 37.0 && latitude <= 38.0 && longitude >= 126.5 && longitude <= 127.5) {
+                    userRegion = '경기';
+                }
+                console.log(`📍 [User Region] ${userRegion} (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+                
+                // 수도권 지역 키워드
+                const capitalAreaKeywords = [
+                    '인천', '계양', '부평', '남동', '연수', '서구', '미추홀',
+                    '서울', '강남', '강북', '강서', '강동', '마포', '용산', '송파', '서초', '관악', '동작', '종로', '중구', '성동', '광진', '동대문', '중랑', '성북', '도봉', '노원', '은평', '서대문', '양천', '구로', '금천', '영등포',
+                    '경기', '수원', '성남', '고양', '용인', '부천', '안산', '안양', '남양주', '화성', '평택', '의정부', '시흥', '파주', '광명', '김포', '군포', '광주', '이천', '양주', '오산', '구리', '안성', '포천', '의왕', '하남', '여주', '양평', '동두천', '과천', '광교'
+                ];
+                
                 allClasses.forEach(cls => {
                     if (cls.latitude && cls.longitude) {
                         // 좌표가 있으면 거리 계산
@@ -2357,10 +2375,24 @@
                             classesWithDistance.push(cls);
                         }
                     } else {
-                        // 좌표가 없는 공방도 포함 (지역 필터링은 서버에서 처리됨)
-                        cls.distance = 999; // 거리 알 수 없음
-                        cls.hasLocation = false;
-                        classesWithoutLocation.push(cls);
+                        // 좌표가 없는 공방: 지역명으로 필터링
+                        const location = (cls.location || '').toLowerCase();
+                        const address = (cls.address || '').toLowerCase();
+                        
+                        // 수도권(서울/인천/경기) 사용자만 같은 지역 공방 표시
+                        if (userRegion === '인천' || userRegion === '서울' || userRegion === '경기') {
+                            // 수도권 키워드가 포함되어 있는지 확인
+                            const isCapitalArea = capitalAreaKeywords.some(keyword => 
+                                location.includes(keyword) || address.includes(keyword)
+                            );
+                            
+                            if (isCapitalArea) {
+                                cls.distance = 999; // 거리 알 수 없음
+                                cls.hasLocation = false;
+                                classesWithoutLocation.push(cls);
+                                console.log(`✅ [Region Match] ${cls.title} - ${cls.location || cls.address}`);
+                            }
+                        }
                     }
                 });
                 
