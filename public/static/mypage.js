@@ -197,17 +197,13 @@ async function loadUserInfo() {
 // 사용자 통계 로드
 async function loadUserStats() {
     try {
-        const response = await fetch('/api/bookings/stats', {
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            console.warn('통계 로드 실패:', response.status);
-            return;
-        }
-        
-        const data = await response.json();
-        const stats = data.stats || {};
+        // TODO: 통계 API 구현 필요
+        // 현재는 기본값 사용
+        const stats = {
+            total_orders: 0,
+            total_bookings: 0,
+            total_consultations: 0
+        };
         
         // 통계 카드 업데이트
         const statCards = document.querySelectorAll('.stat-card .text-2xl');
@@ -1067,4 +1063,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadUserInfo();
     loadOrders();
     loadBookings();  // 예약 내역도 자동 로드
+    
+    // 예약 내역 탭을 기본으로 표시
+    document.getElementById('tab-bookings').classList.remove('hidden');
+    console.log('[MyPage] Default tab set to: bookings');
 });
