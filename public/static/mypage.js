@@ -540,7 +540,8 @@ async function loadBookings(type = 'all') {
                     </button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
         
     } catch (error) {
         console.error('[MyPage] Failed to load bookings:', error);
