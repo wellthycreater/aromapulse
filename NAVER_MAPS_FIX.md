@@ -150,9 +150,33 @@ npx wrangler pages secret put KAKAO_MAPS_API_KEY --project-name aromapulse
 npm run deploy
 ```
 
+## 🔧 추가 수정: Geocoder Submodule (2025-11-25 15:20)
+
+### 문제: Naver Maps 로고만 반복 표시
+스크린샷에서 Naver Maps 로고/워터마크만 반복적으로 표시되고 실제 지도가 렌더링되지 않는 문제 발견
+
+### 원인
+Naver Maps API v3는 **submodules 파라미터 필수**
+- 기본 URL만으로는 일부 기능이 누락되어 지도가 제대로 렌더링되지 않음
+- `geocoder` 서브모듈이 없으면 주소-좌표 변환 기능도 작동 안 함
+
+### 해결
+`src/routes/map-config.ts` 수정:
+```typescript
+// 이전 (문제)
+config.mapUrl = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${c.env.NAVER_MAPS_CLIENT_ID}`;
+
+// 수정 (해결)
+config.mapUrl = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${c.env.NAVER_MAPS_CLIENT_ID}&submodules=geocoder`;
+```
+
+### 배포
+- **프로덕션 URL**: https://8b5f1e14.aromapulse.pages.dev
+- **GitHub 커밋**: `a0ac6b0`
+
 ## 🎉 최종 결과
 
-**문제 해결**: Naver 로그인 사용자가 Healing Experience 페이지에서 **Naver Maps를 정상적으로 사용할 수 있습니다!**
+**문제 완전 해결**: Naver 로그인 사용자가 Healing Experience 페이지에서 **Naver Maps를 정상적으로 사용할 수 있습니다!**
 
 ### 제공 기능
 - ✅ OAuth Provider별 동적 지도 로드 (Google/Naver/Kakao)
