@@ -20,11 +20,6 @@ onedayClasses.get('/', async (c) => {
        LEFT JOIN users u ON oc.provider_id = u.id
        WHERE oc.is_active = 1`;
     
-    // 위치 기반 필터링이 활성화된 경우, 좌표가 있는 클래스만 조회
-    if (nearby) {
-      query += ` AND oc.latitude IS NOT NULL AND oc.longitude IS NOT NULL`;
-    }
-    
     query += ` ORDER BY oc.created_at DESC LIMIT ?`;
     
     const result = await c.env.DB.prepare(query).bind(parseInt(limit)).all();
@@ -49,30 +44,89 @@ onedayClasses.get('/', async (c) => {
             if (user && user.user_latitude && user.user_longitude) {
               console.log(`🗺️ [Location Filter] User location: lat=${user.user_latitude}, lng=${user.user_longitude}, maxDistance=${maxDistance}km`);
               
+              // 사용자 지역 추출 (위도/경도 기반)
+              let userRegion = '서울'; // 기본값
+              
+              // 인천 지역 판별 (위도: 37.3-37.6, 경도: 126.4-126.9)
+              if (user.user_latitude >= 37.3 && user.user_latitude <= 37.6 &&
+                  user.user_longitude >= 126.4 && user.user_longitude <= 126.9) {
+                userRegion = '인천';
+              }
+              // 서울 지역 판별 (위도: 37.4-37.7, 경도: 126.8-127.2)
+              else if (user.user_latitude >= 37.4 && user.user_latitude <= 37.7 &&
+                       user.user_longitude >= 126.8 && user.user_longitude <= 127.2) {
+                userRegion = '서울';
+              }
+              // 경기 지역 판별 (서울/인천 제외한 주변 지역)
+              else if (user.user_latitude >= 37.0 && user.user_latitude <= 38.0 &&
+                       user.user_longitude >= 126.5 && user.user_longitude <= 127.5) {
+                userRegion = '경기';
+              }
+              
+              console.log(`🗺️ [Location Filter] User region: ${userRegion}`);
+              
               // 거리 계산 및 필터링
-              classes = classes.filter(classItem => {
-                if (!classItem.latitude || !classItem.longitude) {
-                  // 좌표가 없는 클래스는 제외
-                  return false;
+              const classesWithDistance: any[] = [];
+              const classesWithoutLocation: any[] = [];
+              
+              classes.forEach(classItem => {
+                if (classItem.latitude && classItem.longitude) {
+                  // 좌표가 있는 경우: 거리 계산
+                  const distance = calculateDistance(
+                    user.user_latitude!,
+                    user.user_longitude!,
+                    classItem.latitude,
+                    classItem.longitude
+                  );
+                  
+                  // 50km 이내만 포함
+                  if (distance <= maxDistance) {
+                    classItem.distance = parseFloat(distance.toFixed(2));
+                    classItem.hasLocation = true;
+                    classesWithDistance.push(classItem);
+                  }
+                } else {
+                  // 좌표가 없는 경우: 지역명으로 필터링
+                  const location = (classItem.location || '').toLowerCase();
+                  const address = (classItem.address || '').toLowerCase();
+                  
+                  // 수도권 지역 키워드
+                  const regionKeywords = {
+                    '인천': ['인천', '계양', '부평', '남동', '연수', '서구', '미추홀'],
+                    '서울': ['서울', '강남', '강북', '강서', '강동', '마포', '용산', '송파', '서초', '관악', '동작', '종로', '중구', '성동', '광진', '동대문', '중랑', '성북', '강북', '도봉', '노원', '은평', '서대문', '양천', '구로', '금천', '영등포'],
+                    '경기': ['경기', '수원', '성남', '고양', '용인', '부천', '안산', '안양', '남양주', '화성', '평택', '의정부', '시흥', '파주', '광명', '김포', '군포', '광주', '이천', '양주', '오산', '구리', '안성', '포천', '의왕', '하남', '여주', '양평', '동두천', '과천']
+                  };
+                  
+                  // 수도권 지역 판별
+                  let isNearby = false;
+                  
+                  // 사용자 지역과 같은 지역인지 확인
+                  if (userRegion === '인천' || userRegion === '서울' || userRegion === '경기') {
+                    // 인천, 서울, 경기는 모두 수도권으로 간주
+                    Object.values(regionKeywords).forEach(keywords => {
+                      keywords.forEach(keyword => {
+                        if (location.includes(keyword) || address.includes(keyword)) {
+                          isNearby = true;
+                        }
+                      });
+                    });
+                  }
+                  
+                  if (isNearby) {
+                    classItem.distance = 999; // 좌표 없음 표시 (거리 알 수 없음)
+                    classItem.hasLocation = false;
+                    classesWithoutLocation.push(classItem);
+                  }
                 }
-                
-                const distance = calculateDistance(
-                  user.user_latitude!,
-                  user.user_longitude!,
-                  classItem.latitude,
-                  classItem.longitude
-                );
-                
-                // 거리 정보를 클래스 객체에 추가
-                classItem.distance = parseFloat(distance.toFixed(2));
-                
-                return distance <= maxDistance;
               });
               
-              // 거리순으로 정렬
-              classes.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+              // 결과 합치기: 좌표 있는 공방(거리순) + 좌표 없는 공방(최신순)
+              classes = [
+                ...classesWithDistance.sort((a, b) => a.distance - b.distance),
+                ...classesWithoutLocation
+              ];
               
-              console.log(`🗺️ [Location Filter] Found ${classes.length} classes within ${maxDistance}km`);
+              console.log(`🗺️ [Location Filter] Found ${classesWithDistance.length} classes with location + ${classesWithoutLocation.length} classes in same region`);
             } else {
               console.warn('⚠️ [Location Filter] User location not available, showing all classes');
             }
