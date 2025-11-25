@@ -2387,12 +2387,14 @@
                 await initializeMapByProvider();
                 
                 // 거리별 카운트
-                const nearby = nearbyClasses.filter(c => c.distance <= 20).length;
-                const medium = nearbyClasses.filter(c => c.distance > 20 && c.distance <= 50).length;
+                const nearby = filtered.filter(c => c.distance && c.distance <= 20).length;
+                const medium = filtered.filter(c => c.distance && c.distance > 20 && c.distance <= 50).length;
+                const noLocation = filtered.filter(c => !c.distance || c.distance === 999).length;
                 
-                let message = `✅ ${nearbyClasses.length}개의 인근 공방을 찾았습니다!\n\n`;
-                if (nearby > 0) message += `🚶 가까운 지역 (20km 이내): ${nearby}개\n`;
+                let message = `✅ ${filtered.length}개의 인근 공방을 찾았습니다!\n\n`;
+                if (nearby > 0) message += `🚶 가까운 지역 (0-20km): ${nearby}개\n`;
                 if (medium > 0) message += `🚗 인근 지역 (20-50km): ${medium}개\n`;
+                if (noLocation > 0) message += `📍 같은 지역 (거리 미확인): ${noLocation}개\n`;
                 message += '\n📍 지도에 내 위치(파란색)와 공방 위치(보라색)가 표시됩니다!';
                 
                 alert(message);
