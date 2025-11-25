@@ -499,12 +499,23 @@ user.put('/location', async (c) => {
       return c.json({ error: '경도는 -180에서 180 사이여야 합니다' }, 400);
     }
     
-    // 위치 및 주소 업데이트
-    await c.env.DB.prepare(
-      'UPDATE users SET user_latitude = ?, user_longitude = ?, address = ? WHERE id = ?'
-    ).bind(data.latitude, data.longitude, data.address || null, userId).run();
+    // 위치 업데이트 (주소가 있으면 함께 업데이트)
+    let updateQuery;
+    let updateParams;
     
-    console.log(`✅ [Location Update] Updated: lat=${data.latitude}, lng=${data.longitude}`);
+    if (data.address) {
+      // 주소 입력 모드: 위도, 경도, 주소 모두 업데이트
+      updateQuery = 'UPDATE users SET user_latitude = ?, user_longitude = ?, address = ? WHERE id = ?';
+      updateParams = [data.latitude, data.longitude, data.address, userId];
+    } else {
+      // GPS 모드: 위도, 경도만 업데이트
+      updateQuery = 'UPDATE users SET user_latitude = ?, user_longitude = ? WHERE id = ?';
+      updateParams = [data.latitude, data.longitude, userId];
+    }
+    
+    await c.env.DB.prepare(updateQuery).bind(...updateParams).run();
+    
+    console.log(`✅ [Location Update] Updated: lat=${data.latitude}, lng=${data.longitude}${data.address ? ', address=' + data.address : ' (GPS mode)'}`);
     
     return c.json({
       message: '위치가 성공적으로 업데이트되었습니다',
