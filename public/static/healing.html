@@ -1153,16 +1153,38 @@
         // Load Map API Script Dynamically
         async function loadMapAPI(provider) {
             try {
-                console.log(`Loading Map API for provider: ${provider}`);
+                console.log(`[MAP] Loading Map API for provider: ${provider}`);
+                
+                // Check if API is already loaded
+                if (provider === 'google' && typeof google !== 'undefined' && google.maps) {
+                    console.log('[MAP] Google Maps API already loaded');
+                    return;
+                }
+                if (provider === 'naver' && typeof naver !== 'undefined' && naver.maps) {
+                    console.log('[MAP] Naver Maps API already loaded');
+                    return;
+                }
+                if (provider === 'kakao' && typeof kakao !== 'undefined' && kakao.maps) {
+                    console.log('[MAP] Kakao Maps API already loaded');
+                    return;
+                }
+                
+                // Check if script tag already exists
+                const existingScript = document.querySelector(`script[data-map-provider="${provider}"]`);
+                if (existingScript) {
+                    console.log(`[MAP] ${provider} Maps script tag already exists, waiting for load...`);
+                    return;
+                }
                 
                 // Fetch map configuration from server
+                console.log(`[MAP] Fetching map config for ${provider}...`);
                 const response = await fetch(`/api/map-config?provider=${provider}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load map config: ${response.status}`);
                 }
                 
                 const config = await response.json();
-                console.log(`Map config loaded:`, config);
+                console.log(`[MAP] Map config loaded:`, config);
                 
                 // Load the appropriate script
                 return new Promise((resolve, reject) => {
@@ -1170,20 +1192,23 @@
                     script.src = config.config.mapUrl;
                     script.async = true;
                     script.defer = true;
+                    script.setAttribute('data-map-provider', provider);
                     
                     script.onload = () => {
-                        console.log(`${provider} Maps API loaded successfully`);
+                        console.log(`[MAP] ${provider} Maps API loaded successfully`);
                         resolve();
                     };
                     
                     script.onerror = () => {
+                        console.error(`[MAP] Failed to load ${provider} Maps API`);
                         reject(new Error(`Failed to load ${provider} Maps API`));
                     };
                     
+                    console.log(`[MAP] Appending script tag for ${provider}:`, script.src);
                     document.head.appendChild(script);
                 });
             } catch (error) {
-                console.error(`Error loading Map API:`, error);
+                console.error(`[MAP] Error loading Map API:`, error);
                 throw error;
             }
         }
@@ -1281,12 +1306,18 @@
         // Initialize Naver Map
         async function initializeNaverMap() {
             try {
+                console.log('[NAVER] Starting Naver Maps initialization...');
+                
                 // Wait for naver.maps to be available (loaded by loadMapAPI)
                 if (typeof naver === 'undefined' || !naver.maps) {
-                    console.log('Waiting for Naver Maps API to load...');
+                    console.log('[NAVER] Waiting for Naver Maps API to load...');
                     await new Promise((resolve, reject) => {
+                        let attempts = 0;
                         const checkInterval = setInterval(() => {
+                            attempts++;
+                            console.log(`[NAVER] Checking API availability... Attempt ${attempts}`);
                             if (typeof naver !== 'undefined' && naver.maps) {
+                                console.log('[NAVER] Naver Maps API is now available!');
                                 clearInterval(checkInterval);
                                 resolve();
                             }
@@ -1300,12 +1331,15 @@
                     });
                 }
                 
+                console.log('[NAVER] Hiding loading overlay...');
                 document.getElementById('map-loading').classList.add('hidden');
                 
                 // Initialize map center
                 const center = classes.length > 0 && classes[0].latitude 
                     ? new naver.maps.LatLng(classes[0].latitude, classes[0].longitude)
                     : new naver.maps.LatLng(37.5665, 126.9780); // Default: Seoul
+                
+                console.log('[NAVER] Creating map with center:', center.toString());
                 
                 // Create Naver Map
                 map = new naver.maps.Map('map', {
@@ -1317,9 +1351,13 @@
                     }
                 });
                 
+                console.log('[NAVER] Map created successfully:', map);
+                
                 // Add markers
-                classes.forEach(cls => {
+                console.log(`[NAVER] Adding ${classes.length} markers...`);
+                classes.forEach((cls, index) => {
                     if (cls.latitude && cls.longitude) {
+                        console.log(`[NAVER] Adding marker ${index + 1}:`, cls.name, cls.latitude, cls.longitude);
                         const position = new naver.maps.LatLng(cls.latitude, cls.longitude);
                         const marker = new naver.maps.Marker({
                             position: position,
@@ -1340,6 +1378,7 @@
                         });
                         
                         naver.maps.Event.addListener(marker, 'click', function() {
+                            console.log('[NAVER] Marker clicked:', cls.name);
                             if (currentInfoWindow) {
                                 currentInfoWindow.close();
                             }
@@ -1351,18 +1390,23 @@
                     }
                 });
                 
+                console.log('[NAVER] Loading classes list...');
                 loadClassesList();
                 
                 if (classes.length > 0 && classes[0].latitude) {
+                    console.log('[NAVER] Setting map center to first class location');
                     map.setCenter(new naver.maps.LatLng(classes[0].latitude, classes[0].longitude));
                 }
+                
+                console.log('[NAVER] Naver Maps initialization complete!');
             } catch (error) {
-                console.error('Naver Maps initialization error:', error);
+                console.error('[NAVER] Naver Maps initialization error:', error);
                 document.getElementById('map-loading').innerHTML = `
                     <div class="text-center">
                         <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
                         <p class="text-gray-700 font-semibold mb-2">지도 로드 실패</p>
                         <p class="text-gray-500 text-sm">${error.message}</p>
+                        <p class="text-gray-400 text-xs mt-2">브라우저 콘솔(F12)에서 자세한 정보를 확인하세요</p>
                     </div>
                 `;
                 loadClassesList();
