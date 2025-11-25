@@ -2505,6 +2505,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'include',  // 쿠키 포함
                     body: JSON.stringify({
                         latitude,
                         longitude,
@@ -2512,11 +2513,15 @@
                     })
                 });
                 
+                const data = await response.json();
+                console.log('[Update Location] Response:', data);
+                
                 if (!response.ok) {
-                    throw new Error('위치 업데이트 실패');
+                    // 상세한 에러 메시지 표시
+                    const errorMsg = data.error || '위치 업데이트 실패';
+                    throw new Error(`${errorMsg} (HTTP ${response.status})`);
                 }
                 
-                const data = await response.json();
                 console.log('[Update Location] Success:', data);
                 
                 // currentUser 정보 업데이트
@@ -2530,7 +2535,7 @@
                 
             } catch (error) {
                 console.error('[Update Location] Error:', error);
-                alert('위치 저장에 실패했습니다.\n\n' + error.message);
+                alert(`❌ 위치 저장에 실패했습니다.\n\n${error.message}\n\n💡 로그인 상태를 확인해주세요.`);
             }
         }
 
