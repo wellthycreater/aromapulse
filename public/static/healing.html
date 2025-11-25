@@ -2164,8 +2164,15 @@
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || '위치 업데이트 실패');
+                    let errorMsg = '위치 업데이트 실패';
+                    try {
+                        const error = await response.json();
+                        errorMsg = error.error || errorMsg;
+                    } catch (e) {
+                        errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    console.error('❌ [Location Update] Server error:', errorMsg);
+                    throw new Error(errorMsg);
                 }
 
                 const result = await response.json();
@@ -2184,6 +2191,7 @@
                 let errorMessage = '위치를 가져올 수 없습니다.';
                 
                 if (error.code) {
+                    // Geolocation API 에러
                     switch (error.code) {
                         case error.PERMISSION_DENIED:
                             errorMessage = '위치 권한이 거부되었습니다.\n\n브라우저 설정에서 위치 권한을 허용해주세요.';
@@ -2196,10 +2204,16 @@
                             break;
                     }
                 } else {
+                    // 서버 API 에러
                     errorMessage = error.message || errorMessage;
+                    
+                    // 로그인 관련 에러인 경우 힌트 추가
+                    if (errorMessage.includes('로그인') || errorMessage.includes('인증') || errorMessage.includes('토큰')) {
+                        errorMessage += '\n\n다시 로그인 후 시도해주세요.';
+                    }
                 }
                 
-                alert('❌ ' + errorMessage);
+                alert('❌ 위치 업데이트 실패\n\n' + errorMessage);
             } finally {
                 // 버튼 원상복구
                 button.disabled = false;
