@@ -32,6 +32,7 @@ import loginLogsRoutes from './routes/login-logs';
 import userAnalyticsRoutes from './routes/user-analytics';
 import workshopBookingsRoutes from './routes/workshop-bookings';
 import placesSearchRoutes from './routes/places-search';
+import mapConfigRoutes from './routes/map-config';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -76,6 +77,7 @@ app.route('/api/login-logs', loginLogsRoutes);
 app.route('/api/user-analytics', userAnalyticsRoutes);
 app.route('/api/workshop-bookings', workshopBookingsRoutes);
 app.route('/api/places', placesSearchRoutes);
+app.route('/api/map-config', mapConfigRoutes);
 
 // Health check
 app.get('/api/health', (c) => {
