@@ -7,8 +7,7 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBhWaWieHL0kdCrDRMn0QWYPW91-ZL_1Tc&libraries=places" async defer></script>
+    <!-- Map APIs will be loaded dynamically based on user's OAuth provider -->
     <style>
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
@@ -1142,8 +1141,50 @@
             }
         }
 
+        // Load Map API Script Dynamically
+        async function loadMapAPI(provider) {
+            try {
+                console.log(`Loading Map API for provider: ${provider}`);
+                
+                // Fetch map configuration from server
+                const response = await fetch(`/api/map-config?provider=${provider}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load map config: ${response.status}`);
+                }
+                
+                const config = await response.json();
+                console.log(`Map config loaded:`, config);
+                
+                // Load the appropriate script
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = config.config.mapUrl;
+                    script.async = true;
+                    script.defer = true;
+                    
+                    script.onload = () => {
+                        console.log(`${provider} Maps API loaded successfully`);
+                        resolve();
+                    };
+                    
+                    script.onerror = () => {
+                        reject(new Error(`Failed to load ${provider} Maps API`));
+                    };
+                    
+                    document.head.appendChild(script);
+                });
+            } catch (error) {
+                console.error(`Error loading Map API:`, error);
+                throw error;
+            }
+        }
+
         // Initialize Map by Provider
         async function initializeMapByProvider() {
+            // Load Map API first
+            await loadMapAPI(currentUser.provider);
+            
+            // Then initialize the map
             if (currentUser.provider === 'google') {
                 await initializeGoogleMap();
             } else if (currentUser.provider === 'naver') {
