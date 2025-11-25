@@ -1057,6 +1057,7 @@
         let map = null;
         let markers = [];
         let classes = []; // 원데이 클래스
+        let currentInfoWindow = null; // 현재 열려있는 정보창
 
         // Check Login Status on Page Load
         async function checkLoginStatus() {
@@ -1279,32 +1280,179 @@
 
         // Initialize Naver Map
         async function initializeNaverMap() {
-            document.getElementById('map-loading').classList.remove('hidden');
-            document.getElementById('map-loading').innerHTML = `
-                <div class="text-center">
-                    <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
-                    <p class="text-gray-700 font-semibold mb-2">Naver Maps API 키가 필요합니다</p>
-                    <p class="text-gray-500 text-sm">Naver Cloud Platform에서 Maps API 키를 발급받아주세요</p>
-                </div>
-            `;
-            
-            // TODO: Implement Naver Maps when API keys are provided
-            loadClassesList();
+            try {
+                // Wait for naver.maps to be available (loaded by loadMapAPI)
+                if (typeof naver === 'undefined' || !naver.maps) {
+                    console.log('Waiting for Naver Maps API to load...');
+                    await new Promise((resolve, reject) => {
+                        const checkInterval = setInterval(() => {
+                            if (typeof naver !== 'undefined' && naver.maps) {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }
+                        }, 100);
+                        
+                        // Timeout after 10 seconds
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            reject(new Error('Naver Maps API failed to load within 10 seconds'));
+                        }, 10000);
+                    });
+                }
+                
+                document.getElementById('map-loading').classList.add('hidden');
+                
+                // Initialize map center
+                const center = classes.length > 0 && classes[0].latitude 
+                    ? new naver.maps.LatLng(classes[0].latitude, classes[0].longitude)
+                    : new naver.maps.LatLng(37.5665, 126.9780); // Default: Seoul
+                
+                // Create Naver Map
+                map = new naver.maps.Map('map', {
+                    center: center,
+                    zoom: 12,
+                    zoomControl: true,
+                    zoomControlOptions: {
+                        position: naver.maps.Position.TOP_RIGHT
+                    }
+                });
+                
+                // Add markers
+                classes.forEach(cls => {
+                    if (cls.latitude && cls.longitude) {
+                        const position = new naver.maps.LatLng(cls.latitude, cls.longitude);
+                        const marker = new naver.maps.Marker({
+                            position: position,
+                            map: map,
+                            title: cls.name || cls.title,
+                            icon: {
+                                content: `<div style="background: #9333EA; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>`,
+                                anchor: new naver.maps.Point(12, 12)
+                            }
+                        });
+                        
+                        const infoWindow = new naver.maps.InfoWindow({
+                            content: createInfoWindowContent(cls),
+                            borderWidth: 0,
+                            backgroundColor: 'transparent',
+                            disableAnchor: true,
+                            pixelOffset: new naver.maps.Point(0, -10)
+                        });
+                        
+                        naver.maps.Event.addListener(marker, 'click', function() {
+                            if (currentInfoWindow) {
+                                currentInfoWindow.close();
+                            }
+                            infoWindow.open(map, marker);
+                            currentInfoWindow = infoWindow;
+                        });
+                        
+                        markers.push({ marker, infoWindow });
+                    }
+                });
+                
+                loadClassesList();
+                
+                if (classes.length > 0 && classes[0].latitude) {
+                    map.setCenter(new naver.maps.LatLng(classes[0].latitude, classes[0].longitude));
+                }
+            } catch (error) {
+                console.error('Naver Maps initialization error:', error);
+                document.getElementById('map-loading').innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                        <p class="text-gray-700 font-semibold mb-2">지도 로드 실패</p>
+                        <p class="text-gray-500 text-sm">${error.message}</p>
+                    </div>
+                `;
+                loadClassesList();
+            }
         }
 
         // Initialize Kakao Map
         async function initializeKakaoMap() {
-            document.getElementById('map-loading').classList.remove('hidden');
-            document.getElementById('map-loading').innerHTML = `
-                <div class="text-center">
-                    <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
-                    <p class="text-gray-700 font-semibold mb-2">Kakao Maps API 키가 필요합니다</p>
-                    <p class="text-gray-500 text-sm">Kakao Developers에서 Maps JavaScript 키를 발급받아주세요</p>
-                </div>
-            `;
-            
-            // TODO: Implement Kakao Maps when API keys are provided
-            loadClassesList();
+            try {
+                // Wait for kakao.maps to be available (loaded by loadMapAPI)
+                if (typeof kakao === 'undefined' || !kakao.maps) {
+                    console.log('Waiting for Kakao Maps API to load...');
+                    await new Promise((resolve, reject) => {
+                        const checkInterval = setInterval(() => {
+                            if (typeof kakao !== 'undefined' && kakao.maps) {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }
+                        }, 100);
+                        
+                        // Timeout after 10 seconds
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            reject(new Error('Kakao Maps API failed to load within 10 seconds'));
+                        }, 10000);
+                    });
+                }
+                
+                // Load Kakao Maps
+                kakao.maps.load(() => {
+                    document.getElementById('map-loading').classList.add('hidden');
+                    
+                    // Initialize map center
+                    const center = classes.length > 0 && classes[0].latitude 
+                        ? new kakao.maps.LatLng(classes[0].latitude, classes[0].longitude)
+                        : new kakao.maps.LatLng(37.5665, 126.9780); // Default: Seoul
+                    
+                    // Create Kakao Map
+                    map = new kakao.maps.Map(document.getElementById('map'), {
+                        center: center,
+                        level: 5
+                    });
+                    
+                    // Add markers
+                    classes.forEach(cls => {
+                        if (cls.latitude && cls.longitude) {
+                            const position = new kakao.maps.LatLng(cls.latitude, cls.longitude);
+                            const marker = new kakao.maps.Marker({
+                                position: position,
+                                map: map,
+                                title: cls.name || cls.title,
+                                image: new kakao.maps.MarkerImage(
+                                    'data:image/svg+xml;base64,' + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><circle cx="12" cy="12" r="12" fill="#9333EA" stroke="white" stroke-width="3"/></svg>`),
+                                    new kakao.maps.Size(24, 24)
+                                )
+                            });
+                            
+                            const infoWindow = new kakao.maps.InfoWindow({
+                                content: createInfoWindowContent(cls)
+                            });
+                            
+                            kakao.maps.event.addListener(marker, 'click', function() {
+                                if (currentInfoWindow) {
+                                    currentInfoWindow.close();
+                                }
+                                infoWindow.open(map, marker);
+                                currentInfoWindow = infoWindow;
+                            });
+                            
+                            markers.push({ marker, infoWindow });
+                        }
+                    });
+                    
+                    loadClassesList();
+                    
+                    if (classes.length > 0 && classes[0].latitude) {
+                        map.setCenter(new kakao.maps.LatLng(classes[0].latitude, classes[0].longitude));
+                    }
+                });
+            } catch (error) {
+                console.error('Kakao Maps initialization error:', error);
+                document.getElementById('map-loading').innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                        <p class="text-gray-700 font-semibold mb-2">지도 로드 실패</p>
+                        <p class="text-gray-500 text-sm">${error.message}</p>
+                    </div>
+                `;
+                loadClassesList();
+            }
         }
 
         // Create Info Window Content
