@@ -922,6 +922,96 @@ function getBookingStatusText(status) {
     return texts[status] || '알 수 없음';
 }
 
+// 현재 위치 사용하기
+async function useCurrentLocation() {
+    // 위치 권한 지원 확인
+    if (!navigator.geolocation) {
+        alert('이 브라우저는 위치 서비스를 지원하지 않습니다.');
+        return;
+    }
+
+    // 로딩 표시
+    const button = event.target.closest('button');
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>위치 가져오는 중...';
+
+    try {
+        console.log('📍 위치 권한 요청 중...');
+        
+        // 위치 권한 요청
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        });
+
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+
+        console.log(`✅ 위치 획득: lat=${latitude}, lng=${longitude}, accuracy=${accuracy}m`);
+
+        // 서버에 위치 정보 전송
+        const response = await fetch('/api/user/location', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                latitude: latitude,
+                longitude: longitude
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || '위치 업데이트 실패');
+        }
+
+        const result = await response.json();
+        console.log('✅ 서버 위치 업데이트 성공:', result);
+
+        // 주소 필드에 좌표 정보 표시
+        const addressField = document.getElementById('profile-address');
+        addressField.value = `현재 위치 (위도: ${latitude.toFixed(6)}, 경도: ${longitude.toFixed(6)})`;
+        addressField.placeholder = '주소를 입력하거나 현재 위치를 사용하세요';
+
+        // 성공 메시지
+        alert(`✅ 현재 위치가 저장되었습니다!\n\n이제 인근 공방을 쉽게 찾을 수 있습니다.\n(정확도: 약 ${Math.round(accuracy)}m)`);
+
+    } catch (error) {
+        console.error('❌ 위치 가져오기 실패:', error);
+        
+        // 에러 메시지 처리
+        let errorMessage = '위치를 가져올 수 없습니다.';
+        
+        if (error.code) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = '위치 권한이 거부되었습니다.\n\n브라우저 설정에서 위치 권한을 허용해주세요.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = '위치 정보를 사용할 수 없습니다.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = '위치 요청 시간이 초과되었습니다.\n\n다시 시도해주세요.';
+                    break;
+            }
+        } else {
+            errorMessage = error.message || errorMessage;
+        }
+        
+        alert('❌ ' + errorMessage);
+    } finally {
+        // 버튼 원상복구
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+    }
+}
+
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', async function() {
     // 동적 CSS 먼저 로드 (캐싱 우회)

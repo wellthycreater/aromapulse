@@ -204,13 +204,21 @@
         <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
             <!-- Section Header -->
             <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-8">
-                <h2 class="text-3xl font-bold mb-3">
-                    <i class="fas fa-map-marked-alt mr-3"></i>
-                    전국 아로마 공방 찾기
-                </h2>
-                <p class="text-purple-100">
-                    <span id="map-provider-name">Google Maps</span>로 가까운 공방을 찾아보세요
-                </p>
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-3">
+                            <i class="fas fa-map-marked-alt mr-3"></i>
+                            전국 아로마 공방 찾기
+                        </h2>
+                        <p class="text-purple-100">
+                            <span id="map-provider-name">Google Maps</span>로 가까운 공방을 찾아보세요
+                        </p>
+                    </div>
+                    <button onclick="useCurrentLocationForMap()" class="bg-white text-purple-600 px-6 py-3 rounded-xl font-semibold hover:bg-purple-50 transition flex items-center gap-2 shadow-lg">
+                        <i class="fas fa-location-crosshairs"></i>
+                        <span>내 위치로 검색</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Map Container -->
@@ -1806,6 +1814,128 @@
             window.location.href = `mailto:support@wellthykorea.com?subject=${subject}&body=${body}`;
         }
         
+        // 현재 위치 사용하여 지도 업데이트
+        async function useCurrentLocationForMap() {
+            // 위치 권한 지원 확인
+            if (!navigator.geolocation) {
+                alert('이 브라우저는 위치 서비스를 지원하지 않습니다.');
+                return;
+            }
+
+            // 로딩 표시
+            const button = event.target.closest('button');
+            const originalHTML = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>위치 확인 중...';
+
+            try {
+                console.log('📍 [Healing Map] 위치 권한 요청 중...');
+                
+                // 위치 권한 요청
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                });
+
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                console.log(`✅ [Healing Map] 위치 획득: lat=${latitude}, lng=${longitude}, accuracy=${accuracy}m`);
+
+                // 서버에 위치 정보 전송
+                const response = await fetch('/api/user/location', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        latitude: latitude,
+                        longitude: longitude
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '위치 업데이트 실패');
+                }
+
+                const result = await response.json();
+                console.log('✅ [Healing Map] 서버 위치 업데이트 성공:', result);
+
+                // 인근 공방만 표시하도록 API 재호출
+                alert(`✅ 현재 위치가 저장되었습니다!\n\n인근 공방을 검색합니다...\n(정확도: 약 ${Math.round(accuracy)}m)`);
+                
+                // 인근 공방 필터링하여 다시 로드
+                await loadNearbyClasses(latitude, longitude);
+
+            } catch (error) {
+                console.error('❌ [Healing Map] 위치 가져오기 실패:', error);
+                
+                // 에러 메시지 처리
+                let errorMessage = '위치를 가져올 수 없습니다.';
+                
+                if (error.code) {
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '위치 권한이 거부되었습니다.\n\n브라우저 설정에서 위치 권한을 허용해주세요.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '위치 정보를 사용할 수 없습니다.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '위치 요청 시간이 초과되었습니다.\n\n다시 시도해주세요.';
+                            break;
+                    }
+                } else {
+                    errorMessage = error.message || errorMessage;
+                }
+                
+                alert('❌ ' + errorMessage);
+            } finally {
+                // 버튼 원상복구
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+            }
+        }
+
+        // 인근 공방 로드 (위치 기반 필터링)
+        async function loadNearbyClasses(latitude, longitude) {
+            try {
+                console.log(`🔍 [Nearby Classes] 인근 공방 검색: lat=${latitude}, lng=${longitude}`);
+                
+                // nearby=true 파라미터로 인근 클래스만 조회 (기본 50km)
+                const response = await fetch(`/api/oneday-classes?nearby=true&maxDistance=50&provider=${currentUser.provider}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API 요청 실패: ${response.status}`);
+                }
+                
+                const nearbyClasses = await response.json();
+                console.log(`✅ [Nearby Classes] ${nearbyClasses.length}개 인근 공방 발견`);
+                
+                if (nearbyClasses.length === 0) {
+                    alert('😢 50km 이내에 공방이 없습니다.\n\n검색 반경을 늘리거나 다른 지역을 검색해보세요.');
+                    return;
+                }
+                
+                // 전역 classes 변수 업데이트
+                classes = nearbyClasses;
+                
+                // 지도와 리스트 다시 렌더링
+                await initializeMapByProvider();
+                
+                alert(`✅ ${nearbyClasses.length}개의 인근 공방을 찾았습니다!\n\n지도에서 확인해보세요.`);
+                
+            } catch (error) {
+                console.error('❌ [Nearby Classes] 인근 공방 로드 실패:', error);
+                alert('인근 공방을 불러오는데 실패했습니다.\n\n' + error.message);
+            }
+        }
+
         // Page load
         document.addEventListener('DOMContentLoaded', function() {
             loadProperties();

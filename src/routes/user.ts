@@ -457,4 +457,70 @@ user.delete('/profile-image', async (c) => {
   }
 });
 
+// 사용자 위치 업데이트 (Geolocation API로부터 받은 좌표)
+user.put('/location', async (c) => {
+  try {
+    // JWT 토큰에서 사용자 정보 가져오기
+    const token = getCookie(c, 'auth_token');
+    
+    if (!token) {
+      return c.json({ 
+        error: '로그인이 필요합니다',
+        autoLogout: true 
+      }, 401);
+    }
+    
+    const jwtManager = new JWTManager(c.env.JWT_SECRET);
+    const payload = await jwtManager.verify(token);
+    
+    if (!payload || !payload.userId) {
+      return c.json({ 
+        error: '유효하지 않은 토큰입니다',
+        autoLogout: true 
+      }, 401);
+    }
+    
+    const userId = payload.userId;
+    const data = await c.req.json();
+    
+    console.log('📍 [Location Update] User:', userId, 'Data:', data);
+    
+    // 필수 필드 검증
+    if (typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
+      return c.json({ error: '위도와 경도는 숫자여야 합니다' }, 400);
+    }
+    
+    // 위도/경도 범위 검증
+    if (data.latitude < -90 || data.latitude > 90) {
+      return c.json({ error: '위도는 -90에서 90 사이여야 합니다' }, 400);
+    }
+    
+    if (data.longitude < -180 || data.longitude > 180) {
+      return c.json({ error: '경도는 -180에서 180 사이여야 합니다' }, 400);
+    }
+    
+    // 위치 업데이트
+    await c.env.DB.prepare(
+      'UPDATE users SET user_latitude = ?, user_longitude = ? WHERE id = ?'
+    ).bind(data.latitude, data.longitude, userId).run();
+    
+    console.log(`✅ [Location Update] Updated: lat=${data.latitude}, lng=${data.longitude}`);
+    
+    return c.json({
+      message: '위치가 성공적으로 업데이트되었습니다',
+      location: {
+        latitude: data.latitude,
+        longitude: data.longitude
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('❌ [Location Update] Error:', error);
+    return c.json({ 
+      error: '위치 업데이트 실패',
+      details: error.message
+    }, 500);
+  }
+});
+
 export default user;
