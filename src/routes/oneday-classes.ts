@@ -1,6 +1,9 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
 import { filterByOAuthProvider, type OAuthProvider } from '../utils/oauth-filter';
+import { calculateDistance } from '../utils/geocoding';
+import { getCookie } from 'hono/cookie';
+import { JWTManager } from '../lib/auth/jwt';
 
 const onedayClasses = new Hono<{ Bindings: Bindings }>();
 
@@ -9,6 +12,8 @@ onedayClasses.get('/', async (c) => {
   try {
     const limit = c.req.query('limit') || '50';
     const provider = c.req.query('provider') as OAuthProvider | undefined; // 'google', 'naver', 'kakao'
+    const nearby = c.req.query('nearby') === 'true'; // 위치 기반 필터링 활성화
+    const maxDistance = parseFloat(c.req.query('maxDistance') || '50'); // 기본 50km
     
     let query = `SELECT oc.*, u.name as provider_name 
        FROM oneday_classes oc
@@ -19,14 +24,71 @@ onedayClasses.get('/', async (c) => {
     
     const result = await c.env.DB.prepare(query).bind(parseInt(limit)).all();
     
+    let classes = result.results as any[];
+    
+    // 위치 기반 필터링이 활성화된 경우
+    if (nearby) {
+      try {
+        // JWT 토큰에서 사용자 ID 추출
+        const token = getCookie(c, 'auth_token');
+        if (token) {
+          const jwtManager = new JWTManager(c.env.JWT_SECRET);
+          const payload = await jwtManager.verify(token);
+          
+          if (payload && payload.userId) {
+            // 사용자 좌표 조회
+            const user = await c.env.DB.prepare(
+              'SELECT user_latitude, user_longitude FROM users WHERE id = ?'
+            ).bind(payload.userId).first<{ user_latitude: number | null; user_longitude: number | null }>();
+            
+            if (user && user.user_latitude && user.user_longitude) {
+              console.log(`🗺️ [Location Filter] User location: lat=${user.user_latitude}, lng=${user.user_longitude}, maxDistance=${maxDistance}km`);
+              
+              // 거리 계산 및 필터링
+              classes = classes.filter(classItem => {
+                if (!classItem.latitude || !classItem.longitude) {
+                  // 좌표가 없는 클래스는 제외
+                  return false;
+                }
+                
+                const distance = calculateDistance(
+                  user.user_latitude!,
+                  user.user_longitude!,
+                  classItem.latitude,
+                  classItem.longitude
+                );
+                
+                // 거리 정보를 클래스 객체에 추가
+                classItem.distance = parseFloat(distance.toFixed(2));
+                
+                return distance <= maxDistance;
+              });
+              
+              // 거리순으로 정렬
+              classes.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+              
+              console.log(`🗺️ [Location Filter] Found ${classes.length} classes within ${maxDistance}km`);
+            } else {
+              console.warn('⚠️ [Location Filter] User location not available, showing all classes');
+            }
+          }
+        } else {
+          console.warn('⚠️ [Location Filter] No auth token, showing all classes');
+        }
+      } catch (error: any) {
+        console.error('❌ [Location Filter] Error:', error);
+        // 에러 발생 시 전체 목록 반환
+      }
+    }
+    
     // OAuth 제공자별 필터링 적용 (해시 기반)
     // 카카오/구글/네이버 로그인 사용자는 각각 다른 클래스만 볼 수 있음
     const filteredResults = filterByOAuthProvider(
-      result.results as Array<{ id: number }>,
+      classes as Array<{ id: number }>,
       provider
     );
     
-    console.log(`[OAuth Filter] Provider: ${provider || 'none'}, Total: ${result.results.length}, Filtered: ${filteredResults.length}`);
+    console.log(`[OAuth Filter] Provider: ${provider || 'none'}, Total: ${classes.length}, Filtered: ${filteredResults.length}`);
     
     return c.json(filteredResults);
     
