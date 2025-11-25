@@ -2150,36 +2150,46 @@
 
                 console.log(`✅ [Healing Map] 위치 획득: lat=${latitude}, lng=${longitude}, accuracy=${accuracy}m`);
 
-                // 서버에 위치 정보 전송
-                const response = await fetch('/api/user/location', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include', // ✅ 쿠키(인증토큰) 포함
-                    body: JSON.stringify({
-                        latitude: latitude,
-                        longitude: longitude
-                    })
-                });
+                // 서버에 위치 정보 전송 (실패해도 계속 진행)
+                try {
+                    const response = await fetch('/api/user/location', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include', // ✅ 쿠키(인증토큰) 포함
+                        body: JSON.stringify({
+                            latitude: latitude,
+                            longitude: longitude
+                        })
+                    });
 
-                if (!response.ok) {
-                    let errorMsg = '위치 업데이트 실패';
-                    try {
-                        const error = await response.json();
-                        errorMsg = error.error || errorMsg;
-                    } catch (e) {
-                        errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('✅ [Location Update] 서버 저장 성공:', result);
+                    } else {
+                        let errorMsg = '서버 저장 실패';
+                        try {
+                            const error = await response.json();
+                            errorMsg = error.error || errorMsg;
+                        } catch (e) {
+                            errorMsg = `HTTP ${response.status}`;
+                        }
+                        console.warn('⚠️ [Location Update] 서버 저장 실패 (계속 진행):', errorMsg);
                     }
-                    console.error('❌ [Location Update] Server error:', errorMsg);
-                    throw new Error(errorMsg);
+                } catch (serverError) {
+                    console.warn('⚠️ [Location Update] 서버 요청 실패 (계속 진행):', serverError);
                 }
 
-                const result = await response.json();
-                console.log('✅ [Healing Map] 서버 위치 업데이트 성공:', result);
+                // 위치 정보를 sessionStorage에 저장 (임시)
+                sessionStorage.setItem('userLocation', JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude,
+                    timestamp: Date.now()
+                }));
 
                 // 인근 공방만 표시하도록 API 재호출
-                alert(`✅ 현재 위치가 저장되었습니다!\n\n인근 공방을 검색합니다...\n(정확도: 약 ${Math.round(accuracy)}m)`);
+                alert(`✅ 현재 위치가 설정되었습니다!\n\n인근 공방을 검색합니다...\n(정확도: 약 ${Math.round(accuracy)}m)`);
                 
                 // 인근 공방 필터링하여 다시 로드
                 await loadNearbyClasses(latitude, longitude);
