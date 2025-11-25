@@ -7,6 +7,8 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Kakao Postcode Service for address search -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <!-- Map APIs will be loaded dynamically based on user's OAuth provider -->
     <style>
         @keyframes float {
@@ -214,7 +216,7 @@
                             <span id="map-provider-name">Google Maps</span>로 가까운 공방을 찾아보세요
                         </p>
                     </div>
-                    <button onclick="useCurrentLocationForMap()" class="bg-white text-purple-600 px-6 py-3 rounded-xl font-semibold hover:bg-purple-50 transition flex items-center gap-2 shadow-lg">
+                    <button onclick="showLocationModal()" class="bg-white text-purple-600 px-6 py-3 rounded-xl font-semibold hover:bg-purple-50 transition flex items-center gap-2 shadow-lg">
                         <i class="fas fa-location-crosshairs"></i>
                         <span>내 위치로 검색</span>
                     </button>
@@ -2247,6 +2249,291 @@
             }
         }
 
+        // ========================================
+        // 위치 선택 모달 관련 함수
+        // ========================================
+        
+        function showLocationModal() {
+            console.log('[Location Modal] Opening modal');
+            
+            // 제공자별 UI 업데이트
+            updateLocationModalUI();
+            
+            // 저장된 주소가 있으면 표시
+            if (currentUser && currentUser.address && currentUser.user_latitude && currentUser.user_longitude) {
+                document.getElementById('savedAddressInfo').classList.remove('hidden');
+                document.getElementById('savedAddressText').textContent = currentUser.address;
+            } else {
+                document.getElementById('savedAddressInfo').classList.add('hidden');
+            }
+            
+            document.getElementById('locationModal').classList.remove('hidden');
+        }
+        
+        function closeLocationModal() {
+            console.log('[Location Modal] Closing modal');
+            document.getElementById('locationModal').classList.add('hidden');
+        }
+        
+        function updateLocationModalUI() {
+            if (!currentUser) return;
+            
+            const provider = currentUser.provider;
+            const iconEl = document.getElementById('addressProviderIcon');
+            const nameEl = document.getElementById('addressProviderName');
+            const descEl = document.getElementById('addressProviderDesc');
+            
+            if (provider === 'naver') {
+                iconEl.className = 'w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition';
+                iconEl.innerHTML = '<i class="fas fa-map-marked-alt text-green-600 text-xl"></i>';
+                nameEl.textContent = 'Naver 지도로 주소 검색';
+                descEl.textContent = '네이버 지도를 사용하여 정확한 주소를 검색합니다';
+            } else if (provider === 'kakao') {
+                iconEl.className = 'w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center group-hover:bg-yellow-200 transition';
+                iconEl.innerHTML = '<i class="fas fa-search-location text-yellow-600 text-xl"></i>';
+                nameEl.textContent = 'Kakao 우편번호로 주소 검색';
+                descEl.textContent = '카카오 우편번호 서비스를 사용하여 주소를 검색합니다';
+            } else if (provider === 'google') {
+                iconEl.className = 'w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition';
+                iconEl.innerHTML = '<i class="fas fa-map-pin text-blue-600 text-xl"></i>';
+                nameEl.textContent = 'Google Places로 주소 검색';
+                descEl.textContent = '구글 플레이스를 사용하여 정확한 주소를 검색합니다';
+            }
+        }
+        
+        function useGPS() {
+            console.log('[GPS] Using GPS location');
+            closeLocationModal();
+            useCurrentLocationForMap();
+        }
+        
+        function searchAddressByProvider() {
+            if (!currentUser) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+            
+            const provider = currentUser.provider;
+            console.log(`[Address Search] Using ${provider} address search`);
+            
+            if (provider === 'naver') {
+                searchAddressNaver();
+            } else if (provider === 'kakao') {
+                searchAddressKakao();
+            } else if (provider === 'google') {
+                searchAddressGoogle();
+            }
+        }
+        
+        function useSavedAddress() {
+            if (!currentUser || !currentUser.user_latitude || !currentUser.user_longitude) {
+                alert('저장된 주소 정보가 없습니다.');
+                return;
+            }
+            
+            console.log('[Saved Address] Using saved address:', currentUser.address);
+            closeLocationModal();
+            
+            // 저장된 좌표로 검색
+            loadNearbyClasses();
+        }
+        
+        // ========================================
+        // Naver 주소 검색
+        // ========================================
+        
+        function searchAddressNaver() {
+            const address = prompt('주소를 입력하세요 (예: 인천 계양구 작전동 863-17)');
+            
+            if (!address) return;
+            
+            console.log('[Naver Address] Searching:', address);
+            closeLocationModal();
+            
+            // Naver Geocoding API 호출
+            geocodeAddressNaver(address);
+        }
+        
+        async function geocodeAddressNaver(address) {
+            try {
+                console.log('[Naver Geocoding] Converting address to coordinates:', address);
+                
+                // 백엔드 API를 통해 Naver Geocoding 호출
+                const response = await fetch(`/api/geocode/naver?address=${encodeURIComponent(address)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Naver Geocoding API 호출 실패');
+                }
+                
+                const data = await response.json();
+                
+                if (data.latitude && data.longitude) {
+                    console.log('[Naver Geocoding] Success:', data);
+                    
+                    // 사용자 위치 업데이트
+                    await updateUserLocation(data.latitude, data.longitude, address);
+                    
+                    // 지도 새로고침
+                    loadNearbyClasses();
+                } else {
+                    throw new Error('주소를 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('[Naver Geocoding] Error:', error);
+                alert('주소 변환에 실패했습니다.\n\n' + error.message);
+            }
+        }
+        
+        // ========================================
+        // Kakao 주소 검색
+        // ========================================
+        
+        function searchAddressKakao() {
+            console.log('[Kakao Address] Opening Kakao Postcode');
+            closeLocationModal();
+            
+            // Kakao 우편번호 서비스 열기
+            document.getElementById('kakaoAddressModal').classList.remove('hidden');
+            
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    console.log('[Kakao Address] Selected:', data);
+                    
+                    const fullAddress = data.roadAddress || data.jibunAddress;
+                    
+                    // Kakao Geocoding으로 좌표 변환
+                    geocodeAddressKakao(fullAddress);
+                    
+                    closeKakaoAddressModal();
+                },
+                width: '100%',
+                height: '100%'
+            }).embed(document.getElementById('kakaoAddressLayer'));
+        }
+        
+        function closeKakaoAddressModal() {
+            document.getElementById('kakaoAddressModal').classList.add('hidden');
+            document.getElementById('kakaoAddressLayer').innerHTML = '';
+        }
+        
+        async function geocodeAddressKakao(address) {
+            try {
+                console.log('[Kakao Geocoding] Converting address to coordinates:', address);
+                
+                // 백엔드 API를 통해 Kakao Geocoding 호출
+                const response = await fetch(`/api/geocode/kakao?address=${encodeURIComponent(address)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Kakao Geocoding API 호출 실패');
+                }
+                
+                const data = await response.json();
+                
+                if (data.latitude && data.longitude) {
+                    console.log('[Kakao Geocoding] Success:', data);
+                    
+                    // 사용자 위치 업데이트
+                    await updateUserLocation(data.latitude, data.longitude, address);
+                    
+                    // 지도 새로고침
+                    loadNearbyClasses();
+                } else {
+                    throw new Error('주소를 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('[Kakao Geocoding] Error:', error);
+                alert('주소 변환에 실패했습니다.\n\n' + error.message);
+            }
+        }
+        
+        // ========================================
+        // Google 주소 검색
+        // ========================================
+        
+        function searchAddressGoogle() {
+            const address = prompt('주소를 입력하세요 (예: 인천 계양구 작전동 863-17)');
+            
+            if (!address) return;
+            
+            console.log('[Google Address] Searching:', address);
+            closeLocationModal();
+            
+            // Google Geocoding API 호출
+            geocodeAddressGoogle(address);
+        }
+        
+        async function geocodeAddressGoogle(address) {
+            try {
+                console.log('[Google Geocoding] Converting address to coordinates:', address);
+                
+                // 백엔드 API를 통해 Google Geocoding 호출
+                const response = await fetch(`/api/geocode/google?address=${encodeURIComponent(address)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Google Geocoding API 호출 실패');
+                }
+                
+                const data = await response.json();
+                
+                if (data.latitude && data.longitude) {
+                    console.log('[Google Geocoding] Success:', data);
+                    
+                    // 사용자 위치 업데이트
+                    await updateUserLocation(data.latitude, data.longitude, address);
+                    
+                    // 지도 새로고침
+                    loadNearbyClasses();
+                } else {
+                    throw new Error('주소를 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('[Google Geocoding] Error:', error);
+                alert('주소 변환에 실패했습니다.\n\n' + error.message);
+            }
+        }
+        
+        // ========================================
+        // 사용자 위치 업데이트 (공통)
+        // ========================================
+        
+        async function updateUserLocation(latitude, longitude, address) {
+            try {
+                console.log('[Update Location] Saving location:', { latitude, longitude, address });
+                
+                const response = await fetch('/api/user/location', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        latitude,
+                        longitude,
+                        address
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('위치 업데이트 실패');
+                }
+                
+                const data = await response.json();
+                console.log('[Update Location] Success:', data);
+                
+                // currentUser 정보 업데이트
+                if (currentUser) {
+                    currentUser.user_latitude = latitude;
+                    currentUser.user_longitude = longitude;
+                    currentUser.address = address;
+                }
+                
+                alert(`✅ 위치가 성공적으로 설정되었습니다!\n\n📍 ${address}\n📏 위도: ${latitude.toFixed(6)}, 경도: ${longitude.toFixed(6)}`);
+                
+            } catch (error) {
+                console.error('[Update Location] Error:', error);
+                alert('위치 저장에 실패했습니다.\n\n' + error.message);
+            }
+        }
+
         // Page load
         document.addEventListener('DOMContentLoaded', function() {
             loadProperties();
@@ -2400,6 +2687,92 @@
                     닫기
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- 위치 선택 모달 -->
+    <div id="locationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+            <button onclick="closeLocationModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+                <i class="fas fa-map-marker-alt text-purple-600 mr-2"></i>
+                내 위치 설정
+            </h3>
+            
+            <p class="text-gray-600 text-center mb-8">
+                위치를 설정하는 방법을 선택하세요
+            </p>
+            
+            <!-- GPS 자동 감지 옵션 -->
+            <button onclick="useGPS()" class="w-full mb-4 p-6 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition group">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition">
+                            <i class="fas fa-location-crosshairs text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <h4 class="font-bold text-gray-900 mb-1 flex items-center">
+                            현재 위치 자동 감지
+                            <span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">빠름</span>
+                        </h4>
+                        <p class="text-sm text-gray-600">
+                            GPS를 사용하여 현재 위치를 자동으로 감지합니다
+                        </p>
+                    </div>
+                </div>
+            </button>
+            
+            <div class="text-center text-gray-400 font-semibold my-4">또는</div>
+            
+            <!-- 주소 검색 옵션 (제공자별 다른 아이콘) -->
+            <button onclick="searchAddressByProvider()" class="w-full p-6 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition group">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <div id="addressProviderIcon" class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition">
+                            <i class="fas fa-home text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <h4 class="font-bold text-gray-900 mb-1 flex items-center">
+                            <span id="addressProviderName">주소로 직접 입력</span>
+                            <span class="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">정확</span>
+                        </h4>
+                        <p class="text-sm text-gray-600" id="addressProviderDesc">
+                            집이나 회사 주소를 입력하여 위치를 설정합니다
+                        </p>
+                    </div>
+                </div>
+            </button>
+            
+            <!-- 저장된 주소 표시 (있는 경우) -->
+            <div id="savedAddressInfo" class="hidden mt-6 p-4 bg-gray-50 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">저장된 주소</p>
+                <p id="savedAddressText" class="text-sm text-gray-900 font-medium"></p>
+                <button onclick="useSavedAddress()" class="mt-2 text-xs text-purple-600 hover:text-purple-700 font-semibold">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    이 주소로 검색하기
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Kakao 주소 검색 모달 -->
+    <div id="kakaoAddressModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full relative">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">
+                    <i class="fas fa-search text-yellow-500 mr-2"></i>
+                    Kakao 주소 검색
+                </h3>
+                <button onclick="closeKakaoAddressModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="kakaoAddressLayer" style="height: 500px;"></div>
         </div>
     </div>
 

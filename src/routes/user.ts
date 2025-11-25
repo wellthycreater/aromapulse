@@ -499,10 +499,10 @@ user.put('/location', async (c) => {
       return c.json({ error: '경도는 -180에서 180 사이여야 합니다' }, 400);
     }
     
-    // 위치 업데이트
+    // 위치 및 주소 업데이트
     await c.env.DB.prepare(
-      'UPDATE users SET user_latitude = ?, user_longitude = ? WHERE id = ?'
-    ).bind(data.latitude, data.longitude, userId).run();
+      'UPDATE users SET user_latitude = ?, user_longitude = ?, address = ? WHERE id = ?'
+    ).bind(data.latitude, data.longitude, data.address || null, userId).run();
     
     console.log(`✅ [Location Update] Updated: lat=${data.latitude}, lng=${data.longitude}`);
     
