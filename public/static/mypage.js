@@ -462,58 +462,82 @@ async function loadBookings(type = 'all') {
     const bookingsEmpty = document.getElementById('bookings-empty');
     
     try {
-        const response = await fetch('/api/bookings/my-bookings', {
+        console.log('[MyPage] Loading reservations...');
+        
+        // 새로운 예약 API 호출
+        const response = await fetch('/api/reservations/my', {
             credentials: 'include'  // 쿠키 포함
         });
         
-        if (!response.ok) throw new Error('Failed to load bookings');
+        console.log('[MyPage] Response status:', response.status);
         
-        const data = await response.json();
-        let bookings = data.bookings || [];
-        
-        // 타입 필터링
-        if (type !== 'all') {
-            bookings = bookings.filter(b => b.type === type);
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('[MyPage] Failed to load reservations:', errorData);
+            throw new Error(errorData.error || 'Failed to load reservations');
         }
         
-        if (bookings.length === 0) {
+        let reservations = await response.json();
+        console.log('[MyPage] Loaded reservations:', reservations);
+        
+        // reservation_type 기반 타입 필터링
+        if (type !== 'all') {
+            const typeMap = {
+                'workshop': 'workshop',
+                'product': 'product',
+                'class': 'class'
+            };
+            reservations = reservations.filter(r => r.reservation_type === typeMap[type]);
+        }
+        
+        if (reservations.length === 0) {
             bookingsList.innerHTML = '';
             bookingsEmpty.style.display = 'block';
+            console.log('[MyPage] No reservations found');
             return;
         }
         
         bookingsEmpty.style.display = 'none';
-        bookingsList.innerHTML = bookings.map(booking => `
+        bookingsList.innerHTML = reservations.map(reservation => {
+            // 예약 타입별 제목 결정
+            const title = reservation.class_title || reservation.product_name || '예약 항목';
+            const location = reservation.class_location || reservation.class_address || '';
+            
+            return `
             <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all">
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium mb-2 ${
-                            booking.type === 'workshop' ? 'bg-purple-50 text-purple-600' : 
-                            booking.type === 'product' ? 'bg-blue-50 text-blue-600' : 
+                            reservation.reservation_type === 'workshop' ? 'bg-purple-50 text-purple-600' : 
+                            reservation.reservation_type === 'product' ? 'bg-blue-50 text-blue-600' : 
                             'bg-green-50 text-green-600'
                         }">
                             ${
-                                booking.type === 'workshop' ? '워크샵' : 
-                                booking.type === 'product' ? '쇼핑 예약' : 
+                                reservation.reservation_type === 'workshop' ? '워크샵' : 
+                                reservation.reservation_type === 'product' ? '쇼핑 예약' : 
                                 '원데이 클래스'
                             }
                         </span>
-                        <p class="text-xs text-gray-400">예약일: ${new Date(booking.created_at).toLocaleDateString('ko-KR')}</p>
+                        <p class="text-xs text-gray-400">예약일: ${new Date(reservation.created_at).toLocaleDateString('ko-KR')}</p>
                     </div>
-                    <span class="px-3 py-1.5 rounded-full text-xs font-medium ${getBookingStatusClass(booking.status)}">
-                        ${getBookingStatusText(booking.status)}
+                    <span class="px-3 py-1.5 rounded-full text-xs font-medium ${getBookingStatusClass(reservation.status)}">
+                        ${getBookingStatusText(reservation.status)}
                     </span>
                 </div>
                 <div class="mb-4">
-                    <h4 class="font-semibold text-gray-800 mb-3 text-sm">${booking.title || '프로그램명'}</h4>
+                    <h4 class="font-semibold text-gray-800 mb-3 text-sm">${title}</h4>
                     <div class="flex gap-4 text-xs text-gray-600">
-                        <span><i class="fas fa-calendar mr-1.5"></i>${booking.date || '날짜 미정'}</span>
-                        <span><i class="${booking.type === 'product' ? 'fas fa-box' : 'fas fa-users'} mr-1.5"></i>${booking.participants || 1}${booking.type === 'product' ? '개' : '명'}</span>
+                        <span><i class="fas fa-calendar mr-1.5"></i>${reservation.reservation_date} ${reservation.reservation_time || ''}</span>
+                        <span><i class="${reservation.reservation_type === 'product' ? 'fas fa-box' : 'fas fa-users'} mr-1.5"></i>${reservation.participants || 1}${reservation.reservation_type === 'product' ? '개' : '명'}</span>
                     </div>
+                    ${location ? `<div class="mt-2 text-xs text-gray-500"><i class="fas fa-map-marker-alt mr-1.5"></i>${location}</div>` : ''}
                 </div>
                 <div class="flex justify-between items-center pt-4 border-t border-gray-100">
-                    <span class="text-lg font-bold text-gray-800">${booking.amount?.toLocaleString() || '0'}<span class="text-sm font-normal text-gray-500">원</span></span>
-                    <button onclick="viewBookingDetail('${booking.booking_id}')" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition text-sm font-medium">
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1">연락처: ${reservation.contact_phone}</div>
+                        <div class="text-xs text-gray-500">${reservation.contact_name}</div>
+                    </div>
+                    <button onclick="viewReservationDetail(${reservation.id})" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition text-sm font-medium">
                         상세보기
                     </button>
                 </div>
@@ -873,6 +897,10 @@ function viewOrderDetail(orderId) {
 
 function viewBookingDetail(bookingId) {
     alert(`예약 상세보기: ${bookingId}\n(개발 중)`);
+}
+
+function viewReservationDetail(reservationId) {
+    alert(`예약 상세보기: ${reservationId}\n(개발 중)`);
 }
 
 function viewConsultationDetail(consultationId) {
