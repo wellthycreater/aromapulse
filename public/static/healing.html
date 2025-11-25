@@ -1243,11 +1243,12 @@
                         }
                     }, 100);
                     
-                    // Timeout after 10 seconds
+                    // Timeout after 30 seconds
                     setTimeout(() => {
                         clearInterval(checkInterval);
-                        throw new Error('Google Maps API failed to load within 10 seconds');
-                    }, 10000);
+                        console.error('[GOOGLE] API load timeout');
+                        throw new Error('Google Maps API failed to load within 30 seconds. Please check your internet connection or try refreshing the page.');
+                    }, 30000);
                 });
             }
             
@@ -1361,11 +1362,21 @@
                             }
                         }, 100);
                         
-                        // Timeout after 10 seconds
+                        // Timeout after 30 seconds
                         setTimeout(() => {
                             clearInterval(checkInterval);
-                            reject(new Error('Naver Maps API failed to load within 10 seconds'));
-                        }, 10000);
+                            console.error('[NAVER] API load timeout - checking script status...');
+                            const scripts = document.querySelectorAll('script[data-map-provider="naver"]');
+                            console.error('[NAVER] Script tags found:', scripts.length);
+                            scripts.forEach((s, i) => {
+                                console.error(`[NAVER] Script ${i}:`, {
+                                    src: s.src,
+                                    loaded: s.readyState,
+                                    error: s.onerror
+                                });
+                            });
+                            reject(new Error('Naver Maps API failed to load within 30 seconds. Please check your internet connection or try refreshing the page.'));
+                        }, 30000);
                     });
                 }
                 
@@ -1507,11 +1518,12 @@
                             }
                         }, 100);
                         
-                        // Timeout after 10 seconds
+                        // Timeout after 30 seconds
                         setTimeout(() => {
                             clearInterval(checkInterval);
-                            reject(new Error('Kakao Maps API failed to load within 10 seconds'));
-                        }, 10000);
+                            console.error('[KAKAO] API load timeout');
+                            reject(new Error('Kakao Maps API failed to load within 30 seconds. Please check your internet connection or try refreshing the page.'));
+                        }, 30000);
                     });
                 }
                 
