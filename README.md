@@ -37,17 +37,33 @@
 
 ## 📋 현재 완료된 기능
 
-### ✅ 최신 업데이트 (2024-11-24)
+### ✅ 최신 업데이트 (2025-11-25) 🎉
+- **Naver Maps 완전 구현** ✅
+  - Naver 로그인 사용자에게 Naver Maps 자동 제공
+  - 지도 렌더링, Geocoding, 마커, 정보창 완벽 작동
+  - "내 위치로 검색" 기능으로 50km 내 공방 필터링
+  - Web 서비스 URL: `aromapulse.pages.dev` 사용
+- **Google Maps 안정적 작동** ✅
+  - Google 로그인 사용자에게 Google Maps 제공
+  - 마커 및 정보창 정상 표시
+- **위치 기반 기능 완전 구현** ✅
+  - Geolocation API를 통한 자동 위치 감지
+  - 사용자 위치 DB 저장 (`user_latitude`, `user_longitude`)
+  - 50km 내 공방 필터링 및 거리순 정렬
+  - 위치 검색 최적화 인덱스 생성
+- **Kakao Maps 준비 완료** ✅
+  - Kakao Maps API 키만 설정하면 즉시 사용 가능
+  - Kakao 로그인 사용자에게 자동 제공 예정
+
+### 이전 업데이트 (2024-11-24)
 - **원데이 클래스 예약 시스템** ✅
   - 클래스 목록에서 바로 예약 가능
   - 예약 모달 통합 (날짜/시간/인원/예약자 정보)
-  - iCalendar (.ics) 파일 생성 → Google Calendar 연동
+  - iCalendar (.ics) 파일 생성 → Google/Naver/Kakao Calendar 연동
   - 로그인 사용자만 예약 가능
   - 14개 서울 지역 원데이 클래스 데이터 시드
 - **테스트 로그인 엔드포인트** ✅
   - `/api/auth/test-google-login` - 개발/테스트용 자동 로그인
-- **Google Maps 통합** ✅
-  - Healing 페이지에 지도 표시
   - 공방 위치 마커 및 InfoWindow
   - 지도에서 바로 예약 가능
 
