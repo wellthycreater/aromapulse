@@ -25,7 +25,7 @@ mapConfig.get('/', async (c) => {
         
       case 'naver':
         config.clientId = c.env.NAVER_MAPS_CLIENT_ID;
-        config.mapUrl = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${c.env.NAVER_MAPS_CLIENT_ID}`;
+        config.mapUrl = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${c.env.NAVER_MAPS_CLIENT_ID}&submodules=geocoder`;
         break;
         
       case 'kakao':
