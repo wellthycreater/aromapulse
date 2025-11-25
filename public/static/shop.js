@@ -158,10 +158,26 @@ function viewProductDetail(productId) {
   window.location.href = `/static/product-detail?id=${productId}`;
 }
 
-// 빠른 예약 (제품 상세 페이지의 예약 모달로 이동)
+// 빠른 예약 - 예약 모달 열기
 function quickBooking(productId) {
-  // 제품 상세 페이지로 이동하고 예약 모달 자동 열기
-  window.location.href = `/static/product-detail?id=${productId}&booking=true`;
+  const product = allProducts.find(p => p.id === productId);
+  if (!product) {
+    alert('상품 정보를 찾을 수 없습니다.');
+    return;
+  }
+  
+  // 새로운 예약 시스템 사용 (reservation-booking.js)
+  if (window.reservationBooking) {
+    window.reservationBooking.openModal(
+      'product',
+      productId,
+      product.name,
+      product.price
+    );
+  } else {
+    console.error('예약 시스템이 로드되지 않았습니다.');
+    alert('예약 시스템을 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+  }
 }
 
 // 장바구니에 추가

@@ -140,22 +140,32 @@ onedayClasses.get('/', async (c) => {
       }
     }
     
-    // OAuth 제공자별 필터링 적용 (해시 기반)
-    // ✅ 위치 기반 검색(nearby=true)에서는 필터링 비활성화 - 모든 인근 공방 표시
-    // 카카오/구글/네이버 로그인 사용자는 각각 다른 클래스만 볼 수 있음 (일반 목록만)
+    // OAuth 제공자별 필터링 - provider_id 기반으로 완전 분리
+    // 구글(provider_id=2), 네이버(provider_id=3), 카카오(provider_id=4)
+    // ✅ 위치 검색 시에도 OAuth 필터링 적용 - 각 제공자별로 완전히 다른 공방만 표시
     let filteredResults;
     
-    if (nearby) {
-      // 위치 기반 검색: OAuth 필터링 없이 모든 인근 공방 반환
-      filteredResults = classes;
-      console.log(`[OAuth Filter] DISABLED for nearby search - showing all ${classes.length} classes`);
+    if (provider) {
+      // provider_id 매핑: google=2, naver=3, kakao=4
+      const providerIdMap: { [key: string]: number } = {
+        'google': 2,
+        'naver': 3,
+        'kakao': 4
+      };
+      
+      const targetProviderId = providerIdMap[provider.toLowerCase()];
+      
+      if (targetProviderId) {
+        filteredResults = classes.filter((classItem: any) => classItem.provider_id === targetProviderId);
+        console.log(`[OAuth Filter] Provider: ${provider} (ID: ${targetProviderId}), Total: ${classes.length}, Filtered: ${filteredResults.length}`);
+      } else {
+        filteredResults = classes;
+        console.log(`[OAuth Filter] Unknown provider: ${provider}, showing all ${classes.length} classes`);
+      }
     } else {
-      // 일반 목록: OAuth 필터링 적용
-      filteredResults = filterByOAuthProvider(
-        classes as Array<{ id: number }>,
-        provider
-      );
-      console.log(`[OAuth Filter] Provider: ${provider || 'none'}, Total: ${classes.length}, Filtered: ${filteredResults.length}`);
+      // provider 없으면 전체 반환
+      filteredResults = classes;
+      console.log(`[OAuth Filter] No provider specified, showing all ${classes.length} classes`);
     }
     
     return c.json(filteredResults);

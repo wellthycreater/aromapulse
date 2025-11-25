@@ -34,6 +34,7 @@ import workshopBookingsRoutes from './routes/workshop-bookings';
 import placesSearchRoutes from './routes/places-search';
 import mapConfigRoutes from './routes/map-config';
 import geocodeRoutes from './routes/geocode';
+import reservationsRoutes from './routes/reservations';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -80,6 +81,7 @@ app.route('/api/workshop-bookings', workshopBookingsRoutes);
 app.route('/api/places', placesSearchRoutes);
 app.route('/api/map-config', mapConfigRoutes);
 app.route('/api/geocode', geocodeRoutes);
+app.route('/api/reservations', reservationsRoutes);
 
 // Health check
 app.get('/api/health', (c) => {

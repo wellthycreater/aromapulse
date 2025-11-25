@@ -9,6 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Kakao Postcode Service for address search -->
     <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <!-- Reservation Booking System -->
+    <script src="/static/reservation-booking.js" defer></script>
     <!-- Map APIs will be loaded dynamically based on user's OAuth provider -->
     <style>
         @keyframes float {
@@ -1786,20 +1788,26 @@
         }
 
         // Book Class
-        // Open booking modal
+        // Open booking modal (새로운 통합 예약 시스템 사용)
         function bookClass(classId, bookingUrl) {
             const cls = classes.find(c => c.id === classId);
-            if (!cls) return;
+            if (!cls) {
+                alert('클래스 정보를 찾을 수 없습니다.');
+                return;
+            }
             
-            // Show booking modal
-            document.getElementById('booking-modal').classList.remove('hidden');
-            document.getElementById('booking-class-title').textContent = cls.title || cls.name;
-            document.getElementById('booking-class-info').textContent = `${cls.location} · ${cls.price?.toLocaleString()}원`;
-            document.getElementById('booking-class-id').value = classId;
-            
-            // Prefill user info
-            document.getElementById('booker-name').value = currentUser.name;
-            document.getElementById('booker-email').value = currentUser.email;
+            // 새로운 예약 모달 열기 (reservation-booking.js 사용)
+            if (window.reservationBooking) {
+                window.reservationBooking.openModal(
+                    'class',
+                    classId,
+                    cls.name || cls.title,
+                    cls.price
+                );
+            } else {
+                console.error('예약 시스템이 로드되지 않았습니다.');
+                alert('예약 시스템을 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+            }
         }
 
         // Close booking modal
@@ -2981,5 +2989,7 @@
         </div>
     </div>
 
+    <!-- 예약 모달 스크립트 -->
+    <script src="/static/reservation-modal.js"></script>
 </body>
 </html>
