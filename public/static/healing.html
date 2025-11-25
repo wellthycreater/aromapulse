@@ -1267,13 +1267,48 @@
                 ]
             });
 
-            // Add markers
+            // 사용자 위치 마커 추가 (파란색 핀)
+            if (window.userLocation) {
+                const userMarker = new google.maps.Marker({
+                    position: { lat: window.userLocation.latitude, lng: window.userLocation.longitude },
+                    map: map,
+                    title: '📍 내 위치',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 12,
+                        fillColor: '#3B82F6',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 3,
+                    },
+                    zIndex: 1000
+                });
+
+                const userInfoWindow = new google.maps.InfoWindow({
+                    content: `<div style="padding: 10px; font-weight: bold; color: #3B82F6;">
+                        <i class="fas fa-map-marker-alt mr-2"></i>내 현재 위치
+                    </div>`
+                });
+
+                userMarker.addListener('click', () => {
+                    markers.forEach(m => m.infoWindow && m.infoWindow.close());
+                    userInfoWindow.open(map, userMarker);
+                });
+
+                markers.push(userMarker);
+                
+                // 지도 중심을 사용자 위치로 설정
+                map.setCenter({ lat: window.userLocation.latitude, lng: window.userLocation.longitude });
+                console.log('📍 [Google Maps] 사용자 위치 마커 추가됨');
+            }
+
+            // 공방 마커 추가 (보라색 핀)
             classes.forEach(cls => {
                 if (cls.latitude && cls.longitude) {
                     const marker = new google.maps.Marker({
                         position: { lat: cls.latitude, lng: cls.longitude },
                         map: map,
-                        title: cls.name,
+                        title: cls.title,
                         icon: {
                             path: google.maps.SymbolPath.CIRCLE,
                             scale: 10,
@@ -1300,7 +1335,8 @@
 
             loadClassesList();
 
-            if (classes.length > 0 && classes[0].latitude) {
+            // 사용자 위치가 없으면 첫 번째 공방으로 중심 설정
+            if (!window.userLocation && classes.length > 0 && classes[0].latitude) {
                 map.setCenter({ lat: classes[0].latitude, lng: classes[0].longitude });
             }
         }
@@ -1355,8 +1391,49 @@
                 
                 console.log('[NAVER] Map created successfully:', map);
                 
-                // Add markers
-                console.log(`[NAVER] Adding ${classes.length} markers...`);
+                // 사용자 위치 마커 추가 (파란색 핀)
+                if (window.userLocation) {
+                    console.log('[NAVER] Adding user location marker:', window.userLocation);
+                    const userPosition = new naver.maps.LatLng(window.userLocation.latitude, window.userLocation.longitude);
+                    const userMarker = new naver.maps.Marker({
+                        position: userPosition,
+                        map: map,
+                        title: '📍 내 위치',
+                        icon: {
+                            content: `<div style="background: #3B82F6; width: 28px; height: 28px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;">📍</div>`,
+                            anchor: new naver.maps.Point(14, 14)
+                        },
+                        zIndex: 1000
+                    });
+                    
+                    const userInfoWindow = new naver.maps.InfoWindow({
+                        content: `<div style="padding: 10px; font-weight: bold; color: #3B82F6; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <i class="fas fa-map-marker-alt mr-2"></i>내 현재 위치
+                        </div>`,
+                        borderWidth: 0,
+                        backgroundColor: 'transparent',
+                        disableAnchor: false,
+                        pixelOffset: new naver.maps.Point(0, -10)
+                    });
+                    
+                    naver.maps.Event.addListener(userMarker, 'click', function() {
+                        console.log('[NAVER] User marker clicked');
+                        if (currentInfoWindow) {
+                            currentInfoWindow.close();
+                        }
+                        userInfoWindow.open(map, userMarker);
+                        currentInfoWindow = userInfoWindow;
+                    });
+                    
+                    markers.push({ marker: userMarker, infoWindow: userInfoWindow });
+                    
+                    // 지도 중심을 사용자 위치로 설정
+                    map.setCenter(userPosition);
+                    console.log('📍 [NAVER] 사용자 위치 마커 추가됨');
+                }
+                
+                // 공방 마커 추가 (보라색 핀)
+                console.log(`[NAVER] Adding ${classes.length} class markers...`);
                 classes.forEach((cls, index) => {
                     if (cls.latitude && cls.longitude) {
                         console.log(`[NAVER] Adding marker ${index + 1}:`, cls.name, cls.latitude, cls.longitude);
@@ -1395,7 +1472,8 @@
                 console.log('[NAVER] Loading classes list...');
                 loadClassesList();
                 
-                if (classes.length > 0 && classes[0].latitude) {
+                // 사용자 위치가 없으면 첫 번째 공방으로 중심 설정
+                if (!window.userLocation && classes.length > 0 && classes[0].latitude) {
                     console.log('[NAVER] Setting map center to first class location');
                     map.setCenter(new naver.maps.LatLng(classes[0].latitude, classes[0].longitude));
                 }
@@ -2231,12 +2309,28 @@
             }
         }
 
+        // Haversine 거리 계산 함수
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // 지구 반지름 (km)
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; // km 단위
+        }
+
         // 인근 공방 로드 (위치 기반 필터링)
         async function loadNearbyClasses(latitude, longitude) {
             try {
                 console.log(`🔍 [Nearby Classes] 인근 공방 검색: lat=${latitude}, lng=${longitude}`);
                 
-                // nearby=true 파라미터로 인근 클래스만 조회 (기본 50km)
+                // 사용자 위치 저장 (전역)
+                window.userLocation = { latitude, longitude };
+                
+                // 먼저 서버에서 nearby 필터링 시도
                 const response = await fetch(`/api/oneday-classes?nearby=true&maxDistance=50&provider=${currentUser.provider}`);
                 
                 if (!response.ok) {
@@ -2264,7 +2358,7 @@
                 let message = `✅ ${nearbyClasses.length}개의 인근 공방을 찾았습니다!\n\n`;
                 if (nearby > 0) message += `🚶 가까운 지역 (20km 이내): ${nearby}개\n`;
                 if (medium > 0) message += `🚗 인근 지역 (20-50km): ${medium}개\n`;
-                message += '\n지도에서 위치를 확인해보세요!';
+                message += '\n📍 지도에 내 위치(파란색)와 공방 위치(보라색)가 표시됩니다!';
                 
                 alert(message);
                 
