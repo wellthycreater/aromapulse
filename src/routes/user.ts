@@ -60,6 +60,47 @@ async function hashPassword(password: string): Promise<string> {
     .join('');
 }
 
+// 현재 로그인한 사용자 정보 조회 (인증 필요 없음 - 토큰 있으면 반환, 없으면 401)
+user.get('/', async (c) => {
+  try {
+    const token = getCookie(c, 'auth_token');
+    
+    if (!token) {
+      console.log('ℹ️ [GET /api/user] No auth token - user not logged in');
+      return c.json({ error: '로그인이 필요합니다' }, 401);
+    }
+    
+    // JWT 검증
+    const jwtManager = new JWTManager(c.env.JWT_SECRET);
+    const tokenData = await jwtManager.verify(token);
+    
+    if (!tokenData || !tokenData.userId) {
+      console.warn('⚠️ [GET /api/user] Invalid token');
+      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+    }
+    
+    // 사용자 정보 조회
+    const userInfo = await c.env.DB.prepare(`
+      SELECT id, email, name, phone, profile_image, user_type, oauth_provider
+      FROM users 
+      WHERE id = ?
+    `).bind(tokenData.userId).first();
+    
+    if (!userInfo) {
+      console.warn('⚠️ [GET /api/user] User not found in DB');
+      return c.json({ error: '사용자를 찾을 수 없습니다' }, 404);
+    }
+    
+    console.log('✅ [GET /api/user] User info returned:', { userId: userInfo.id, email: userInfo.email });
+    
+    return c.json(userInfo);
+    
+  } catch (error: any) {
+    console.error('❌ [GET /api/user] Error:', error);
+    return c.json({ error: '사용자 정보 조회 실패', details: error.message }, 500);
+  }
+});
+
 // 인증 미들웨어 (쿠키 기반)
 async function authMiddleware(c: any, next: any) {
   // 쿠키에서 토큰 가져오기
