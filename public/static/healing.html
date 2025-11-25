@@ -2330,9 +2330,9 @@
                 // 사용자 위치 저장 (전역)
                 window.userLocation = { latitude, longitude };
                 
-                // 전체 공방 목록 가져오기 (nearby=false로 전체 조회)
-                console.log('📡 [API] 전체 공방 목록 요청 중...');
-                const response = await fetch(`/api/oneday-classes?limit=500&provider=${currentUser.provider}`);
+                // 전체 공방 목록 가져오기 (nearby=true로 OAuth 필터링 비활성화)
+                console.log('📡 [API] 전체 공방 목록 요청 중 (nearby=true)...');
+                const response = await fetch(`/api/oneday-classes?limit=500&nearby=true&provider=${currentUser.provider}`);
                 
                 if (!response.ok) {
                     throw new Error(`API 요청 실패: ${response.status}`);

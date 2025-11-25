@@ -141,13 +141,22 @@ onedayClasses.get('/', async (c) => {
     }
     
     // OAuth 제공자별 필터링 적용 (해시 기반)
-    // 카카오/구글/네이버 로그인 사용자는 각각 다른 클래스만 볼 수 있음
-    const filteredResults = filterByOAuthProvider(
-      classes as Array<{ id: number }>,
-      provider
-    );
+    // ✅ 위치 기반 검색(nearby=true)에서는 필터링 비활성화 - 모든 인근 공방 표시
+    // 카카오/구글/네이버 로그인 사용자는 각각 다른 클래스만 볼 수 있음 (일반 목록만)
+    let filteredResults;
     
-    console.log(`[OAuth Filter] Provider: ${provider || 'none'}, Total: ${classes.length}, Filtered: ${filteredResults.length}`);
+    if (nearby) {
+      // 위치 기반 검색: OAuth 필터링 없이 모든 인근 공방 반환
+      filteredResults = classes;
+      console.log(`[OAuth Filter] DISABLED for nearby search - showing all ${classes.length} classes`);
+    } else {
+      // 일반 목록: OAuth 필터링 적용
+      filteredResults = filterByOAuthProvider(
+        classes as Array<{ id: number }>,
+        provider
+      );
+      console.log(`[OAuth Filter] Provider: ${provider || 'none'}, Total: ${classes.length}, Filtered: ${filteredResults.length}`);
+    }
     
     return c.json(filteredResults);
     
