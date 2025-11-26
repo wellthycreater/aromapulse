@@ -1067,19 +1067,23 @@
         async function checkLoginStatus() {
             try {
                 console.log('[LOGIN] Checking login status...');
-                const response = await fetch('/api/auth/me');
+                const response = await fetch('/api/user', {
+                    credentials: 'include'
+                });
                 console.log('[LOGIN] Response status:', response.status);
                 
-                const data = await response.json();
-                console.log('[LOGIN] Response data:', data);
-
-                if (data.authenticated) {
-                    console.log('[LOGIN] User is authenticated:', data.user);
-                    currentUser = data.user;
+                if (response.ok) {
+                    const user = await response.json();
+                    console.log('[LOGIN] User is authenticated:', user);
+                    console.log('[LOGIN] User provider:', user.oauth_provider);
+                    
+                    currentUser = user;
+                    currentUser.provider = user.oauth_provider; // OAuth provider 명시적 설정
+                    
                     showLoggedInState();
                     await loadClassesAndMap();
                 } else {
-                    console.log('[LOGIN] User is not authenticated');
+                    console.log('[LOGIN] User is not authenticated (status:', response.status, ')');
                     showLoginRequiredState();
                 }
             } catch (error) {
@@ -1124,8 +1128,9 @@
         async function loadClassesAndMap() {
             try {
                 // Fetch oneday classes from API
-                console.log('Fetching classes from API...');
-                const response = await fetch(`/api/oneday-classes?provider=${currentUser.provider}`);
+                const provider = currentUser.provider || currentUser.oauth_provider;
+                console.log('Fetching classes from API for provider:', provider);
+                const response = await fetch(`/api/oneday-classes?provider=${provider}`);
                 
                 if (!response.ok) {
                     throw new Error(`API request failed: ${response.status} ${response.statusText}`);
@@ -1133,6 +1138,7 @@
                 
                 classes = await response.json();
                 console.log('Classes loaded:', classes.length, 'items');
+                console.log('[OAuth Filter] Provider:', provider, 'Classes:', classes.length);
 
                 // Show maps section
                 document.getElementById('maps-section').classList.remove('hidden');
@@ -1143,10 +1149,10 @@
                     'naver': 'Naver Map',
                     'kakao': 'Kakao Map'
                 };
-                document.getElementById('map-provider-name').textContent = providerNames[currentUser.provider] || 'Maps';
+                document.getElementById('map-provider-name').textContent = providerNames[provider] || 'Maps';
 
                 // Initialize map based on provider
-                console.log('Initializing map for provider:', currentUser.provider);
+                console.log('Initializing map for provider:', provider);
                 await initializeMapByProvider();
             } catch (error) {
                 console.error('Failed to load classes:', error);
@@ -2350,9 +2356,11 @@
                 // 사용자 위치 저장 (전역)
                 window.userLocation = { latitude, longitude };
                 
-                // 전체 공방 목록 가져오기 (nearby=true로 OAuth 필터링 비활성화)
-                console.log('📡 [API] 전체 공방 목록 요청 중 (nearby=true)...');
-                const response = await fetch(`/api/oneday-classes?limit=500&nearby=true&provider=${currentUser.provider}`);
+                // 전체 공방 목록 가져오기 (nearby=true + OAuth 필터링 적용)
+                console.log('📡 [API] OAuth 필터링된 공방 목록 요청 중...');
+                console.log('📡 [API] Provider:', currentUser.provider || currentUser.oauth_provider);
+                const provider = currentUser.provider || currentUser.oauth_provider;
+                const response = await fetch(`/api/oneday-classes?limit=500&nearby=true&provider=${provider}`);
                 
                 if (!response.ok) {
                     throw new Error(`API 요청 실패: ${response.status}`);
