@@ -197,6 +197,77 @@ reservations.get('/my', async (c) => {
   }
 });
 
+// 예약 상세 조회
+reservations.get('/:id', async (c) => {
+  try {
+    const token = getCookie(c, 'auth_token');
+    if (!token) {
+      return c.json({ error: '로그인이 필요합니다' }, 401);
+    }
+
+    const jwtManager = new JWTManager(c.env.JWT_SECRET);
+    const payload = await jwtManager.verify(token);
+    
+    if (!payload || !payload.userId) {
+      return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
+    }
+
+    const reservationId = c.req.param('id');
+
+    // 관리자 확인
+    const ADMIN_EMAILS = [
+      'admin@aromapulse.kr',
+      'developer@aromapulse.kr',
+      'operator@aromapulse.kr',
+      'wellthykorea@gmail.com',
+      'wellthy47@naver.com',
+      'succeed@kakao.com'
+    ];
+
+    const user = await c.env.DB.prepare(
+      'SELECT email, user_type FROM users WHERE id = ?'
+    ).bind(payload.userId).first<{ email: string; user_type: string }>();
+
+    const isAdmin = user && (ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B');
+
+    // 예약 상세 조회
+    const reservation = await c.env.DB.prepare(`
+      SELECT r.*,
+        oc.title as class_title,
+        oc.location as class_location,
+        oc.address as class_address,
+        p.name as product_name,
+        u.name as user_name,
+        u.email as user_email
+      FROM reservations r
+      LEFT JOIN oneday_classes oc ON r.class_id = oc.id
+      LEFT JOIN products p ON r.product_id = p.id
+      LEFT JOIN users u ON r.user_id = u.id
+      WHERE r.id = ?
+    `).bind(reservationId).first();
+
+    if (!reservation) {
+      return c.json({ error: '예약을 찾을 수 없습니다' }, 404);
+    }
+
+    // 권한 확인: 본인 또는 관리자만 조회 가능
+    if (!isAdmin && reservation.user_id !== payload.userId) {
+      return c.json({ error: '접근 권한이 없습니다' }, 403);
+    }
+
+    console.log(`📋 [Reservation Detail] User ${payload.userId} viewing reservation ${reservationId}`);
+
+    return c.json(reservation);
+
+  } catch (error: any) {
+    console.error('❌ [Reservation Detail] Error:', error);
+    return c.json({ 
+      error: '예약 상세 조회 실패', 
+      details: error.message 
+    }, 500);
+  }
+});
+
 // 예약 취소
 reservations.put('/:id/cancel', async (c) => {
   try {

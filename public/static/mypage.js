@@ -908,8 +908,269 @@ function viewBookingDetail(bookingId) {
     alert(`예약 상세보기: ${bookingId}\n(개발 중)`);
 }
 
-function viewReservationDetail(reservationId) {
-    alert(`예약 상세보기: ${reservationId}\n(개발 중)`);
+async function viewReservationDetail(reservationId) {
+    try {
+        console.log('[Reservation Detail] Fetching reservation:', reservationId);
+        
+        // 예약 상세 정보 조회
+        const response = await fetch(`/api/reservations/${reservationId}`, {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('예약 정보를 불러올 수 없습니다');
+        }
+        
+        const reservation = await response.json();
+        console.log('[Reservation Detail] Data:', reservation);
+        
+        // 모달 생성 및 표시
+        showReservationDetailModal(reservation);
+        
+    } catch (error) {
+        console.error('[Reservation Detail] Error:', error);
+        alert('예약 상세 정보를 불러오는데 실패했습니다');
+    }
+}
+
+function showReservationDetailModal(reservation) {
+    // 기존 모달 제거
+    const existingModal = document.getElementById('reservationDetailModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 제목 결정
+    const title = reservation.class_title || reservation.product_name || '예약 항목';
+    const location = reservation.class_location || reservation.class_address || '위치 정보 없음';
+    
+    // 예약 타입별 아이콘 및 색상
+    const typeConfig = {
+        'class': { icon: 'fa-graduation-cap', color: 'green', label: '원데이 클래스' },
+        'product': { icon: 'fa-box', color: 'blue', label: '쇼핑 예약' },
+        'workshop': { icon: 'fa-tools', color: 'purple', label: '워크샵' }
+    };
+    
+    const config = typeConfig[reservation.reservation_type] || typeConfig['class'];
+    
+    // 상태별 색상
+    const statusColors = {
+        'pending': 'yellow',
+        'confirmed': 'green',
+        'cancelled': 'red',
+        'completed': 'blue'
+    };
+    
+    const statusLabels = {
+        'pending': '예약대기',
+        'confirmed': '예약확정',
+        'cancelled': '예약취소',
+        'completed': '완료'
+    };
+    
+    const statusColor = statusColors[reservation.status] || 'gray';
+    const statusLabel = statusLabels[reservation.status] || reservation.status;
+    
+    // 모달 HTML
+    const modalHTML = `
+        <div id="reservationDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="closeReservationDetailModal(event)">
+            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                <!-- 헤더 -->
+                <div class="sticky top-0 bg-gradient-to-r from-${config.color}-500 to-${config.color}-600 text-white p-6 rounded-t-2xl">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas ${config.icon} text-2xl"></i>
+                                <span class="text-sm font-medium opacity-90">${config.label}</span>
+                            </div>
+                            <h2 class="text-2xl font-bold">${title}</h2>
+                            <p class="text-sm opacity-90 mt-1">예약번호: #${reservation.id}</p>
+                        </div>
+                        <button onclick="closeReservationDetailModal()" class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 본문 -->
+                <div class="p-6 space-y-6">
+                    <!-- 상태 배지 -->
+                    <div class="flex justify-between items-center pb-4 border-b">
+                        <span class="px-4 py-2 rounded-full text-sm font-semibold bg-${statusColor}-100 text-${statusColor}-700 border border-${statusColor}-200">
+                            ${statusLabel}
+                        </span>
+                        <span class="text-sm text-gray-500">
+                            예약일시: ${new Date(reservation.created_at).toLocaleString('ko-KR')}
+                        </span>
+                    </div>
+                    
+                    <!-- 예약 정보 -->
+                    <div class="space-y-4">
+                        <h3 class="font-semibold text-lg text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-calendar-check text-${config.color}-600"></i>
+                            예약 정보
+                        </h3>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-xs text-gray-500 mb-1">예약 날짜</p>
+                                <p class="font-semibold text-gray-800">${reservation.reservation_date}</p>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-xs text-gray-500 mb-1">예약 시간</p>
+                                <p class="font-semibold text-gray-800">${reservation.reservation_time || '시간 미정'}</p>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-xs text-gray-500 mb-1">인원</p>
+                                <p class="font-semibold text-gray-800">
+                                    <i class="${reservation.reservation_type === 'product' ? 'fas fa-box' : 'fas fa-users'} mr-1"></i>
+                                    ${reservation.participants || 1}${reservation.reservation_type === 'product' ? '개' : '명'}
+                                </p>
+                            </div>
+                            
+                            ${reservation.reservation_type === 'class' && location !== '위치 정보 없음' ? `
+                            <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                                <p class="text-xs text-gray-500 mb-1">위치</p>
+                                <p class="font-semibold text-gray-800">
+                                    <i class="fas fa-map-marker-alt mr-1 text-${config.color}-600"></i>
+                                    ${location}
+                                </p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- 예약자 정보 -->
+                    <div class="space-y-4">
+                        <h3 class="font-semibold text-lg text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-user text-${config.color}-600"></i>
+                            예약자 정보
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-xs text-gray-500 mb-1">이름</p>
+                                <p class="font-semibold text-gray-800">${reservation.contact_name}</p>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-xs text-gray-500 mb-1">연락처</p>
+                                <p class="font-semibold text-gray-800">
+                                    <i class="fas fa-phone mr-1"></i>
+                                    ${reservation.contact_phone}
+                                </p>
+                            </div>
+                            
+                            ${reservation.contact_email ? `
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-xs text-gray-500 mb-1">이메일</p>
+                                <p class="font-semibold text-gray-800">
+                                    <i class="fas fa-envelope mr-1"></i>
+                                    ${reservation.contact_email}
+                                </p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- 특별 요청사항 -->
+                    ${reservation.special_request ? `
+                    <div class="space-y-4">
+                        <h3 class="font-semibold text-lg text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-comment-dots text-${config.color}-600"></i>
+                            특별 요청사항
+                        </h3>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-gray-700">${reservation.special_request}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- 관리자 전용: 예약자 계정 정보 -->
+                    ${reservation.user_name || reservation.user_email ? `
+                    <div class="space-y-4 border-t pt-4">
+                        <h3 class="font-semibold text-lg text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-user-shield text-purple-600"></i>
+                            예약자 계정 정보 (관리자 전용)
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 gap-4 bg-purple-50 p-4 rounded-lg border border-purple-200">
+                            ${reservation.user_name ? `
+                            <div>
+                                <p class="text-xs text-purple-600 mb-1">계정 이름</p>
+                                <p class="font-semibold text-gray-800">${reservation.user_name}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${reservation.user_email ? `
+                            <div>
+                                <p class="text-xs text-purple-600 mb-1">계정 이메일</p>
+                                <p class="font-semibold text-gray-800">${reservation.user_email}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <!-- 푸터 (액션 버튼) -->
+                <div class="sticky bottom-0 bg-gray-50 p-6 rounded-b-2xl border-t flex gap-3">
+                    ${reservation.status === 'pending' || reservation.status === 'confirmed' ? `
+                    <button onclick="cancelReservation(${reservation.id})" class="flex-1 px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition font-medium">
+                        <i class="fas fa-times-circle mr-2"></i>
+                        예약 취소
+                    </button>
+                    ` : ''}
+                    
+                    <button onclick="closeReservationDetailModal()" class="flex-1 px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition font-medium">
+                        <i class="fas fa-check mr-2"></i>
+                        확인
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 모달 추가
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeReservationDetailModal(event) {
+    // 배경 클릭 시에만 닫기
+    if (!event || event.target.id === 'reservationDetailModal') {
+        const modal = document.getElementById('reservationDetailModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+}
+
+async function cancelReservation(reservationId) {
+    if (!confirm('정말로 이 예약을 취소하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/reservations/${reservationId}/cancel`, {
+            method: 'PUT',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('예약 취소 실패');
+        }
+        
+        alert('✅ 예약이 취소되었습니다');
+        closeReservationDetailModal();
+        loadBookings(); // 목록 새로고침
+        
+    } catch (error) {
+        console.error('[Cancel Reservation] Error:', error);
+        alert('❌ 예약 취소에 실패했습니다');
+    }
 }
 
 function viewConsultationDetail(consultationId) {
