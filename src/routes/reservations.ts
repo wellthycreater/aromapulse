@@ -142,18 +142,49 @@ reservations.get('/my', async (c) => {
       return c.json({ error: '유효하지 않은 토큰입니다' }, 401);
     }
 
-    const result = await c.env.DB.prepare(`
+    // 관리자 확인
+    const ADMIN_EMAILS = [
+      'admin@aromapulse.kr',
+      'developer@aromapulse.kr',
+      'operator@aromapulse.kr',
+      'wellthykorea@gmail.com',
+      'wellthy47@naver.com',
+      'succeed@kakao.com'
+    ];
+
+    const user = await c.env.DB.prepare(
+      'SELECT email, user_type FROM users WHERE id = ?'
+    ).bind(payload.userId).first<{ email: string; user_type: string }>();
+
+    const isAdmin = user && (ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B');
+
+    let query = `
       SELECT r.*,
         oc.title as class_title,
         oc.location as class_location,
         oc.address as class_address,
-        p.name as product_name
+        p.name as product_name,
+        u.name as user_name,
+        u.email as user_email
       FROM reservations r
       LEFT JOIN oneday_classes oc ON r.class_id = oc.id
       LEFT JOIN products p ON r.product_id = p.id
-      WHERE r.user_id = ?
-      ORDER BY r.created_at DESC
-    `).bind(payload.userId).all();
+      LEFT JOIN users u ON r.user_id = u.id
+    `;
+
+    let result;
+    
+    if (isAdmin) {
+      // 관리자: 모든 예약 조회
+      query += ` ORDER BY r.created_at DESC`;
+      result = await c.env.DB.prepare(query).all();
+      console.log(`👑 [Admin Mode] Showing all ${result.results?.length || 0} reservations`);
+    } else {
+      // 일반 사용자: 본인 예약만 조회
+      query += ` WHERE r.user_id = ? ORDER BY r.created_at DESC`;
+      result = await c.env.DB.prepare(query).bind(payload.userId).all();
+      console.log(`👤 [User Mode] Showing ${result.results?.length || 0} reservations for user ${payload.userId}`);
+    }
 
     return c.json(result.results);
 

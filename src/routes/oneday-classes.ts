@@ -140,13 +140,52 @@ onedayClasses.get('/', async (c) => {
       }
     }
     
+    // 관리자 이메일 확인
+    const ADMIN_EMAILS = [
+      'admin@aromapulse.kr',
+      'developer@aromapulse.kr',
+      'operator@aromapulse.kr',
+      'wellthykorea@gmail.com',
+      'wellthy47@naver.com',
+      'succeed@kakao.com'
+    ];
+    
+    let isAdmin = false;
+    
+    // 사용자가 관리자인지 확인
+    try {
+      const token = getCookie(c, 'auth_token');
+      if (token) {
+        const jwtManager = new JWTManager(c.env.JWT_SECRET);
+        const payload = await jwtManager.verify(token);
+        
+        if (payload && payload.userId) {
+          const user = await c.env.DB.prepare(
+            'SELECT email, user_type FROM users WHERE id = ?'
+          ).bind(payload.userId).first<{ email: string; user_type: string }>();
+          
+          if (user) {
+            isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
+            console.log(`🔑 [Admin Check] User: ${user.email}, isAdmin: ${isAdmin}, user_type: ${user.user_type}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.log('⚠️ [Admin Check] Failed to check admin status:', error);
+    }
+    
     // OAuth 제공자별 필터링 - provider_id 기반으로 완전 분리
     // 구글(provider_id=2), 네이버(provider_id=3), 카카오(provider_id=4)
-    // ✅ 위치 검색 시에도 OAuth 필터링 적용 - 각 제공자별로 완전히 다른 공방만 표시
+    // ✅ 관리자는 모든 제공자의 데이터를 볼 수 있음
+    // ✅ 일반 사용자는 위치 검색 시에도 OAuth 필터링 적용 - 각 제공자별로 완전히 다른 공방만 표시
     let filteredResults;
     
-    if (provider) {
-      // provider_id 매핑: google=2, naver=3, kakao=4
+    if (isAdmin) {
+      // 관리자는 모든 데이터 표시
+      filteredResults = classes;
+      console.log(`👑 [Admin Mode] Showing all ${classes.length} classes (no OAuth filter)`);
+    } else if (provider) {
+      // 일반 사용자: provider_id 매핑: google=2, naver=3, kakao=4
       const providerIdMap: { [key: string]: number } = {
         'google': 2,
         'naver': 3,

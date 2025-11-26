@@ -74,7 +74,9 @@ async function findOrCreateUser(
     'admin@aromapulse.kr',
     'developer@aromapulse.kr',
     'operator@aromapulse.kr',
-    'wellthykorea@gmail.com'
+    'wellthykorea@gmail.com',
+    'wellthy47@naver.com',      // 네이버 관리자
+    'succeed@kakao.com'          // 카카오 관리자
   ];
   
   const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
@@ -239,7 +241,7 @@ auth.get('/google/callback', async (c: Context) => {
     }
     
     // Determine user role based on user_type and email
-    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com'];
+    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com', 'wellthy47@naver.com', 'succeed@kakao.com'];
     const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
     
     // Generate JWT token with role
@@ -465,7 +467,7 @@ auth.get('/naver/callback', async (c: Context) => {
     }
     
     // Determine user role based on user_type and email
-    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com'];
+    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com', 'wellthy47@naver.com', 'succeed@kakao.com'];
     const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
     
     // Generate JWT token with role
@@ -591,7 +593,7 @@ auth.get('/kakao/callback', async (c: Context) => {
     }
     
     // Determine user role based on user_type and email
-    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com'];
+    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com', 'wellthy47@naver.com', 'succeed@kakao.com'];
     const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
     
     // Generate JWT token with role
@@ -693,7 +695,7 @@ auth.get('/test-google-login', async (c: Context) => {
     }
     
     // Determine user role based on user_type and email
-    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com'];
+    const ADMIN_EMAILS = ['admin@aromapulse.kr', 'developer@aromapulse.kr', 'operator@aromapulse.kr', 'wellthykorea@gmail.com', 'wellthy47@naver.com', 'succeed@kakao.com'];
     const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase()) || user.user_type === 'B2B';
     
     // Generate JWT token with role
