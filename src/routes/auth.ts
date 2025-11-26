@@ -68,7 +68,7 @@ async function findOrCreateUser(
   accessToken: string,
   refreshToken: string | null,
   expiresIn: number
-) {
+): Promise<{ user: any; isNewUser: boolean }> {
   // Admin email list - these users get automatic admin access
   const ADMIN_EMAILS = [
     'admin@aromapulse.kr',
@@ -98,8 +98,8 @@ async function findOrCreateUser(
     
     // Get user info with role
     const user = await db.prepare(`
-      SELECT id, email, name, profile_image, user_type FROM users WHERE id = ?
-    `).bind(oauthAccount.user_id).first<{ id: number, email: string, name: string, profile_image: string, user_type: string }>();
+      SELECT id, email, name, profile_image, user_type, user_latitude, user_longitude, address FROM users WHERE id = ?
+    `).bind(oauthAccount.user_id).first<{ id: number, email: string, name: string, profile_image: string, user_type: string, user_latitude: number | null, user_longitude: number | null, address: string | null }>();
     
     // Update user_type if admin email but not set as B2B
     if (user && isAdmin && user.user_type !== 'B2B') {
@@ -109,7 +109,7 @@ async function findOrCreateUser(
       user.user_type = 'B2B';
     }
     
-    return user;
+    return { user, isNewUser: false };
   }
   
   // Check if user exists by email (might have registered with different provider or email/password)
@@ -150,14 +150,23 @@ async function findOrCreateUser(
   // Return user info with updated type
   if (existingUser) {
     return { 
-      id: existingUser.id, 
-      email: existingUser.email, 
-      name: existingUser.name, 
-      profile_image: existingUser.profile_image, 
-      user_type: isAdmin ? 'B2B' : existingUser.user_type 
+      user: {
+        id: existingUser.id, 
+        email: existingUser.email, 
+        name: existingUser.name, 
+        profile_image: existingUser.profile_image, 
+        user_type: isAdmin ? 'B2B' : existingUser.user_type,
+        user_latitude: null,
+        user_longitude: null,
+        address: null
+      },
+      isNewUser: false
     };
   } else {
-    return { id: userId, email, name, profile_image: profileImage, user_type: userType };
+    return { 
+      user: { id: userId, email, name, profile_image: profileImage, user_type: userType, user_latitude: null, user_longitude: null, address: null },
+      isNewUser: true
+    };
   }
 }
 
@@ -224,7 +233,7 @@ auth.get('/google/callback', async (c: Context) => {
     const userInfo = await googleOAuth.getUserInfo(tokens.access_token);
     
     // Find or create user in database
-    const user = await findOrCreateUser(
+    const { user, isNewUser } = await findOrCreateUser(
       DB,
       'google',
       userInfo.id,
@@ -269,6 +278,11 @@ auth.get('/google/callback', async (c: Context) => {
       INSERT INTO sessions (user_id, session_token, expires_at, created_at)
       VALUES (?, ?, ?, datetime('now'))
     `).bind(user.id, jwtToken, sessionExpiresAt).run();
+    
+    // Redirect: 신규 사용자이거나 주소가 없으면 배송지 입력 페이지로, 아니면 원래 목적지로
+    if (isNewUser || !user.user_latitude || !user.user_longitude) {
+      return c.redirect(`/static/address-setup?returnTo=${encodeURIComponent(returnTo)}`);
+    }
     
     // Redirect to return URL
     return c.redirect(returnTo);
@@ -450,7 +464,7 @@ auth.get('/naver/callback', async (c: Context) => {
     const userInfo = await naverOAuth.getUserInfo(tokens.access_token);
     
     // Find or create user
-    const user = await findOrCreateUser(
+    const { user, isNewUser } = await findOrCreateUser(
       DB,
       'naver',
       userInfo.id,
@@ -495,6 +509,11 @@ auth.get('/naver/callback', async (c: Context) => {
       INSERT INTO sessions (user_id, session_token, expires_at, created_at)
       VALUES (?, ?, ?, datetime('now'))
     `).bind(user.id, jwtToken, sessionExpiresAt).run();
+    
+    // Redirect: 신규 사용자이거나 주소가 없으면 배송지 입력 페이지로
+    if (isNewUser || !user.user_latitude || !user.user_longitude) {
+      return c.redirect(`/static/address-setup?returnTo=${encodeURIComponent(returnTo)}`);
+    }
     
     return c.redirect(returnTo);
   } catch (error) {
@@ -576,7 +595,7 @@ auth.get('/kakao/callback', async (c: Context) => {
     const profile = kakaoAccount?.profile;
     
     // Find or create user
-    const user = await findOrCreateUser(
+    const { user, isNewUser } = await findOrCreateUser(
       DB,
       'kakao',
       String(userInfo.id),
@@ -621,6 +640,11 @@ auth.get('/kakao/callback', async (c: Context) => {
       INSERT INTO sessions (user_id, session_token, expires_at, created_at)
       VALUES (?, ?, ?, datetime('now'))
     `).bind(user.id, jwtToken, sessionExpiresAt).run();
+    
+    // Redirect: 신규 사용자이거나 주소가 없으면 배송지 입력 페이지로
+    if (isNewUser || !user.user_latitude || !user.user_longitude) {
+      return c.redirect(`/static/address-setup?returnTo=${encodeURIComponent(returnTo)}`);
+    }
     
     return c.redirect(returnTo);
   } catch (error) {

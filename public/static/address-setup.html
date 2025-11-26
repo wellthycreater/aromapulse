@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주소 설정 - 아로마펄스</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Kakao Postcode Service -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen flex items-center justify-center p-4">
+    <div class="container mx-auto max-w-2xl">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-map-marker-alt text-white text-3xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">주소 설정</h1>
+                <p class="text-gray-600">
+                    가까운 공방을 추천해드리기 위해<br>
+                    주소를 입력해주세요
+                </p>
+            </div>
+
+            <!-- User Info -->
+            <div id="user-info" class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 mb-6 hidden">
+                <div class="flex items-center">
+                    <div id="user-avatar" class="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+                        <!-- User initial -->
+                    </div>
+                    <div>
+                        <div id="user-name" class="font-bold text-gray-800"><!-- User name --></div>
+                        <div id="user-provider" class="text-sm text-gray-600"><!-- Provider --></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Selection Methods -->
+            <div class="space-y-4 mb-6">
+                <!-- Method 1: Current Location -->
+                <button onclick="useCurrentLocation()" 
+                        class="w-full p-6 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition group text-left">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition">
+                                <i class="fas fa-location-crosshairs text-green-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-gray-900 text-lg mb-1 flex items-center">
+                                현재 위치 사용
+                                <span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">추천</span>
+                            </h3>
+                            <p class="text-gray-600">
+                                GPS로 현재 위치를 자동으로 감지합니다
+                            </p>
+                        </div>
+                    </div>
+                </button>
+
+                <div class="text-center text-gray-400 font-semibold my-2">또는</div>
+
+                <!-- Method 2: Address Search (Provider-based) -->
+                <button id="address-search-btn" onclick="searchAddressByProvider()" 
+                        class="w-full p-6 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition group text-left">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <div id="address-provider-icon" class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition">
+                                <i class="fas fa-search-location text-blue-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="address-provider-title" class="font-bold text-gray-900 text-lg mb-1">
+                                주소 검색
+                            </h3>
+                            <p id="address-provider-desc" class="text-gray-600">
+                                우편번호 검색으로 주소를 입력합니다
+                            </p>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Selected Address Display -->
+            <div id="selected-address" class="hidden bg-gray-50 rounded-xl p-4 mb-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="text-sm text-gray-500 mb-1">선택된 주소</div>
+                        <div id="address-text" class="font-semibold text-gray-900"><!-- Address --></div>
+                        <div id="address-coords" class="text-xs text-gray-500 mt-1"><!-- Coordinates --></div>
+                    </div>
+                    <button onclick="clearAddress()" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button id="submit-btn" onclick="submitAddress()" disabled
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:shadow-xl transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span id="submit-text">주소를 선택해주세요</span>
+            </button>
+
+            <!-- Help Text -->
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>
+                입력하신 주소는 가까운 공방 추천에만 사용되며, 언제든지 변경할 수 있습니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- Kakao Address Search Modal -->
+    <div id="kakao-address-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full relative">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">
+                    <i class="fas fa-search text-yellow-500 mr-2"></i>
+                    주소 검색
+                </h3>
+                <button onclick="closeKakaoAddressModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="kakao-address-layer" style="height: 500px;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let selectedAddress = null;
+        let selectedLatitude = null;
+        let selectedLongitude = null;
+        let returnTo = '/static/healing';
+
+        // Get return URL from query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('returnTo')) {
+            returnTo = decodeURIComponent(urlParams.get('returnTo'));
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    currentUser = user;
+                    
+                    // Update UI
+                    document.getElementById('user-info').classList.remove('hidden');
+                    document.getElementById('user-name').textContent = user.name;
+                    document.getElementById('user-avatar').textContent = user.name.charAt(0);
+                    
+                    const providerNames = {
+                        'google': 'Google로 로그인',
+                        'naver': 'Naver로 로그인',
+                        'kakao': 'Kakao로 로그인'
+                    };
+                    document.getElementById('user-provider').textContent = providerNames[user.oauth_provider] || user.oauth_provider;
+                    
+                    // Update address search method based on provider
+                    updateProviderUI(user.oauth_provider);
+                } else {
+                    // Not logged in - redirect to login
+                    window.location.href = '/auth/naver';
+                }
+            } catch (error) {
+                console.error('Failed to load user info:', error);
+                alert('사용자 정보를 불러오지 못했습니다.');
+            }
+        }
+
+        // Update UI based on OAuth provider
+        function updateProviderUI(provider) {
+            const icon = document.getElementById('address-provider-icon');
+            const title = document.getElementById('address-provider-title');
+            const desc = document.getElementById('address-provider-desc');
+            
+            if (provider === 'naver') {
+                icon.className = 'w-14 h-14 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition';
+                icon.innerHTML = '<i class="fas fa-map-marked-alt text-green-600 text-2xl"></i>';
+                title.textContent = 'Naver 지도로 주소 검색';
+                desc.textContent = '네이버 지도를 사용하여 정확한 주소를 검색합니다';
+            } else if (provider === 'kakao') {
+                icon.className = 'w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center group-hover:bg-yellow-200 transition';
+                icon.innerHTML = '<i class="fas fa-search-location text-yellow-600 text-2xl"></i>';
+                title.textContent = 'Kakao 우편번호 검색';
+                desc.textContent = '카카오 우편번호 서비스를 사용하여 주소를 검색합니다';
+            } else if (provider === 'google') {
+                icon.className = 'w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition';
+                icon.innerHTML = '<i class="fas fa-map-pin text-blue-600 text-2xl"></i>';
+                title.textContent = 'Google Places 검색';
+                desc.textContent = '구글 플레이스를 사용하여 정확한 주소를 검색합니다';
+            }
+        }
+
+        // Method 1: Use Current Location (GPS)
+        async function useCurrentLocation() {
+            if (!navigator.geolocation) {
+                alert('이 브라우저는 위치 서비스를 지원하지 않습니다.');
+                return;
+            }
+
+            const button = event.target.closest('button');
+            const originalHTML = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>위치 확인 중...';
+
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                });
+
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                console.log('✅ GPS 위치:', latitude, longitude, 'accuracy:', accuracy);
+
+                // Reverse geocode to get address
+                const address = await reverseGeocode(latitude, longitude, currentUser.oauth_provider);
+                
+                // Update UI
+                selectedAddress = address;
+                selectedLatitude = latitude;
+                selectedLongitude = longitude;
+                
+                showSelectedAddress(address, latitude, longitude);
+
+            } catch (error) {
+                console.error('GPS 오류:', error);
+                let errorMessage = '위치를 가져올 수 없습니다.';
+                
+                if (error.code === error.PERMISSION_DENIED) {
+                    errorMessage = '위치 권한이 거부되었습니다.\n\n브라우저 설정에서 위치 권한을 허용해주세요.';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    errorMessage = '위치 정보를 사용할 수 없습니다.';
+                } else if (error.code === error.TIMEOUT) {
+                    errorMessage = '위치 요청 시간이 초과되었습니다.\n\n다시 시도해주세요.';
+                }
+                
+                alert('❌ 위치 확인 실패\n\n' + errorMessage);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+            }
+        }
+
+        // Reverse geocode (lat/lng -> address)
+        async function reverseGeocode(lat, lng, provider) {
+            try {
+                const response = await fetch(`/api/geocode/reverse?lat=${lat}&lng=${lng}&provider=${provider}`);
+                
+                if (!response.ok) {
+                    throw new Error('Reverse geocoding failed');
+                }
+                
+                const data = await response.json();
+                return data.address || `위도: ${lat.toFixed(6)}, 경도: ${lng.toFixed(6)}`;
+            } catch (error) {
+                console.error('Reverse geocoding error:', error);
+                return `위도: ${lat.toFixed(6)}, 경도: ${lng.toFixed(6)}`;
+            }
+        }
+
+        // Method 2: Search Address by Provider
+        function searchAddressByProvider() {
+            if (!currentUser) {
+                alert('사용자 정보를 불러오는 중입니다...');
+                return;
+            }
+
+            const provider = currentUser.oauth_provider;
+            
+            if (provider === 'naver') {
+                searchAddressNaver();
+            } else if (provider === 'kakao') {
+                searchAddressKakao();
+            } else if (provider === 'google') {
+                searchAddressGoogle();
+            }
+        }
+
+        // Naver Address Search
+        function searchAddressNaver() {
+            const address = prompt('주소를 입력하세요\n예: 인천 계양구 작전동 863-17');
+            
+            if (!address) return;
+            
+            geocodeAddress(address, 'naver');
+        }
+
+        // Kakao Address Search
+        function searchAddressKakao() {
+            document.getElementById('kakao-address-modal').classList.remove('hidden');
+            
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    const fullAddress = data.roadAddress || data.jibunAddress;
+                    geocodeAddress(fullAddress, 'kakao');
+                    closeKakaoAddressModal();
+                },
+                width: '100%',
+                height: '100%'
+            }).embed(document.getElementById('kakao-address-layer'));
+        }
+
+        // Google Address Search
+        function searchAddressGoogle() {
+            const address = prompt('주소를 입력하세요\n예: 인천 계양구 작전동 863-17');
+            
+            if (!address) return;
+            
+            geocodeAddress(address, 'google');
+        }
+
+        // Geocode address to lat/lng
+        async function geocodeAddress(address, provider) {
+            try {
+                console.log(`[Geocoding] ${provider}:`, address);
+                
+                const response = await fetch(`/api/geocode/${provider}?address=${encodeURIComponent(address)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Geocoding failed');
+                }
+                
+                const data = await response.json();
+                
+                if (data.latitude && data.longitude) {
+                    console.log('[Geocoding] Success:', data);
+                    
+                    selectedAddress = address;
+                    selectedLatitude = data.latitude;
+                    selectedLongitude = data.longitude;
+                    
+                    showSelectedAddress(address, data.latitude, data.longitude);
+                } else {
+                    throw new Error('주소를 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('[Geocoding] Error:', error);
+                alert('주소 변환에 실패했습니다.\n\n' + error.message);
+            }
+        }
+
+        // Show selected address
+        function showSelectedAddress(address, lat, lng) {
+            document.getElementById('selected-address').classList.remove('hidden');
+            document.getElementById('address-text').textContent = address;
+            document.getElementById('address-coords').textContent = `위도: ${lat.toFixed(6)}, 경도: ${lng.toFixed(6)}`;
+            
+            // Enable submit button
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = false;
+            document.getElementById('submit-text').textContent = '주소 설정 완료';
+        }
+
+        // Clear selected address
+        function clearAddress() {
+            selectedAddress = null;
+            selectedLatitude = null;
+            selectedLongitude = null;
+            
+            document.getElementById('selected-address').classList.add('hidden');
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            document.getElementById('submit-text').textContent = '주소를 선택해주세요';
+        }
+
+        // Submit address to server
+        async function submitAddress() {
+            if (!selectedLatitude || !selectedLongitude) {
+                alert('주소를 먼저 선택해주세요.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>저장 중...';
+
+            try {
+                const response = await fetch('/api/user/location', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        latitude: selectedLatitude,
+                        longitude: selectedLongitude,
+                        address: selectedAddress
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '주소 저장 실패');
+                }
+
+                console.log('[Address Setup] Success:', data);
+                
+                // Redirect to return URL
+                window.location.href = returnTo;
+            } catch (error) {
+                console.error('[Address Setup] Error:', error);
+                alert(`❌ 주소 저장에 실패했습니다.\n\n${error.message}`);
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        // Close Kakao modal
+        function closeKakaoAddressModal() {
+            document.getElementById('kakao-address-modal').classList.add('hidden');
+            document.getElementById('kakao-address-layer').innerHTML = '';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserInfo();
+        });
+    </script>
+</body>
+</html>

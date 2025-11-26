@@ -162,4 +162,140 @@ geocode.get('/google', async (c) => {
   }
 });
 
+// Reverse Geocoding API (Coordinates -> Address)
+geocode.get('/reverse', async (c) => {
+  try {
+    const lat = c.req.query('lat');
+    const lng = c.req.query('lng');
+    const provider = c.req.query('provider') || 'naver';
+    
+    if (!lat || !lng) {
+      return c.json({ error: '위도와 경도가 필요합니다' }, 400);
+    }
+    
+    console.log(`[Reverse Geocoding] ${provider}:`, lat, lng);
+    
+    if (provider === 'naver') {
+      // Naver Reverse Geocoding
+      const clientId = c.env.NAVER_MAPS_CLIENT_ID;
+      const clientSecret = c.env.NAVER_MAPS_CLIENT_SECRET;
+      
+      if (!clientId || !clientSecret) {
+        return c.json({ error: 'Naver Maps API 키가 설정되지 않았습니다' }, 500);
+      }
+      
+      const response = await fetch(
+        `https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${lng},${lat}&output=json&orders=roadaddr`,
+        {
+          headers: {
+            'X-NCP-APIGW-API-KEY-ID': clientId,
+            'X-NCP-APIGW-API-KEY': clientSecret
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Naver Reverse Geocoding API 호출 실패');
+      }
+      
+      const data = await response.json() as any;
+      
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const region = result.region;
+        const land = result.land;
+        
+        let address = '';
+        if (region) {
+          address = `${region.area1.name} ${region.area2.name} ${region.area3.name} ${region.area4.name}`.trim();
+        }
+        if (land && land.addition0) {
+          address += ` ${land.addition0.value}`;
+        }
+        
+        return c.json({
+          address: address || '주소 정보 없음',
+          latitude: parseFloat(lat),
+          longitude: parseFloat(lng),
+          provider: 'naver'
+        });
+      }
+    } else if (provider === 'kakao') {
+      // Kakao Reverse Geocoding
+      const apiKey = c.env.KAKAO_MAPS_API_KEY;
+      
+      if (!apiKey) {
+        return c.json({ error: 'Kakao Maps API 키가 설정되지 않았습니다' }, 500);
+      }
+      
+      const response = await fetch(
+        `https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${lng}&y=${lat}`,
+        {
+          headers: {
+            'Authorization': `KakaoAK ${apiKey}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Kakao Reverse Geocoding API 호출 실패');
+      }
+      
+      const data = await response.json() as any;
+      
+      if (data.documents && data.documents.length > 0) {
+        const result = data.documents[0];
+        const address = result.road_address ? result.road_address.address_name : result.address.address_name;
+        
+        return c.json({
+          address: address,
+          latitude: parseFloat(lat),
+          longitude: parseFloat(lng),
+          provider: 'kakao'
+        });
+      }
+    } else if (provider === 'google') {
+      // Google Reverse Geocoding
+      const apiKey = c.env.GOOGLE_MAPS_API_KEY;
+      
+      if (!apiKey) {
+        return c.json({ error: 'Google Maps API 키가 설정되지 않았습니다' }, 500);
+      }
+      
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=ko`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Google Reverse Geocoding API 호출 실패');
+      }
+      
+      const data = await response.json() as any;
+      
+      if (data.results && data.results.length > 0) {
+        const address = data.results[0].formatted_address;
+        
+        return c.json({
+          address: address,
+          latitude: parseFloat(lat),
+          longitude: parseFloat(lng),
+          provider: 'google'
+        });
+      }
+    }
+    
+    // Fallback
+    return c.json({
+      address: `위도: ${lat}, 경도: ${lng}`,
+      latitude: parseFloat(lat),
+      longitude: parseFloat(lng),
+      provider
+    });
+    
+  } catch (error: any) {
+    console.error('[Reverse Geocoding] Error:', error);
+    return c.json({ error: error.message || 'Reverse Geocoding 실패' }, 500);
+  }
+});
+
 export default geocode;
