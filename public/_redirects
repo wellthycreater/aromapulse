@@ -1,0 +1,2 @@
+# Redirect www to root domain
+https://www.aromapulse.kr/* https://aromapulse.kr/:splat 301
