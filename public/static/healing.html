@@ -1146,7 +1146,7 @@
             icon.innerHTML = `<i class="fab ${iconMap[currentUser.provider] || 'fa-user'} text-purple-600 text-xl"></i>`;
         }
 
-        // Load Classes and Initialize Map
+        // Load Classes and Initialize List (Map Disabled)
         async function loadClassesAndMap() {
             try {
                 // Fetch oneday classes from API
@@ -1165,25 +1165,33 @@
                 // Show maps section
                 document.getElementById('maps-section').classList.remove('hidden');
 
-                // Update map provider name
+                // Update provider name
                 const providerNames = {
-                    'google': 'Google Maps',
-                    'naver': 'Naver Map',
-                    'kakao': 'Kakao Map'
+                    'google': 'Google',
+                    'naver': 'Naver',
+                    'kakao': 'Kakao'
                 };
-                document.getElementById('map-provider-name').textContent = providerNames[provider] || 'Maps';
+                document.getElementById('map-provider-name').textContent = providerNames[provider] || 'Provider';
 
-                // Initialize map based on provider
-                console.log('Initializing map for provider:', provider);
-                await initializeMapByProvider();
+                // Hide map container and show only list
+                document.getElementById('map-container').style.display = 'none';
+                document.getElementById('map-loading').style.display = 'none';
+                
+                // Load classes list directly (no map)
+                console.log('Loading classes list (map disabled)');
+                loadClassesList();
             } catch (error) {
                 console.error('Failed to load classes:', error);
                 alert(`원데이 클래스 정보를 불러오는데 실패했습니다.\n\n오류: ${error.message || error}\n\n브라우저 콘솔(F12)에서 자세한 정보를 확인하세요.`);
             }
         }
 
-        // Load Map API Script Dynamically
+        // Load Map API Script Dynamically (DISABLED)
         async function loadMapAPI(provider) {
+            // Map API loading disabled - using list-only mode
+            console.log('[MAP] Map API loading disabled - list-only mode');
+            return;
+            /*
             try {
                 console.log(`[MAP] Loading Map API for provider: ${provider}`);
                 
@@ -1245,8 +1253,15 @@
             }
         }
 
-        // Initialize Map by Provider
+        */
+        }
+
+        // Initialize Map by Provider (DISABLED)
         async function initializeMapByProvider() {
+            // Map initialization disabled - using list-only mode
+            console.log('[MAP] Map initialization disabled - list-only mode');
+            return;
+            /*
             // Load Map API first
             await loadMapAPI(currentUser.provider);
             
@@ -1260,8 +1275,13 @@
             }
         }
 
-        // Initialize Google Maps
+        */
+        }
+
+        // Initialize Google Maps (DISABLED)
         async function initializeGoogleMap() {
+            return;
+            /*
             // Wait for Google Maps API to load
             if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
                 console.log('Waiting for Google Maps API to load...');
@@ -1372,8 +1392,13 @@
             }
         }
 
-        // Initialize Naver Map
+        */
+        }
+
+        // Initialize Naver Map (DISABLED)
         async function initializeNaverMap() {
+            return;
+            /*
             try {
                 console.log('[NAVER] Starting Naver Maps initialization...');
                 
@@ -1562,8 +1587,13 @@
             }
         }
 
-        // Initialize Kakao Map
+        */
+        }
+
+        // Initialize Kakao Map (DISABLED)
         async function initializeKakaoMap() {
+            return;
+            /*
             try {
                 // Wait for kakao.maps to be available (loaded by loadMapAPI)
                 if (typeof kakao === 'undefined' || !kakao.maps) {
@@ -1648,8 +1678,9 @@
                 loadClassesList();
             }
         }
+        */
 
-        // Create Info Window Content
+        // Create Info Window Content (DISABLED)
         function createInfoWindowContent(cls) {
             const bookingUrl = getBookingUrl(cls);
             return `
