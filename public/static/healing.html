@@ -1370,10 +1370,16 @@
                             }
                         }, 100);
                         
-                        // Timeout after 30 seconds
+                        // Timeout after 60 seconds (increased from 30s)
                         setTimeout(() => {
                             clearInterval(checkInterval);
-                            console.error('[NAVER] API load timeout - checking script status...');
+                            console.error('[NAVER] API load timeout - 네이버 지도 인증 실패 (60초 초과)');
+                            console.error('[NAVER] Client ID: 39vg8tkdpx');
+                            console.error('[NAVER] Current URL:', window.location.href);
+                            console.error('[NAVER] 해결 방법: Naver Cloud Console에서 Web Service URL 등록');
+                            console.error('[NAVER] 등록 필요 URL: https://aromapulse.kr/*, https://aromapulse.pages.dev/*');
+                            
+                            // 스크립트 태그 확인
                             const scripts = document.querySelectorAll('script[data-map-provider="naver"]');
                             console.error('[NAVER] Script tags found:', scripts.length);
                             scripts.forEach((s, i) => {
@@ -1383,8 +1389,10 @@
                                     error: s.onerror
                                 });
                             });
-                            reject(new Error('Naver Maps API failed to load within 30 seconds. Please check your internet connection or try refreshing the page.'));
-                        }, 30000);
+                            
+                            // 오류 표시 (페이지 새로고침 방지)
+                            reject(new Error('네이버 지도 인증 실패\n\n네이버 클라우드에서 Web Service URL을 등록해주세요:\n- https://aromapulse.kr/*\n- https://aromapulse.pages.dev/*'));
+                        }, 60000);
                     });
                 }
                 
@@ -1500,14 +1508,34 @@
                 console.log('[NAVER] Naver Maps initialization complete!');
             } catch (error) {
                 console.error('[NAVER] Naver Maps initialization error:', error);
+                
+                // 페이지 새로고침 방지 - 오류 메시지만 표시
                 document.getElementById('map-loading').innerHTML = `
-                    <div class="text-center">
-                        <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
-                        <p class="text-gray-700 font-semibold mb-2">지도 로드 실패</p>
-                        <p class="text-gray-500 text-sm">${error.message}</p>
-                        <p class="text-gray-400 text-xs mt-2">브라우저 콘솔(F12)에서 자세한 정보를 확인하세요</p>
+                    <div class="text-center p-8">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i>
+                        <p class="text-gray-800 font-bold text-lg mb-3">네이버 지도 로드 실패</p>
+                        <p class="text-gray-600 text-sm mb-4">네이버 클라우드 인증 오류가 발생했습니다.</p>
+                        
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left max-w-md mx-auto mb-4">
+                            <p class="text-yellow-800 font-semibold mb-2">
+                                <i class="fas fa-info-circle mr-2"></i>해결 방법
+                            </p>
+                            <ol class="text-yellow-700 text-sm space-y-1 pl-4">
+                                <li>1. Naver Cloud Console 접속</li>
+                                <li>2. Application → aromapulse → Maps</li>
+                                <li>3. Web Dynamic Map → Web Service URL 등록:</li>
+                            </ol>
+                            <div class="bg-white rounded p-2 mt-2 text-xs font-mono text-gray-700">
+                                https://aromapulse.kr/*<br>
+                                https://aromapulse.pages.dev/*
+                            </div>
+                        </div>
+                        
+                        <p class="text-gray-500 text-xs">임시로 <strong>https://aromapulse.pages.dev</strong>를 사용하세요</p>
                     </div>
                 `;
+                
+                // 지도 없이도 공방 목록은 표시
                 loadClassesList();
             }
         }
