@@ -12,6 +12,28 @@
     <!-- Reservation Booking System -->
     <script src="/static/reservation-booking.js" defer></script>
     <!-- Map APIs will be loaded dynamically based on user's OAuth provider -->
+    
+    <!-- Global Error Handler -->
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error('[Global Error]', {
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno,
+                error: e.error
+            });
+            
+            // isArray 관련 에러인 경우 자세한 정보 출력
+            if (e.message && e.message.includes('isArray')) {
+                console.error('[isArray Error] This might be caused by:');
+                console.error('1. External library not loaded (Tailwind, Naver Maps, etc.)');
+                console.error('2. DOM element not found');
+                console.error('3. Variable is null');
+                console.error('Stack trace:', e.error ? e.error.stack : 'No stack trace');
+            }
+        });
+    </script>
     <style>
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
